@@ -1,0 +1,64 @@
+/* Sidebar.css */
+
+/* Sidebar Styles */
+.sidebar {
+  display: flex;
+  padding: 10px 0px 10px 10px;
+  height: 100%;
+  flex: 1;
+  max-width: 275px;
+  border-right: 1px solid #ddd;
+  background-color: #f4f4f4;
+}
+
+.sidebar-container {
+  margin: 10px 0;
+  display: flex;
+  width: 100%;
+}
+
+.sidebar-options {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+}
+
+.sidebar-option {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 5px;
+  font-size: 14px;
+}
+
+/* Sidebar Links */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  gap: 10px;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.sidebar-link:hover {
+  background-color: #ddd;
+  color: #222;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar Dropdown */
+.sidebar-dropdown {
+  margin-left: 15px; /* Indent dropdown items */
+}
+
+.sidebar-dropdown .sidebar-link {
+  padding-left: 25px;
+}
+
+/* Sidebar Link Hover for Dropdown */
+.sidebar-dropdown .sidebar-link:hover {
+  background-color: #eee;
+}

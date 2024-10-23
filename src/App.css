@@ -1,0 +1,40 @@
+/* App.css */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app-container {
+  display: flex;
+  flex: 1;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  order: 2;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 400px 0 200px;
+  flex: 1;
+  overflow-y: auto;
+}
