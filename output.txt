@@ -1,6 +1,10 @@
 .
 ├── backend
 │   ├── controllers
+│   │   ├── answerController.js
+│   │   ├── commentController.js
+│   │   ├── questionController.js
+│   │   ├── userController.js
 │   ├── db.js
 │   ├── middlewares
 │   │   ├── auth.js
