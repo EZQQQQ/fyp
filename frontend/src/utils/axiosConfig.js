@@ -1,15 +1,12 @@
-// /frontend/src/utils/axiosConfig.js
-
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:5001/api", // Update with your backend URL
+  baseURL: process.env.REACT_APP_BACKEND_URL,
 });
 
-// Add a request interceptor to include the JWT token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // Adjust according to your token storage
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
