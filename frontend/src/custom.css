@@ -1,0 +1,14 @@
+/* frontend/src/custom.css */
+
+pre {
+  @apply bg-black text-white p-4 rounded-md overflow-x-auto;
+}
+
+code {
+  @apply bg-black text-white p-1 rounded;
+}
+
+/* Optional: Styling for blockquotes */
+blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 dark:border-gray-600 dark:text-gray-400;
+}

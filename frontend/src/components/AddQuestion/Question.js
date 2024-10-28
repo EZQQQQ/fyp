@@ -1,14 +1,14 @@
 // /frontend/src/components/AddQuestion/Question.js
 
 import React, { useState } from "react";
-import "./Question.css";
 import {
   Button,
-  Tabs,
-  Tab,
   TextField,
   Autocomplete,
   IconButton,
+  Chip,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -23,7 +23,7 @@ import MarkdownEditor from "../TextEditor/MarkdownEditor";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/userSlice";
 import axiosInstance from "../../utils/axiosConfig";
-import { useNavigate } from "react-router-dom"; // For navigation
+import { useNavigate } from "react-router-dom";
 
 function Question() {
   const user = useSelector(selectUser);
@@ -191,12 +191,14 @@ function Question() {
   };
 
   return (
-    <div className="create-post">
-      <h1>Ask a public question</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+      <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100">
+        Ask a Public Question
+      </h1>
 
       {/* Community Selection */}
-      <div className="select-community">
-        <PeopleIcon className="people-icon" />
+      <div className="flex items-center mb-6">
+        <PeopleIcon className="text-gray-500 dark:text-gray-400 mr-3" />
         <Autocomplete
           options={communities}
           getOptionLabel={(option) => option.title}
@@ -205,18 +207,18 @@ function Question() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Select a community"
+              label="Select a Community"
               variant="outlined"
-              fullWidth
+              className="w-full"
             />
           )}
-          className="community-select"
+          className="w-full"
           noOptionsText="No communities found"
         />
       </div>
 
       {/* Title Input */}
-      <div className="title-input">
+      <div className="relative mb-6">
         <TextField
           label="Title*"
           variant="outlined"
@@ -224,27 +226,41 @@ function Question() {
           value={title}
           onChange={handleTitleChange}
           error={titleError}
-          helperText={titleError ? "Fill out this field" : ""}
+          helperText={titleError ? "Please provide a title." : ""}
         />
-        {titleError && <ErrorIcon className="error-icon" />}
+        {titleError && (
+          <ErrorIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
+        )}
       </div>
 
       {/* Tags Input */}
-      <div className="tags-input">
-        <TextField
-          label="Tags"
-          variant="outlined"
-          fullWidth
-          value={tags.join(", ")}
-          onChange={(e) =>
-            setTags(
-              e.target.value
-                .split(",")
-                .map((tag) => tag.trim())
-                .filter(Boolean)
-            )
+      <div className="mb-6">
+        <Autocomplete
+          multiple
+          freeSolo
+          options={[]}
+          value={tags}
+          onChange={(event, newValue) => {
+            setTags(newValue);
+          }}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                variant="outlined"
+                label={option}
+                {...getTagProps({ index })}
+                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              />
+            ))
           }
-          helperText="Enter tags separated by commas"
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              variant="outlined"
+              label="Tags"
+              placeholder="Enter tags"
+            />
+          )}
         />
       </div>
 
@@ -252,62 +268,96 @@ function Question() {
       <Tabs
         value={tabValue}
         onChange={handleTabChange}
-        className="post-tabs"
+        className="mb-6"
         indicatorColor="primary"
         textColor="primary"
         variant="fullWidth"
-        sx={{
-          ".MuiTab-root": {
-            "&:hover": {
-              backgroundColor: "#f0f0f0",
-              transition: "background-color 0.3s ease",
-            },
-          },
+        classes={{
+          root: "border-b border-gray-200 dark:border-gray-700",
+          indicator: "bg-blue-500",
         }}
       >
-        <Tab icon={<NotesIcon />} label="Text" />
-        <Tab icon={<ImageIcon />} label="Images & Video" />
-        <Tab icon={<PollIcon />} label="Poll" />
+        <Tab
+          icon={<NotesIcon />}
+          label="Text"
+          className={`flex flex-col items-center ${
+            tabValue === 0
+              ? "text-blue-500"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        />
+        <Tab
+          icon={<ImageIcon />}
+          label="Images & Video"
+          className={`flex flex-col items-center ${
+            tabValue === 1
+              ? "text-blue-500"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        />
+        <Tab
+          icon={<PollIcon />}
+          label="Poll"
+          className={`flex flex-col items-center ${
+            tabValue === 2
+              ? "text-blue-500"
+              : "text-gray-500 dark:text-gray-400"
+          }`}
+        />
       </Tabs>
 
       {/* Form Submission */}
       <form onSubmit={handleSubmit}>
         {/* Tab Content */}
-        <div className="tab-content">
+        <div className="mb-6">
           {tabValue === 0 && (
-            <div className="text-tab">
+            <div>
               <MarkdownEditor
                 value={body}
                 onChange={setBody}
-                placeholder="Write your text here (optional)..."
+                placeholder="Write your question content here (optional)..."
               />
             </div>
           )}
           {tabValue === 1 && (
-            <div className="media-upload">
-              <CloudUploadIcon className="upload-icon" />
-              <h2>Drag and Drop or Upload Media</h2>
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              <CloudUploadIcon className="text-gray-500 dark:text-gray-400 text-4xl mb-4" />
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                Drag and Drop or Upload Media
+              </h2>
               <input
                 type="file"
                 multiple
                 accept="image/*,video/*"
                 name="files"
                 onChange={handleFileChange}
+                className="hidden"
+                id="media-upload"
               />
-              {/* Optionally, display selected files */}
+              <label
+                htmlFor="media-upload"
+                className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+              >
+                <CloudUploadIcon className="inline-block mr-2" />
+                Upload Files
+              </label>
+              {/* Display selected files */}
               {files.length > 0 && (
-                <div className="selected-files">
-                  {files.map((file, index) => (
-                    <div key={index} className="file-item">
-                      <p>{file.name}</p>
-                    </div>
-                  ))}
+                <div className="mt-4 w-full">
+                  <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Selected Files:
+                  </h3>
+                  <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
+                    {files.map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>
           )}
           {tabValue === 2 && (
-            <div className="poll-tab">
+            <div className="flex flex-col space-y-4">
               <MarkdownEditor
                 value={body}
                 onChange={setBody}
@@ -317,43 +367,34 @@ function Question() {
                 <Droppable droppableId="poll-options">
                   {(provided) => (
                     <div
-                      className="poll-options"
+                      className="space-y-4"
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                     >
                       {pollOptions.map((option, index) => (
                         <Draggable
                           key={option.id}
-                          draggableId={option.id.toString()}
+                          draggableId={option.id}
                           index={index}
                         >
                           {(provided, snapshot) => (
                             <div
-                              className="poll-option"
+                              className={`flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-md ${
+                                snapshot.isDragging
+                                  ? "bg-gray-200 dark:bg-gray-600"
+                                  : ""
+                              }`}
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              style={{
-                                ...provided.draggableProps.style,
-                                backgroundColor: snapshot.isDragging
-                                  ? "#f0f0f0"
-                                  : "#fff",
-                                borderRadius: "4px",
-                                padding: "8px",
-                                display: "flex",
-                                alignItems: "center",
-                                marginBottom: "8px",
-                              }}
                             >
                               {/* Drag Handle */}
                               <div
-                                className="drag-handle"
                                 {...provided.dragHandleProps}
-                                style={{ cursor: "grab", marginRight: "8px" }}
+                                className="cursor-grab mr-2 text-gray-500 dark:text-gray-300"
                               >
                                 <DragIndicatorIcon />
                               </div>
-
-                              {/* Poll Option Text Field */}
+                              {/* Poll Option Input */}
                               <TextField
                                 variant="outlined"
                                 label={`Option ${index + 1}`}
@@ -361,16 +402,13 @@ function Question() {
                                 onChange={(event) =>
                                   handlePollOptionChange(index, event)
                                 }
-                                className="poll-textfield"
-                                fullWidth
+                                className="flex-1"
                               />
-
                               {/* Remove Option Button */}
                               {pollOptions.length > 2 && (
                                 <IconButton
-                                  color="secondary"
                                   onClick={() => removePollOption(index)}
-                                  className="remove-option-button"
+                                  className="text-red-500 dark:text-red-400 ml-2"
                                 >
                                   <RemoveCircleIcon />
                                 </IconButton>
@@ -384,11 +422,12 @@ function Question() {
                   )}
                 </Droppable>
               </DragDropContext>
+              {/* Add Option Button */}
               <Button
                 variant="outlined"
                 color="primary"
                 onClick={addPollOption}
-                className="add-option-button"
+                className="self-start"
               >
                 Add Option
               </Button>
@@ -398,20 +437,20 @@ function Question() {
 
         {/* Display submission error if any */}
         {submissionError && (
-          <div style={{ color: "red", marginTop: "16px" }}>
-            {submissionError}
-          </div>
+          <div className="mb-4 text-red-500 text-sm">{submissionError}</div>
         )}
 
         {/* Post Button */}
-        <Button
-          variant="contained"
-          color="primary"
-          className="post-button"
-          type="submit"
-        >
-          Post
-        </Button>
+        <div className="flex justify-center">
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+          >
+            Post
+          </Button>
+        </div>
       </form>
     </div>
   );

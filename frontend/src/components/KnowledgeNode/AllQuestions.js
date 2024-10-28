@@ -1,20 +1,19 @@
 // /frontend/src/components/KnowledgeNode/AllQuestions.js
 
 import React, { useState, useEffect } from "react";
-import { Avatar, Button, ToggleButtonGroup, ToggleButton } from "@mui/material";
+import { Avatar } from "@mui/material";
 import { Link } from "react-router-dom";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import "./css/AllQuestions.css";
 import axiosInstance from "../../utils/axiosConfig";
+import QuestionCard from "./QuestionCard";
+import FilterButton from "./FilterButton"; // Import the reusable component
 
 function AllQuestions() {
   const [filter, setFilter] = useState("newest");
   const [questions, setQuestions] = useState([]);
 
-  const handleFilterChange = (event, newFilter) => {
-    if (newFilter !== null) {
-      setFilter(newFilter);
-    }
+  const handleFilterChange = (filterType) => {
+    setFilter(filterType);
   };
 
   useEffect(() => {
@@ -40,81 +39,45 @@ function AllQuestions() {
   });
 
   return (
-    <div className="all-questions">
+    <div className="p-4">
       {/* Header Section */}
-      <div className="all-questions-header">
-        <h1>All Questions</h1>
-        <div className="header-actions">
-          <Link to="/add-question">
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<QuestionAnswerIcon />}
-            >
-              Ask Question
-            </Button>
-          </Link>
-        </div>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+          All Questions
+        </h1>
+        <Link to="/add-question">
+          <button
+            type="button"
+            className="mt-4 md:mt-0 flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+          >
+            <QuestionAnswerIcon className="mr-2" />
+            Ask Question
+          </button>
+        </Link>
       </div>
 
       {/* Filter Section */}
-      <div className="all-questions-filter">
-        <ToggleButtonGroup
-          value={filter}
-          exclusive
-          onChange={handleFilterChange}
-          aria-label="Filter questions"
-          className="filter-options"
-        >
-          <ToggleButton
-            value="newest"
-            aria-label="Newest"
-            className="filter-button"
-          >
-            Newest
-          </ToggleButton>
-          <ToggleButton
-            value="popular"
-            aria-label="Popular"
-            className="filter-button"
-          >
-            Popular
-          </ToggleButton>
-        </ToggleButtonGroup>
+      <div className="flex justify-end mb-6">
+        <div className="inline-flex rounded-md shadow-sm" role="group">
+          <FilterButton
+            label="Newest"
+            active={filter === "newest"}
+            onClick={() => handleFilterChange("newest")}
+            rounded="rounded-l-md"
+          />
+          <FilterButton
+            label="Popular"
+            active={filter === "popular"}
+            onClick={() => handleFilterChange("popular")}
+            rounded="rounded-r-md"
+          />
+        </div>
       </div>
 
       {/* Questions List */}
-      <div className="all-questions-list">
+      <div className="space-y-6">
         {sortedQuestions.map((question) => (
-          <div className="question-container" key={question._id}>
-            <div className="question-stats">
-              <div className="stats-item">
-                <p>{question.votes || 0}</p>
-                <span>Votes</span>
-              </div>
-              <div className="stats-item">
-                <p>{question.answers?.length || 0}</p>
-                <span>Answers</span>
-              </div>
-              <div className="stats-item">
-                <p>{question.views || 0}</p>
-                <span>Views</span>
-              </div>
-            </div>
-            <div className="question-details">
-              <Link to={`/question/${question._id}`} className="question-title">
-                {question.title}
-              </Link>
-              <div className="question-description">{question.content}</div>
-              <div className="question-footer">
-                <small>{new Date(question.createdAt).toLocaleString()}</small>
-                <div className="author-info">
-                  <Avatar src={question.user?.profilePicture} />
-                  <p>{question.user?.name}</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <QuestionCard key={question._id} question={question} />
         ))}
       </div>
     </div>

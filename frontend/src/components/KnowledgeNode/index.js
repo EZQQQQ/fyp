@@ -1,17 +1,16 @@
+// /frontend/src/components/KnowledgeNode/index.js
+
 import React from "react";
-import "./css/index.css";
 import Main from "./Main";
 import Sidebar from "./Sidebar";
 
-function index() {
+function KnowledgeNode() {
   return (
-    <div className="sidebar-index">
-      <div className="sidebar-index-content">
-        <Sidebar />
-        <Main />
-      </div>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <Main />
     </div>
   );
 }
 
-export default index;
+export default KnowledgeNode;
