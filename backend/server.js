@@ -40,12 +40,12 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json());
 
-// Headers (Optional: Already handled by CORS)
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "*");
-  next();
-});
+// // Headers (Optional: Already handled by CORS)
+// app.use((req, res, next) => {
+//   res.setHeader("Access-Control-Allow-Origin", "*");
+//   res.setHeader("Access-Control-Allow-Headers", "*");
+//   next();
+// });
 
 // API Routes
 app.use("/api", router); // Existing API routes
@@ -53,17 +53,33 @@ app.use("/api", router); // Existing API routes
 // Static Resources (if any)
 app.use("/uploads", express.static(path.join(__dirname, "/uploads"))); // Ensure consistency
 
-// Serve frontend build
-app.use(express.static(path.join(__dirname, "/../frontend/build")));
+// // Serve frontend build
+// app.use(express.static(path.join(__dirname, "/../frontend/build")));
 
-// Catch-all Route to Serve React Frontend
-app.get("*", (req, res) => {
-  try {
-    res.sendFile(path.join(__dirname, "/../frontend/build/index.html"));
-  } catch (err) {
-    res.status(500).send("Oops! An error occurred");
-  }
-});
+// // Catch-all Route to Serve React Frontend
+// app.get("*", (req, res) => {
+//   try {
+//     res.sendFile(path.join(__dirname, "/../frontend/build/index.html"));
+//   } catch (err) {
+//     res.status(500).send("Oops! An error occurred");
+//   }
+// });
+
+const allowedOrigins = [process.env.CLIENT_ORIGIN]; // Your frontend URL
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
+
 
 // Error-Handling Middleware (should be after all other middleware and routes)
 app.use(errorHandler);

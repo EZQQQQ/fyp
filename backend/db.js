@@ -1,13 +1,19 @@
+// /backend/db.js
+
 const mongoose = require("mongoose");
 
-const url =
-  "mongodb://ezekiel:Nothing5265@cluster0-shard-00-00.z7unp.mongodb.net:27017,cluster0-shard-00-01.z7unp.mongodb.net:27017,cluster0-shard-00-02.z7unp.mongodb.net:27017/?ssl=true&replicaSet=atlas-qkc5sa-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0";
-
-const connectToDatabase = () => {
-  mongoose
-    .connect(url)
-    .then(() => console.log("Connected to MongoDB"))
-    .catch((err) => console.log("Error connecting to MongoDB", err));
+const connectToDatabase = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      // Other options if needed
+    });
+    console.log(`MongoDB connected: ${conn.connection.host}`);
+  } catch (err) {
+    console.error("Error connecting to MongoDB:", err);
+    process.exit(1); // Exit process with failure
+  }
 };
 
 module.exports = connectToDatabase;
