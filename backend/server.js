@@ -20,12 +20,25 @@ connectToDatabase();
 // CORS Configuration
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
 
-app.use(
-  cors({
-    origin: CLIENT_ORIGIN, // Allow requests from this origin
-    credentials: true, // Allow cookies and authentication headers
-  })
-);
+// Parse multiple origins if provided
+const allowedOrigins = CLIENT_ORIGIN.split(",").map((origin) => origin.trim());
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // Allow cookies and authentication headers
+};
+
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
