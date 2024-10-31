@@ -1,6 +1,6 @@
 // frontend/src/components/Header/Header.js
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
@@ -11,36 +11,10 @@ import { selectUser, logout } from "../../features/userSlice";
 import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebase-config";
 
-function Header() {
-  const [darkMode, setDarkMode] = useState(false);
+function Header({ darkMode, setDarkMode }) {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // Initialize dark mode based on localStorage
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    if (storedTheme === "dark") {
-      setDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
-      setDarkMode(false);
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
-
-  // Toggle dark mode and persist preference
-  const toggleDarkMode = () => {
-    if (darkMode) {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-      setDarkMode(false);
-    } else {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-      setDarkMode(true);
-    }
-  };
 
   // Handle user sign out
   const handleSignOut = () => {
@@ -107,12 +81,32 @@ function Header() {
           <div className="flex items-center space-x-4">
             {/* Dark Mode Toggle */}
             <button
-              onClick={toggleDarkMode}
+              onClick={() => setDarkMode(!darkMode)}
               className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl"
               aria-label="Toggle Dark Mode"
             >
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </button>
+
+            {/* Community Links */}
+            {user && (
+              <Link
+                to="/communities"
+                className="text-gray-800 dark:text-gray-200 hover:underline"
+              >
+                Communities
+              </Link>
+            )}
+
+            {/* Show 'Create Community' for Professors and Admins */}
+            {user && ["professor", "admin"].includes(user.role) && (
+              <Link
+                to="/communities/create"
+                className="text-gray-800 dark:text-gray-200 hover:underline"
+              >
+                Create Community
+              </Link>
+            )}
 
             {/* User Avatar */}
             <div className="relative">

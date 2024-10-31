@@ -24,6 +24,9 @@ const addAnswer = async (req, res) => {
       question_id: questionId,
       answer: answer.trim(),
       user: req.user._id, // From auth middleware
+      upvoters: [], // Initialize as empty array
+      downvoters: [], // Initialize as empty array
+      voteCount: 0, // Initialize vote count
     });
 
     const savedAnswer = await newAnswer.save();
@@ -47,6 +50,7 @@ const addAnswer = async (req, res) => {
 const getAnswersByQuestionId = async (req, res) => {
   try {
     const { questionId } = req.params;
+    const userId = req.user._id; // Extracting userId
 
     // Check if the question exists
     const question = await Question.findById(questionId);
@@ -58,14 +62,24 @@ const getAnswersByQuestionId = async (req, res) => {
     }
 
     // Fetch answers
-    const answers = await Answer.find({ question_id: questionId }).populate(
-      "user",
-      "name profilePicture"
-    );
+    const answers = await Answer.find({ question_id: questionId })
+      .populate("user", "name profilePicture")
+      .lean();
+
+    // Add vote status to each answer
+    const answersWithVoteStatus = answers.map((ans) => ({
+      ...ans,
+      userHasUpvoted: ans.upvoters.some(
+        (voterId) => voterId.toString() === userId.toString()
+      ),
+      userHasDownvoted: ans.downvoters.some(
+        (voterId) => voterId.toString() === userId.toString()
+      ),
+    }));
 
     res.status(200).json({
       status: true,
-      data: answers,
+      data: answersWithVoteStatus,
     });
   } catch (err) {
     console.error("Error fetching answers:", err);

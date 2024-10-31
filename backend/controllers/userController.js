@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 // Register a new user
 const registerUser = async (req, res) => {
   try {
+    console.log("Incoming Registration Data:", req.body); // Log incoming data
     const { name, email, password } = req.body;
 
     // Check if user already exists
@@ -30,6 +31,7 @@ const registerUser = async (req, res) => {
     });
 
     const savedUser = await newUser.save();
+    console.log("User Registered:", savedUser); // Log saved user
 
     // Generate JWT Token
     const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET, {

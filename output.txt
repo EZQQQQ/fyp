@@ -3,6 +3,7 @@
 │   ├── controllers
 │   │   ├── answerController.js
 │   │   ├── commentController.js
+│   │   ├── communityController.js
 │   │   ├── questionController.js
 │   │   ├── userController.js
 │   │   ├── voteController.js
@@ -15,6 +16,7 @@
 │   ├── models
 │   │   ├── Answer.js
 │   │   ├── Comment.js
+│   │   ├── Community.js
 │   │   ├── Question.js
 │   │   └── User.js
 │   ├── package-lock.json
@@ -22,6 +24,7 @@
 │   ├── routers
 │   │   ├── Answer.js
 │   │   ├── Comment.js
+│   │   ├── Community.js
 │   │   ├── Question.js
 │   │   ├── User.js
 │   │   └── index.js
@@ -77,6 +80,11 @@
 │   │   │   │   └── Question.js
 │   │   │   ├── Auth
 │   │   │   │   └── index.js
+│   │   │   ├── Community
+│   │   │   │   ├── CommunityCard.js
+│   │   │   │   ├── CommunityDetail.js
+│   │   │   │   ├── CommunityList.js
+│   │   │   │   └── CreateCommunity.js
 │   │   │   ├── Header
 │   │   │   │   ├── Header.js
 │   │   │   ├── KnowledgeNode
@@ -91,6 +99,7 @@
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
 │   │   │   │   └── VoteButtons.js
+│   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
 │   │   │       ├── TextContent.js
 │   │   │       ├── MainQuestion.js
@@ -98,7 +107,12 @@
 │   │   ├── config
 │   │   │   └── firebase-config.js
 │   │   ├── features
+│   │   │   ├── communitySlice.js
 │   │   │   └── userSlice.js
+│   │   ├── services
+│   │   │   ├── communityService.js
+│   │   │   ├── userService.js
+│   │   │   └── votingService.js
 │   │   ├── custom.css
 │   │   ├── index.css
 │   │   ├── index.js

@@ -55,6 +55,7 @@ const QuestionSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    views: { type: Number, default: 0 },
   },
   {
     timestamps: true,

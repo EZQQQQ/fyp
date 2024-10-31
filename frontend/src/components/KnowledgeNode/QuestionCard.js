@@ -14,8 +14,10 @@ function QuestionCard({ question, onUpvote, onDownvote }) {
       <div className="flex md:flex-col items-center justify-between md:justify-start md:mr-6 mb-4 md:mb-0">
         <VoteButtons
           voteCount={question.voteCount}
-          onUpvote={() => onUpvote(question._id)}
-          onDownvote={() => onDownvote(question._id)}
+          onUpvote={onUpvote}
+          onDownvote={onDownvote}
+          userHasUpvoted={question.userHasUpvoted}
+          userHasDownvoted={question.userHasDownvoted}
         />
       </div>
 
@@ -27,7 +29,10 @@ function QuestionCard({ question, onUpvote, onDownvote }) {
         >
           {question.title}
         </Link>
-        <TextContent content={question.textcontent} type="question" />
+        <TextContent
+          content={question.content || question.textcontent}
+          type="question"
+        />
         <div className="mt-4 flex justify-between items-center">
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {new Date(question.createdAt).toLocaleString()}
@@ -52,9 +57,12 @@ QuestionCard.propTypes = {
   question: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     title: PropTypes.string.isRequired,
+    content: PropTypes.string,
     textcontent: PropTypes.string,
     voteCount: PropTypes.number.isRequired,
     createdAt: PropTypes.string.isRequired,
+    userHasUpvoted: PropTypes.bool.isRequired,
+    userHasDownvoted: PropTypes.bool.isRequired,
     user: PropTypes.shape({
       profilePicture: PropTypes.string,
       name: PropTypes.string,

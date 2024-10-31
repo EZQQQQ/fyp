@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth"); // Ensure you have an auth middleware
-const VoteController = require("../controllers/VoteController");
+const VoteController = require("../controllers/voteController");
 
 // Voting endpoints for Questions
 router.post("/question/:id/upvote", auth, VoteController.upvoteQuestion);

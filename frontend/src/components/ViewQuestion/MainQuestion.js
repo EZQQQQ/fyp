@@ -7,11 +7,14 @@ import { Avatar } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
 import axiosInstance from "../../utils/axiosConfig";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../features/userSlice";
+import { setVoteData, selectVoteData } from "../../features/voteSlice";
 import TextContent from "./TextContent";
 import VoteButtons from "../VoteButtons/VoteButtons";
-import handleVote from "../../services/votingService"; // Import the voting service
+import handleVote from "../../services/votingService"; // Voting service
+import { toast } from "react-toastify"; // Toastify
+import "react-toastify/dist/ReactToastify.css"; // Toastify CSS
 
 function MainQuestion() {
   const { questionId } = useParams();
@@ -22,6 +25,8 @@ function MainQuestion() {
   const [answerText, setAnswerText] = useState("");
   const [showCommentBox, setShowCommentBox] = useState(false);
   const user = useSelector(selectUser);
+  const voteData = useSelector(selectVoteData);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchQuestion = async () => {
@@ -30,32 +35,112 @@ function MainQuestion() {
         setQuestion(response.data.data);
         setComments(response.data.data.comments || []);
         setAnswers(response.data.data.answers || []);
+        // Initialize vote data in Redux
+        dispatch(
+          setVoteData({
+            targetId: questionId,
+            voteInfo: {
+              voteCount: response.data.data.voteCount,
+              userHasUpvoted: response.data.data.userHasUpvoted,
+              userHasDownvoted: response.data.data.userHasDownvoted,
+            },
+          })
+        );
       } catch (error) {
         console.error("Error fetching question:", error.response?.data);
+        toast.error(
+          error.response?.data?.message || "Failed to fetch the question."
+        );
       }
     };
     fetchQuestion();
-  }, [questionId]);
+  }, [questionId, dispatch]);
 
-  // Handle voting
+  // Update local state when vote data changes
+  useEffect(() => {
+    if (voteData[questionId]) {
+      setQuestion((prev) => ({
+        ...prev,
+        voteCount: voteData[questionId].voteCount,
+        userHasUpvoted: voteData[questionId].userHasUpvoted,
+        userHasDownvoted: voteData[questionId].userHasDownvoted,
+      }));
+    }
+  }, [voteData, questionId]);
+
+  // Handle voting for the question
   const handleQuestionVote = async (type) => {
     try {
-      const updatedVoteCount = await handleVote(type, questionId, true);
-      setQuestion({ ...question, voteCount: updatedVoteCount });
+      const voteResult = await handleVote(type, questionId, true);
+      setQuestion((prev) => ({
+        ...prev,
+        voteCount: voteResult.voteCount,
+        userHasUpvoted: voteResult.userHasUpvoted,
+        userHasDownvoted: voteResult.userHasDownvoted,
+      }));
+      // Update Redux store
+      dispatch(
+        setVoteData({
+          targetId: questionId,
+          voteInfo: {
+            voteCount: voteResult.voteCount,
+            userHasUpvoted: voteResult.userHasUpvoted,
+            userHasDownvoted: voteResult.userHasDownvoted,
+          },
+        })
+      );
+      // Show toast only if it's a new vote, not a retraction
+      if (voteResult.action === "voted") {
+        toast.success(
+          type === "upvote"
+            ? "Question upvoted successfully!"
+            : "Question downvoted successfully!"
+        );
+      }
     } catch (error) {
-      alert(error); // Display error to the user
+      console.error("Voting Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to vote.");
     }
   };
 
+  // Handle voting for answers
   const handleAnswerVote = async (type, answerId) => {
     try {
-      const updatedVoteCount = await handleVote(type, answerId, false);
-      const updatedAnswers = answers.map((ans) =>
-        ans._id === answerId ? { ...ans, voteCount: updatedVoteCount } : ans
+      const voteResult = await handleVote(type, answerId, false);
+      setAnswers((prevAnswers) =>
+        prevAnswers.map((ans) =>
+          ans._id === answerId
+            ? {
+                ...ans,
+                voteCount: voteResult.voteCount,
+                userHasUpvoted: voteResult.userHasUpvoted,
+                userHasDownvoted: voteResult.userHasDownvoted,
+              }
+            : ans
+        )
       );
-      setAnswers(updatedAnswers);
+      // Update Redux store
+      dispatch(
+        setVoteData({
+          targetId: answerId,
+          voteInfo: {
+            voteCount: voteResult.voteCount,
+            userHasUpvoted: voteResult.userHasUpvoted,
+            userHasDownvoted: voteResult.userHasDownvoted,
+          },
+        })
+      );
+      // Show toast only if it's a new vote, not a retraction
+      if (voteResult.action === "voted") {
+        toast.success(
+          type === "upvote"
+            ? "Answer upvoted successfully!"
+            : "Answer downvoted successfully!"
+        );
+      }
     } catch (error) {
-      alert(error); // Display error to the user
+      console.error("Voting Error:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to vote.");
     }
   };
 
@@ -73,8 +158,10 @@ function MainQuestion() {
       setComments([...comments, response.data.data]);
       setCommentText("");
       setShowCommentBox(false);
+      toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error adding comment:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to add comment.");
     }
   };
 
@@ -87,8 +174,10 @@ function MainQuestion() {
       });
       setAnswers([...answers, response.data.data]);
       setAnswerText("");
+      toast.success("Answer posted successfully!");
     } catch (error) {
       console.error("Error adding answer:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to post answer.");
     }
   };
 
@@ -102,6 +191,7 @@ function MainQuestion() {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-900 min-h-screen p-6">
+      {/* ToastContainer should be included once in App.js */}
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between mb-6">
@@ -149,6 +239,8 @@ function MainQuestion() {
                 voteCount={question.voteCount}
                 onUpvote={() => handleQuestionVote("upvote")}
                 onDownvote={() => handleQuestionVote("downvote")}
+                userHasUpvoted={question.userHasUpvoted}
+                userHasDownvoted={question.userHasDownvoted}
               />
             </div>
             {/* Content */}
@@ -253,6 +345,8 @@ function MainQuestion() {
                   voteCount={answer.voteCount}
                   onUpvote={() => handleAnswerVote("upvote", answer._id)}
                   onDownvote={() => handleAnswerVote("downvote", answer._id)}
+                  userHasUpvoted={answer.userHasUpvoted}
+                  userHasDownvoted={answer.userHasDownvoted}
                 />
               </div>
               {/* Content */}

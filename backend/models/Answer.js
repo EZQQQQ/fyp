@@ -35,7 +35,11 @@ const AnswerSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 module.exports = mongoose.model("Answer", AnswerSchema);

@@ -1,18 +1,21 @@
-// /backend/routers/index.js
+// backend/routers/index.js
 
 const express = require("express");
 const router = express.Router();
 
-const userRouter = require("./User");
-const questionRouter = require("./Question");
-const answerRouter = require("./Answer");
-const commentRouter = require("./Comment");
+const UserRouter = require("./User");
+const CommentRouter = require("./Comment");
+const AnswerRouter = require("./Answer");
 const VoteRouter = require("./Vote");
+const CommunityRouter = require("./Community");
+const QuestionRouter = require("./Question");
 
-router.use("/user", userRouter);
-router.use("/question", questionRouter);
-router.use("/answer", answerRouter);
-router.use("/comment", commentRouter);
+// Mount sub-routers with distinct base paths
+router.use("/user", UserRouter);
+router.use("/comment", CommentRouter);
+router.use("/answer", AnswerRouter);
 router.use("/", VoteRouter);
+router.use("/communities", CommunityRouter);
+router.use("/question", QuestionRouter);
 
 module.exports = router;

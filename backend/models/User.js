@@ -21,7 +21,12 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "professor", "student"],
       default: "student",
     },
-    // Add other user fields as needed (e.g., password, profilePicture, etc.)
+    communities: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Community",
+      },
+    ],
     password: {
       type: String,
       required: true,

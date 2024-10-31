@@ -7,7 +7,11 @@ const mongoose = require("mongoose");
 const handleValidationResults = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ status: false, errors: errors.array() });
+    // Return the first error message for consistency
+    return res.status(400).json({
+      status: false,
+      message: errors.array()[0].msg,
+    });
   }
   next();
 };

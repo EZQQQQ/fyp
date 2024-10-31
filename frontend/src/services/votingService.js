@@ -7,7 +7,7 @@ import axiosInstance from "../utils/axiosConfig";
  * @param {string} type - The type of vote ("upvote" or "downvote").
  * @param {string} targetId - The ID of the question or answer.
  * @param {boolean} isQuestion - Flag indicating if the target is a question.
- * @returns {Promise<number>} - The updated vote count.
+ * @returns {Promise<Object>} - The updated vote count and user's vote status.
  */
 const handleVote = async (type, targetId, isQuestion = true) => {
   try {
@@ -15,7 +15,7 @@ const handleVote = async (type, targetId, isQuestion = true) => {
       ? `/question/${targetId}/${type}`
       : `/answer/${targetId}/${type}`;
     const response = await axiosInstance.post(endpoint);
-    return response.data.data.voteCount;
+    return response.data.data; // Contains voteCount, userHasUpvoted, userHasDownvoted
   } catch (error) {
     console.error(
       `Error during ${type} on ${isQuestion ? "question" : "answer"}:`,

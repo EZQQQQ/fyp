@@ -15,28 +15,47 @@ const handleVote = async (model, targetId, userId, voteType) => {
     throw new Error("Target not found");
   }
 
-  // Check if user has already voted
-  if (document[voteField].includes(userId)) {
-    throw new Error(`User has already ${voteType}d this`);
-  }
+  // Check if user has already voted in this direction
+  const hasVoted = document[voteField].includes(userId);
+  const hasOppositeVoted = document[oppositeVoteField].includes(userId);
 
-  // If user has voted oppositely, remove the opposite vote and adjust voteCount accordingly
-  if (document[oppositeVoteField].includes(userId)) {
-    document[oppositeVoteField] = document[oppositeVoteField].filter(
+  if (hasVoted) {
+    // User wants to retract their vote
+    document[voteField] = document[voteField].filter(
       (id) => id.toString() !== userId.toString()
     );
-    document.voteCount += voteType === "upvote" ? 2 : -2; // Removing opposite vote and adding current vote
+    document.voteCount += voteType === "upvote" ? -1 : 1;
+    await document.save();
+
+    return {
+      voteCount: document.voteCount,
+      action: "retracted",
+      userHasUpvoted: document.upvoters.includes(userId),
+      userHasDownvoted: document.downvoters.includes(userId),
+    };
   } else {
-    // Increment or decrement voteCount
-    document.voteCount += voteChange;
+    if (hasOppositeVoted) {
+      // User is switching their vote
+      document[oppositeVoteField] = document[oppositeVoteField].filter(
+        (id) => id.toString() !== userId.toString()
+      );
+      document.voteCount += voteType === "upvote" ? 2 : -2; // Removing opposite vote and adding current vote
+    } else {
+      // User is voting for the first time in this direction
+      document.voteCount += voteChange;
+    }
+
+    // Add user to the appropriate vote array
+    document[voteField].push(userId);
+
+    await document.save();
+    return {
+      voteCount: document.voteCount,
+      action: "voted",
+      userHasUpvoted: document.upvoters.includes(userId),
+      userHasDownvoted: document.downvoters.includes(userId),
+    };
   }
-
-  // Add user to the appropriate vote array
-  document[voteField].push(userId);
-
-  await document.save();
-
-  return document.voteCount;
 };
 
 // Upvote a question
@@ -45,12 +64,16 @@ const upvoteQuestion = async (req, res) => {
     const questionId = req.params.id;
     const userId = req.user._id; // Assuming auth middleware sets req.user
 
-    const voteCount = await handleVote(Question, questionId, userId, "upvote");
+    const { voteCount, action, userHasUpvoted, userHasDownvoted } =
+      await handleVote(Question, questionId, userId, "upvote");
 
     res.status(200).json({
       status: true,
-      message: "Question upvoted successfully",
-      data: { voteCount },
+      message:
+        action === "voted"
+          ? "Question upvoted successfully"
+          : "Upvote retracted successfully",
+      data: { voteCount, userHasUpvoted, userHasDownvoted },
     });
   } catch (error) {
     console.error("Error upvoting question:", error.message);
@@ -64,17 +87,16 @@ const downvoteQuestion = async (req, res) => {
     const questionId = req.params.id;
     const userId = req.user._id;
 
-    const voteCount = await handleVote(
-      Question,
-      questionId,
-      userId,
-      "downvote"
-    );
+    const { voteCount, action, userHasUpvoted, userHasDownvoted } =
+      await handleVote(Question, questionId, userId, "downvote");
 
     res.status(200).json({
       status: true,
-      message: "Question downvoted successfully",
-      data: { voteCount },
+      message:
+        action === "voted"
+          ? "Question downvoted successfully"
+          : "Downvote retracted successfully",
+      data: { voteCount, userHasUpvoted, userHasDownvoted },
     });
   } catch (error) {
     console.error("Error downvoting question:", error.message);
@@ -88,12 +110,16 @@ const upvoteAnswer = async (req, res) => {
     const answerId = req.params.id;
     const userId = req.user._id;
 
-    const voteCount = await handleVote(Answer, answerId, userId, "upvote");
+    const { voteCount, action, userHasUpvoted, userHasDownvoted } =
+      await handleVote(Answer, answerId, userId, "upvote");
 
     res.status(200).json({
       status: true,
-      message: "Answer upvoted successfully",
-      data: { voteCount },
+      message:
+        action === "voted"
+          ? "Answer upvoted successfully"
+          : "Upvote retracted successfully",
+      data: { voteCount, userHasUpvoted, userHasDownvoted },
     });
   } catch (error) {
     console.error("Error upvoting answer:", error.message);
@@ -107,12 +133,16 @@ const downvoteAnswer = async (req, res) => {
     const answerId = req.params.id;
     const userId = req.user._id;
 
-    const voteCount = await handleVote(Answer, answerId, userId, "downvote");
+    const { voteCount, action, userHasUpvoted, userHasDownvoted } =
+      await handleVote(Answer, answerId, userId, "downvote");
 
     res.status(200).json({
       status: true,
-      message: "Answer downvoted successfully",
-      data: { voteCount },
+      message:
+        action === "voted"
+          ? "Answer downvoted successfully"
+          : "Downvote retracted successfully",
+      data: { voteCount, userHasUpvoted, userHasDownvoted },
     });
   } catch (error) {
     console.error("Error downvoting answer:", error.message);

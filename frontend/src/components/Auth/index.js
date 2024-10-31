@@ -1,11 +1,10 @@
-// /frontend/src/components/Auth/index.js
+// frontend/src/components/Auth.js
 
 import React, { useState } from "react";
 import { Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../utils/axiosConfig";
 import { useDispatch } from "react-redux";
-import { login } from "../../features/userSlice";
+import { loginUser, registerUser } from "../../features/userSlice";
 
 function Auth() {
   const [registerMode, setRegisterMode] = useState(false);
@@ -27,21 +26,13 @@ function Auth() {
       setLoading(false);
     } else {
       try {
-        const response = await axiosInstance.post("/user/register", {
-          name,
-          email,
-          password,
-        });
-        const { user, token } = response.data.data;
-        // Save token to localStorage
-        localStorage.setItem("token", token);
-        // Update Redux store
-        dispatch(login(user));
+        // **Dispatch registerUser instead of signupUser**
+        await dispatch(registerUser({ name, email, password })).unwrap();
         navigate("/");
         setLoading(false);
       } catch (error) {
-        console.error("Registration Error:", error.response?.data);
-        setError(error.response?.data?.message || "Registration failed");
+        console.error("Registration Error:", error);
+        setError(error || "Registration failed");
         setLoading(false);
       }
     }
@@ -56,20 +47,12 @@ function Auth() {
       setLoading(false);
     } else {
       try {
-        const response = await axiosInstance.post("/user/login", {
-          email,
-          password,
-        });
-        const { user, token } = response.data.data;
-        // Save token to localStorage
-        localStorage.setItem("token", token);
-        // Update Redux store
-        dispatch(login(user));
+        await dispatch(loginUser({ email, password })).unwrap();
         navigate("/");
         setLoading(false);
       } catch (error) {
-        console.error("Login Error:", error.response?.data);
-        setError(error.response?.data?.message || "Login failed");
+        console.error("Login Error:", error);
+        setError(error || "Login failed");
         setLoading(false);
       }
     }

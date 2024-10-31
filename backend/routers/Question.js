@@ -44,7 +44,7 @@ router.get(
   "/:id",
   auth,
   param("id").isMongoId().withMessage("Invalid question ID"),
-  handleValidationResults, // Use handleValidationResults here
+  handleValidationResults,
   questionController.getQuestionById
 );
 
