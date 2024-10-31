@@ -3,36 +3,20 @@
 import React from "react";
 import { Avatar } from "@mui/material";
 import { Link } from "react-router-dom";
+import TextContent from "../ViewQuestion/TextContent";
+import VoteButtons from "../VoteButtons/VoteButtons";
+import PropTypes from "prop-types";
 
-function QuestionCard({ question }) {
+function QuestionCard({ question, onUpvote, onDownvote }) {
   return (
     <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-lg shadow p-4">
       {/* Question Stats */}
       <div className="flex md:flex-col items-center justify-between md:justify-start md:mr-6 mb-4 md:mb-0">
-        <div className="flex flex-col items-center mr-4 md:mr-0">
-          <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            {question.votes || 0}
-          </p>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Votes
-          </span>
-        </div>
-        <div className="flex flex-col items-center mr-4 md:mr-0">
-          <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            {question.answers?.length || 0}
-          </p>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Answers
-          </span>
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            {question.views || 0}
-          </p>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            Views
-          </span>
-        </div>
+        <VoteButtons
+          voteCount={question.voteCount}
+          onUpvote={() => onUpvote(question._id)}
+          onDownvote={() => onDownvote(question._id)}
+        />
       </div>
 
       {/* Question Details */}
@@ -43,9 +27,7 @@ function QuestionCard({ question }) {
         >
           {question.title}
         </Link>
-        <p className="mt-2 text-gray-700 dark:text-gray-300">
-          {question.content}
-        </p>
+        <TextContent content={question.textcontent} type="question" />
         <div className="mt-4 flex justify-between items-center">
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {new Date(question.createdAt).toLocaleString()}
@@ -65,5 +47,21 @@ function QuestionCard({ question }) {
     </div>
   );
 }
+
+QuestionCard.propTypes = {
+  question: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    textcontent: PropTypes.string,
+    voteCount: PropTypes.number.isRequired,
+    createdAt: PropTypes.string.isRequired,
+    user: PropTypes.shape({
+      profilePicture: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  }).isRequired,
+  onUpvote: PropTypes.func.isRequired,
+  onDownvote: PropTypes.func.isRequired,
+};
 
 export default QuestionCard;

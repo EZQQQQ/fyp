@@ -26,7 +26,7 @@ const QuestionSchema = new mongoose.Schema(
     ],
     files: [
       {
-        type: String, // Store filenames
+        type: String, // Store filenames or URLs
       },
     ],
     tags: [
@@ -37,7 +37,24 @@ const QuestionSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
+    voteCount: {
+      type: Number,
+      default: 0,
+    },
+    upvoters: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    downvoters: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,
@@ -46,14 +63,14 @@ const QuestionSchema = new mongoose.Schema(
   }
 );
 
-// **Define virtual field for answers**
+// Define virtual field for answers
 QuestionSchema.virtual("answers", {
   ref: "Answer", // The model to use
   localField: "_id", // Find answers where `localField`
   foreignField: "question_id", // is equal to `foreignField`
 });
 
-// **Define virtual field for comments**
+// Define virtual field for comments
 QuestionSchema.virtual("comments", {
   ref: "Comment",
   localField: "_id",

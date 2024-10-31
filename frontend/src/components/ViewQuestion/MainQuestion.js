@@ -1,20 +1,17 @@
 // /frontend/src/components/ViewQuestion/MainQuestion.js
 
 import React, { useState, useEffect } from "react";
-import {
-  Bookmark,
-  History,
-  ArrowUpward,
-  ArrowDownward,
-} from "@mui/icons-material";
+import { Bookmark, History } from "@mui/icons-material";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import { Avatar } from "@mui/material"; // Keep Avatar if you wish to use it
+import { Avatar } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
 import axiosInstance from "../../utils/axiosConfig";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../features/userSlice";
 import TextContent from "./TextContent";
+import VoteButtons from "../VoteButtons/VoteButtons";
+import handleVote from "../../services/votingService"; // Import the voting service
 
 function MainQuestion() {
   const { questionId } = useParams();
@@ -40,57 +37,25 @@ function MainQuestion() {
     fetchQuestion();
   }, [questionId]);
 
-  // Handle upvote for question
-  const handleQuestionUpvote = async () => {
+  // Handle voting
+  const handleQuestionVote = async (type) => {
     try {
-      const response = await axiosInstance.post(
-        `/question/${questionId}/upvote`
-      );
-      setQuestion({ ...question, voteCount: response.data.data.voteCount });
+      const updatedVoteCount = await handleVote(type, questionId, true);
+      setQuestion({ ...question, voteCount: updatedVoteCount });
     } catch (error) {
-      console.error("Error upvoting question:", error.response?.data);
+      alert(error); // Display error to the user
     }
   };
 
-  // Handle downvote for question
-  const handleQuestionDownvote = async () => {
+  const handleAnswerVote = async (type, answerId) => {
     try {
-      const response = await axiosInstance.post(
-        `/question/${questionId}/downvote`
-      );
-      setQuestion({ ...question, voteCount: response.data.data.voteCount });
-    } catch (error) {
-      console.error("Error downvoting question:", error.response?.data);
-    }
-  };
-
-  // Handle upvote for answer
-  const handleAnswerUpvote = async (answerId) => {
-    try {
-      const response = await axiosInstance.post(`/answer/${answerId}/upvote`);
+      const updatedVoteCount = await handleVote(type, answerId, false);
       const updatedAnswers = answers.map((ans) =>
-        ans._id === answerId
-          ? { ...ans, voteCount: response.data.data.voteCount }
-          : ans
+        ans._id === answerId ? { ...ans, voteCount: updatedVoteCount } : ans
       );
       setAnswers(updatedAnswers);
     } catch (error) {
-      console.error("Error upvoting answer:", error.response?.data);
-    }
-  };
-
-  // Handle downvote for answer
-  const handleAnswerDownvote = async (answerId) => {
-    try {
-      const response = await axiosInstance.post(`/answer/${answerId}/downvote`);
-      const updatedAnswers = answers.map((ans) =>
-        ans._id === answerId
-          ? { ...ans, voteCount: response.data.data.voteCount }
-          : ans
-      );
-      setAnswers(updatedAnswers);
-    } catch (error) {
-      console.error("Error downvoting answer:", error.response?.data);
+      alert(error); // Display error to the user
     }
   };
 
@@ -127,13 +92,21 @@ function MainQuestion() {
     }
   };
 
+  if (!question) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gray-100 dark:bg-gray-900 min-h-screen p-6">
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between mb-6">
           <h2 className="text-2xl font-bold mb-4 sm:mb-0 text-gray-900 dark:text-gray-100">
-            {question?.title}
+            {question.title}
           </h2>
           <Link to="/add-question">
             <button className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -149,19 +122,19 @@ function MainQuestion() {
             <p className="mr-4">
               Asked:{" "}
               <span className="text-gray-700 dark:text-gray-300">
-                {new Date(question?.createdAt).toLocaleString()}
+                {new Date(question.createdAt).toLocaleString()}
               </span>
             </p>
             <p className="mr-4">
               Active:{" "}
               <span className="text-gray-700 dark:text-gray-300">
-                {new Date(question?.updatedAt).toLocaleString()}
+                {new Date(question.updatedAt).toLocaleString()}
               </span>
             </p>
             <p>
               Viewed:{" "}
               <span className="text-gray-700 dark:text-gray-300">
-                {question?.views || 0} times
+                {question.views || 0} times
               </span>
             </p>
           </div>
@@ -172,35 +145,32 @@ function MainQuestion() {
           <div className="flex">
             {/* Voting */}
             <div className="flex flex-col items-center mr-6">
-              <ArrowUpward
-                className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
-                onClick={handleQuestionUpvote}
-              />
-              <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {question?.voteCount || 0}
-              </p>
-              <ArrowDownward
-                className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
-                onClick={handleQuestionDownvote}
+              <VoteButtons
+                voteCount={question.voteCount}
+                onUpvote={() => handleQuestionVote("upvote")}
+                onDownvote={() => handleQuestionVote("downvote")}
               />
             </div>
             {/* Content */}
             <div className="flex-1">
-              <TextContent content={question?.content} type="question" />
+              <TextContent content={question.content} type="question" />
 
               {/* Files */}
-              {question?.files?.map((fileUrl, index) => (
-                <div key={index} className="my-4">
-                  <img
-                    src={fileUrl}
-                    alt={`Attachment ${index}`}
-                    className="max-w-full rounded-md"
-                  />
+              {question.files?.length > 0 && (
+                <div className="my-4">
+                  {question.files.map((fileUrl, index) => (
+                    <img
+                      key={index}
+                      src={fileUrl}
+                      alt={`Attachment ${index + 1}`}
+                      className="max-w-full rounded-md"
+                    />
+                  ))}
                 </div>
-              ))}
+              )}
 
               {/* Poll Options */}
-              {question?.pollOptions?.length > 0 && (
+              {question.pollOptions?.length > 0 && (
                 <div className="my-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Poll Options:
@@ -216,12 +186,12 @@ function MainQuestion() {
               {/* Author Info */}
               <div className="flex items-center justify-end mt-6">
                 <small className="text-gray-500 dark:text-gray-400 mr-2">
-                  asked {new Date(question?.createdAt).toLocaleString()}
+                  asked {new Date(question.createdAt).toLocaleString()}
                 </small>
                 <div className="flex items-center">
-                  <Avatar src={question?.user?.profilePicture} />
+                  <Avatar src={question.user?.profilePicture} />
                   <p className="ml-2 font-medium text-gray-900 dark:text-gray-100">
-                    {question?.user?.name}
+                    {question.user?.name}
                   </p>
                 </div>
               </div>
@@ -279,16 +249,10 @@ function MainQuestion() {
             >
               {/* Voting */}
               <div className="flex flex-col items-center mr-6">
-                <ArrowUpward
-                  className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
-                  onClick={() => handleAnswerUpvote(answer._id)}
-                />
-                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  {answer.voteCount || 0}
-                </p>
-                <ArrowDownward
-                  className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
-                  onClick={() => handleAnswerDownvote(answer._id)}
+                <VoteButtons
+                  voteCount={answer.voteCount}
+                  onUpvote={() => handleAnswerVote("upvote", answer._id)}
+                  onDownvote={() => handleAnswerVote("downvote", answer._id)}
                 />
               </div>
               {/* Content */}
