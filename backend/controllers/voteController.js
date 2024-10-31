@@ -1,4 +1,4 @@
-// /backend/controllers/VoteController.js
+// /backend/controllers/voteController.js
 
 const Question = require("../models/Question");
 const Answer = require("../models/Answer");

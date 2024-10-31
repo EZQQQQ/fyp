@@ -3,14 +3,15 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth"); // Ensure you have an auth middleware
-const VoteController = require("../controllers/voteController");
+
+const voteController = require("../controllers/voteController");
 
 // Voting endpoints for Questions
-router.post("/question/:id/upvote", auth, VoteController.upvoteQuestion);
-router.post("/question/:id/downvote", auth, VoteController.downvoteQuestion);
+router.post("/question/:id/upvote", auth, voteController.upvoteQuestion);
+router.post("/question/:id/downvote", auth, voteController.downvoteQuestion);
 
 // Voting endpoints for Answers
-router.post("/answer/:id/upvote", auth, VoteController.upvoteAnswer);
-router.post("/answer/:id/downvote", auth, VoteController.downvoteAnswer);
+router.post("/answer/:id/upvote", auth, voteController.upvoteAnswer);
+router.post("/answer/:id/downvote", auth, voteController.downvoteAnswer);
 
 module.exports = router;
