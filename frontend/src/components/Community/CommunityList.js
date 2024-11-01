@@ -1,22 +1,28 @@
-// frontend/src/components/Community/CommunityList.js
+// /frontend/src/components/Community/CommunityList.js
 
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCommunities, joinCommunity } from "../../features/communitySlice";
+import {
+  fetchCommunities,
+  joinCommunity,
+  selectCommunities,
+} from "../../features/communitySlice";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify"; // Ensure correct import
 import "react-toastify/dist/ReactToastify.css";
 
 const CommunityList = () => {
   const dispatch = useDispatch();
-  const { communities, loading, error } = useSelector(
-    (state) => state.communities
-  );
+  const communities = useSelector(selectCommunities);
+  const loading = useSelector((state) => state.communities.loading);
+  const error = useSelector((state) => state.communities.error);
   const user = useSelector((state) => state.user.user); // Assuming user state
 
   useEffect(() => {
-    dispatch(fetchCommunities());
-  }, [dispatch]);
+    if (communities.length === 0) {
+      dispatch(fetchCommunities());
+    }
+  }, [dispatch, communities.length]);
 
   const handleJoin = async (communityId) => {
     try {
@@ -30,12 +36,14 @@ const CommunityList = () => {
 
   if (loading) {
     return (
-      <p className="text-gray-500 dark:text-gray-400">Loading communities...</p>
+      <div className="text-gray-700 dark:text-gray-200">
+        Loading communities...
+      </div>
     );
   }
 
   if (error) {
-    return <p className="text-red-500 dark:text-red-400">Error: {error}</p>;
+    return <div className="text-red-500 dark:text-red-400">Error: {error}</div>;
   }
 
   return (

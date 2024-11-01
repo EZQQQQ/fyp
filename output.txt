@@ -10,6 +10,7 @@
 │   ├── db.js
 │   ├── middlewares
 │   │   ├── auth.js
+│   │   ├── authorize.js
 │   │   ├── errorHandler.js
 │   │   ├── upload.js
 │   │   └── validate.js
@@ -108,6 +109,7 @@
 │   │   │   └── firebase-config.js
 │   │   ├── features
 │   │   │   ├── communitySlice.js
+│   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
 │   │   ├── services
 │   │   │   ├── communityService.js

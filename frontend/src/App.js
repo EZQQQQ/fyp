@@ -1,4 +1,4 @@
-// frontend/src/App.js
+// /frontend/src/App.js
 
 import React, { useEffect, useState } from "react";
 import {
@@ -18,10 +18,10 @@ import AddQuestion from "./components/AddQuestion/Question";
 import Auth from "./components/Auth";
 import "./index.css";
 import { useDispatch, useSelector } from "react-redux";
-import { logout, selectUser, fetchUserData } from "./features/userSlice"; // Import fetchUserData
-import { ToastContainer } from "react-toastify"; // Import ToastContainer
-import "react-toastify/dist/ReactToastify.css"; // Import Toastify CSS
-import ProtectedRoute from "./components/ProtectedRoute"; // Import the separate ProtectedRoute
+import { logout, selectUser, fetchUserData } from "./features/userSlice";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   const user = useSelector(selectUser);
@@ -101,7 +101,7 @@ function App() {
                 }
               />
 
-              {/* Create New Community - Professors Only */}
+              {/* Create New Community - Professors and Admins Only */}
               <Route
                 path="/communities/create"
                 element={

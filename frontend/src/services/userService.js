@@ -1,4 +1,4 @@
-// frontend/src/services/userService.js
+// /frontend/src/services/userService.js
 
 import axios from "axios";
 
@@ -25,28 +25,76 @@ axiosInstance.interceptors.request.use(
   }
 );
 
+// Interceptor to handle responses and errors
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Optionally handle specific error status codes
+    // For example, if unauthorized, redirect to login
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Login user
 const login = async (credentials) => {
-  const response = await axiosInstance.post("/user/login", credentials);
-  return response.data;
+  try {
+    const response = await axiosInstance.post("/user/login", credentials);
+    const data = response.data;
+
+    // Save token to local storage
+    localStorage.setItem("token", data.token);
+
+    return data;
+  } catch (error) {
+    // Handle error appropriately
+    throw error;
+  }
 };
 
 // Register user
 const register = async (userData) => {
-  const response = await axiosInstance.post("/user/register", userData);
-  return response.data;
+  try {
+    const response = await axiosInstance.post("/user/register", userData);
+    const data = response.data;
+
+    // Save token to local storage
+    localStorage.setItem("token", data.token);
+
+    return data;
+  } catch (error) {
+    // Handle error appropriately
+    throw error;
+  }
 };
 
 // Fetch authenticated user's profile
 const fetchUserData = async () => {
-  const response = await axiosInstance.get("/user/profile");
-  return response.data;
+  try {
+    const response = await axiosInstance.get("/user/profile");
+    return response.data;
+  } catch (error) {
+    // Handle error appropriately
+    throw error;
+  }
+};
+
+// Logout user
+const logout = () => {
+  // Remove token from local storage
+  localStorage.removeItem("token");
+  // Optionally redirect to login page
+  window.location.href = "/login";
 };
 
 const userService = {
   login,
-  register, // Updated from signup to register
-  fetchUserData, // Added fetchUserData for completeness
+  register,
+  fetchUserData,
+  logout,
 };
 
 export default userService;

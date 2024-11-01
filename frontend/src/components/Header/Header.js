@@ -1,4 +1,4 @@
-// frontend/src/components/Header/Header.js
+// /frontend/src/components/Header/Header.js
 
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -88,7 +88,8 @@ function Header({ darkMode, setDarkMode }) {
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </button>
 
-            {/* Community Links */}
+            {/* Remove Community Links from Header */}
+            {/*
             {user && (
               <Link
                 to="/communities"
@@ -98,7 +99,6 @@ function Header({ darkMode, setDarkMode }) {
               </Link>
             )}
 
-            {/* Show 'Create Community' for Professors and Admins */}
             {user && ["professor", "admin"].includes(user.role) && (
               <Link
                 to="/communities/create"
@@ -107,6 +107,7 @@ function Header({ darkMode, setDarkMode }) {
                 Create Community
               </Link>
             )}
+            */}
 
             {/* User Avatar */}
             <div className="relative">

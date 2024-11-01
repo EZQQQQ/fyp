@@ -112,7 +112,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.data; // Adjust based on backend response
+        state.user = action.payload.data;
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.loading = false;

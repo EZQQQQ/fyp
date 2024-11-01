@@ -21,7 +21,7 @@ router.get("/", auth, CommunityController.getAllCommunities);
 router.post(
   "/:id/join",
   auth,
-  authorizeRoles("student"), // Adjust roles as needed
+  authorizeRoles("student", "professor", "admin"), // Adjust roles as needed
   CommunityController.joinCommunity
 );
 

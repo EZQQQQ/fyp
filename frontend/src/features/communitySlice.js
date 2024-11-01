@@ -2,53 +2,65 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import communityService from "../services/communityService";
+import { toast } from "react-toastify";
 
-// Async thunks
+// Thunk to fetch communities
 export const fetchCommunities = createAsyncThunk(
-  "communities/fetchAll",
-  async (_, { rejectWithValue }) => {
+  "communities/fetchCommunities",
+  async (_, thunkAPI) => {
     try {
       const response = await communityService.fetchCommunities();
-      return response.data;
+      if (response.status) {
+        return response.data; // Return the array of communities
+      } else {
+        return thunkAPI.rejectWithValue("Failed to fetch communities.");
+      }
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch communities."
+      );
     }
   }
 );
 
+// Thunk to create a community
 export const createCommunity = createAsyncThunk(
-  "communities/create",
-  async (communityData, { rejectWithValue }) => {
+  "communities/createCommunity",
+  async (communityData, thunkAPI) => {
     try {
       const response = await communityService.createCommunity(communityData);
-      return response.data.data;
+      if (response.status) {
+        return response.data; // Return the newly created community
+      } else {
+        return thunkAPI.rejectWithValue("Failed to create community.");
+      }
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to create community."
+      );
     }
   }
 );
 
+// Thunk to join a community
 export const joinCommunity = createAsyncThunk(
-  "communities/join",
-  async (communityId, { rejectWithValue }) => {
+  "communities/joinCommunity",
+  async (communityId, thunkAPI) => {
     try {
       const response = await communityService.joinCommunity(communityId);
-      return { communityId, voteCount: response.data.data.voteCount };
+      if (response.status) {
+        return response.data; // Return updated community data if needed
+      } else {
+        return thunkAPI.rejectWithValue("Failed to join community.");
+      }
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
-    }
-  }
-);
-
-// Optional: Leave community
-export const leaveCommunity = createAsyncThunk(
-  "communities/leave",
-  async (communityId, { rejectWithValue }) => {
-    try {
-      const response = await communityService.leaveCommunity(communityId);
-      return { communityId, message: response.data.message };
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to join community."
+      );
     }
   }
 );
@@ -61,72 +73,61 @@ const communitySlice = createSlice({
     error: null,
   },
   reducers: {
-    addCommunity: (state, action) => {
-      state.communities.push(action.payload);
-    },
-    // Other synchronous reducers if needed
+    // Add synchronous reducers if needed
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Communities
+      // Handle fetchCommunities
       .addCase(fetchCommunities.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCommunities.fulfilled, (state, action) => {
         state.loading = false;
-        state.communities = action.payload;
+        state.communities = action.payload; // Set fetched communities
       })
       .addCase(fetchCommunities.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        toast.error(action.payload);
       })
-      // Create Community
+
+      // Handle createCommunity
       .addCase(createCommunity.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(createCommunity.fulfilled, (state, action) => {
         state.loading = false;
-        state.communities.push(action.payload);
+        state.communities.push(action.payload); // Add new community to the list
+        toast.success("Community created successfully!");
       })
       .addCase(createCommunity.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        toast.error(action.payload);
       })
-      // Join Community
+
+      // Handle joinCommunity
+      .addCase(joinCommunity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(joinCommunity.fulfilled, (state, action) => {
-        const { communityId, voteCount } = action.payload;
-        const community = state.communities.find(
-          (comm) => comm._id === communityId
-        );
-        if (community) {
-          community.members.push(state.user.id);
-          community.voteCount = voteCount;
-        }
+        state.loading = false;
+        // Optionally, update specific community data here
+        // For example, updating the members array
+        // This depends on your backend's response structure
       })
       .addCase(joinCommunity.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload;
-      })
-      // Optional: Leave Community
-      .addCase(leaveCommunity.fulfilled, (state, action) => {
-        const { communityId } = action.payload;
-        state.communities = state.communities.map((comm) =>
-          comm._id === communityId
-            ? {
-                ...comm,
-                members: comm.members.filter(
-                  (member) => member !== state.user.id
-                ),
-              }
-            : comm
-        );
-      })
-      .addCase(leaveCommunity.rejected, (state, action) => {
-        state.error = action.payload;
+        toast.error(action.payload);
       });
   },
 });
 
-export const { addCommunity } = communitySlice.actions;
+// Selector to access communities from the state
+export const selectCommunities = (state) => state.communities.communities;
+
 export default communitySlice.reducer;

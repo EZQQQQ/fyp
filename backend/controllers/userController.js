@@ -66,6 +66,14 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        status: false,
+        message: "Please provide email and password.",
+      });
+    }
+
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
@@ -97,6 +105,7 @@ const loginUser = async (req, res) => {
           id: user._id,
           name: user.name,
           email: user.email,
+          role: user.role,
           profilePicture: user.profilePicture,
         },
         token,
@@ -116,6 +125,13 @@ const loginUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password"); // Exclude password
+
+    if (!user) {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
 
     res.status(200).json({
       status: true,

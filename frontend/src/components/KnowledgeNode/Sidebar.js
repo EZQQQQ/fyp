@@ -1,7 +1,6 @@
 // /frontend/src/components/KnowledgeNode/Sidebar.js
 
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import HomeIcon from "@mui/icons-material/Home";
@@ -10,11 +9,26 @@ import PeopleIcon from "@mui/icons-material/People";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import SidebarLink from "./SidebarLink";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser } from "../../features/userSlice";
+import {
+  fetchCommunities,
+  selectCommunities,
+} from "../../features/communitySlice";
 
 function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const location = useLocation();
+  const user = useSelector(selectUser);
+  const communities = useSelector(selectCommunities);
+  const dispatch = useDispatch();
+
+  // Fetch communities only if the user is authenticated
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchCommunities());
+    }
+  }, [dispatch, user]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -70,7 +84,7 @@ function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={toggleDropdown}
-              className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w-full focus:outline-none ${
+              className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w/full focus:outline-none ${
                 dropdownOpen
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   : "text-gray-700 dark:text-gray-200"
@@ -93,20 +107,33 @@ function Sidebar() {
                 id="communities-dropdown"
                 className="ml-6 mt-2 flex flex-col space-y-1 transition-all duration-300 ease-in-out"
               >
-                {/* Community Links */}
-                <SidebarLink
-                  to="/community/reactjs"
-                  onClick={handleCommunityClick}
-                >
-                  ReactJS
-                </SidebarLink>
-                <SidebarLink
-                  to="/community/javascript"
-                  onClick={handleCommunityClick}
-                >
-                  JavaScript
-                </SidebarLink>
-                {/* Add more communities as needed */}
+                {/* "+ Create a Community" Link for Professors and Admins */}
+                {user &&
+                  (user.role === "admin" || user.role === "professor") && (
+                    <SidebarLink
+                      to="/communities/create"
+                      onClick={handleCommunityClick}
+                    >
+                      + Create a Community
+                    </SidebarLink>
+                  )}
+
+                {/* Dynamically Render Community Links */}
+                {Array.isArray(communities) && communities.length > 0 ? (
+                  communities.map((community) => (
+                    <SidebarLink
+                      key={community._id}
+                      to={`/communities/${community._id}`}
+                      onClick={handleCommunityClick}
+                    >
+                      {community.name}
+                    </SidebarLink>
+                  ))
+                ) : (
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">
+                    No communities found.
+                  </span>
+                )}
               </div>
             )}
           </div>

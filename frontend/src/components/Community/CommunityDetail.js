@@ -9,21 +9,23 @@ const CommunityDetail = () => {
   const { id } = useParams();
   const [community, setCommunity] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchCommunity = async () => {
       try {
         const response = await communityService.getCommunityById(id);
         setCommunity(response.data.data);
-        setLoading(false);
       } catch (error) {
         console.error(
           "Error fetching community:",
           error.response?.data?.message || error.message
         );
+        setError(true);
         toast.error(
           error.response?.data?.message || "Failed to fetch community."
         );
+      } finally {
         setLoading(false);
       }
     };
@@ -39,9 +41,9 @@ const CommunityDetail = () => {
     );
   }
 
-  if (!community) {
+  if (error || !community) {
     return (
-      <p className="text-red-500 dark:text-red-400">Community not found.</p>
+      <p className="text-red-500 dark:text-red-400">Error loading community.</p>
     );
   }
 

@@ -2,14 +2,15 @@
 
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { addCommunity } from "../../features/communitySlice"; // Assuming you have a communitySlice
-import communityService from "../../services/communityService";
+import { createCommunity } from "../../features/communitySlice"; // Use createCommunity thunk
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 const CreateCommunity = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,22 +19,14 @@ const CreateCommunity = () => {
       return;
     }
     try {
-      const response = await communityService.createCommunity({
-        name,
-        description,
-      });
-      dispatch(addCommunity(response.data.data));
-      toast.success("Community created successfully!");
+      await dispatch(createCommunity({ name, description })).unwrap();
       setName("");
       setDescription("");
+      toast.success("Community created successfully!");
+      navigate("/communities"); // Redirect to community list after creation
     } catch (error) {
-      console.error(
-        "Error creating community:",
-        error.response?.data?.message || error.message
-      );
-      toast.error(
-        error.response?.data?.message || "Failed to create community."
-      );
+      // Error handling is already managed in the slice via toast
+      console.error("Error creating community:", error);
     }
   };
 
