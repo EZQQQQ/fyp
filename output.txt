@@ -13,6 +13,8 @@
 │   │   ├── authorize.js
 │   │   ├── errorHandler.js
 │   │   ├── upload.js
+│   │   ├── uploadCommunity.js
+│   │   ├── uploadProfile.js
 │   │   └── validate.js
 │   ├── models
 │   │   ├── Answer.js
@@ -20,6 +22,7 @@
 │   │   ├── Community.js
 │   │   ├── Question.js
 │   │   └── User.js
+│   ├── firebaseAdmin.js
 │   ├── package-lock.json
 │   ├── package.json
 │   ├── routers
@@ -81,7 +84,7 @@
 │   │   │   │   └── Question.js
 │   │   │   ├── Auth
 │   │   │   │   ├── AdminAuth.js
-│   │   │   │   ├── MiccrosoftLogin.js
+│   │   │   │   ├── MicrosoftLogin.js
 │   │   │   │   ├── Unauthorized.js
 │   │   │   │   └── index.js
 │   │   │   ├── Community
@@ -103,6 +106,7 @@
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
 │   │   │   │   └── VoteButtons.js
+│   │   │   ├── Dashboard.js
 │   │   │   ├── ProfileCreation.js
 │   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
