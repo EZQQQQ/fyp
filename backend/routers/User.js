@@ -3,19 +3,29 @@
 const express = require("express");
 const router = express.Router();
 const {
-  validateRegisterUser,
-  validateLoginUser,
-} = require("../middlewares/validate");
+  ssoLoginUser,
+  loginUser,
+  createUserProfile,
+  getUserProfile,
+} = require("../controllers/userController");
 const auth = require("../middlewares/auth");
-const userController = require("../controllers/userController");
+const uploadProfile = require("../middlewares/uploadProfile");
 
-// POST /api/user/register - Register a new user
-router.post("/register", validateRegisterUser, userController.registerUser);
+// SSO Login Route
+router.post("/sso-login", ssoLoginUser);
 
-// POST /api/user/login - Login a user
-router.post("/login", validateLoginUser, userController.loginUser);
+// Admin Login Route
+router.post("/login", loginUser);
 
-// GET /api/user/profile - Get authenticated user's profile
-router.get("/profile", auth, userController.getUserProfile);
+// Create User Profile Route with Profile Photo Upload
+router.post(
+  "/profile",
+  auth,
+  uploadProfile.single("profilePicture"),
+  createUserProfile
+);
+
+// Get User Profile Route
+router.get("/profile", auth, getUserProfile);
 
 module.exports = router;

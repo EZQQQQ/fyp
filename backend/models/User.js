@@ -1,25 +1,35 @@
-// /backend/models/User.js
+// backend/models/User.js
 
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      trim: true,
+    },
+    username: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null values
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      trim: true,
-      lowercase: true,
+    },
+    password: {
+      type: String,
+      // Password is optional for SSO users
     },
     role: {
       type: String,
-      enum: ["admin", "professor", "student"],
+      enum: ["student", "professor", "admin"],
       default: "student",
+    },
+    profilePicture: {
+      type: String,
+      default: "", // URL or path to profile picture
     },
     communities: [
       {
@@ -27,17 +37,8 @@ const userSchema = new mongoose.Schema(
         ref: "Community",
       },
     ],
-    password: {
-      type: String,
-      required: true,
-    },
-    // Example profile picture URL
-    profilePicture: {
-      type: String,
-      default: "", // Default to empty string or a placeholder image URL
-    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", UserSchema);

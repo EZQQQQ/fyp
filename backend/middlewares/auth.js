@@ -14,11 +14,8 @@ const auth = async (req, res, next) => {
     }
 
     const token = authHeader.replace("Bearer ", "").trim();
-
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Find user associated with the token
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ status: false, message: "Invalid token" });

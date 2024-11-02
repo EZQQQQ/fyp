@@ -1,154 +1,200 @@
-// /backend/controllers/userController.js
+// backend/controllers/userController.js
 
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const admin = require("../firebaseAdmin"); // Import Firebase Admin
 
-// Register a new user
-const registerUser = async (req, res) => {
+// Helper function to generate JWT
+const generateToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+};
+
+// SSO Login Controller
+const ssoLoginUser = async (req, res) => {
   try {
-    console.log("Incoming Registration Data:", req.body); // Log incoming data
-    const { name, email, password } = req.body;
+    const { token, isAdmin } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({
-        status: false,
-        message: "Email already in use",
-      });
+    if (!token) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Token is required" });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Verify Firebase token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    const { email, name } = decodedToken;
 
-    // Create new user
-    const newUser = new User({
-      name: name.trim(),
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      // Add other fields as needed
-    });
+    if (!email) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid token: Email not found" });
+    }
 
-    const savedUser = await newUser.save();
-    console.log("User Registered:", savedUser); // Log saved user
+    // Determine user role based on email domain or isAdmin flag
+    let role = "student"; // Default role
+    const emailDomain = email.split("@")[1].toLowerCase();
+    if (emailDomain === "ntu.edu.sg") {
+      role = "professor";
+    }
+    if (isAdmin) {
+      role = "admin";
+    }
 
-    // Generate JWT Token
-    const token = jwt.sign({ id: savedUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    // Find or create user
+    let user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Create new user
+      user = new User({
+        name: name || email.split("@")[0],
+        email: email.toLowerCase(),
+        role,
+        // No password for SSO users
+      });
+      await user.save();
+    } else {
+      // Update role if necessary
+      if (isAdmin && user.role !== "admin") {
+        user.role = "admin";
+        await user.save();
+      }
+    }
 
-    res.status(201).json({
+    // Generate JWT
+    const appToken = generateToken(user._id);
+
+    res.status(200).json({
       status: true,
-      message: "User registered successfully",
-      data: {
-        user: {
-          id: savedUser._id,
-          name: savedUser.name,
-          email: savedUser.email,
-          profilePicture: savedUser.profilePicture,
-        },
-        token,
-      },
+      message: "SSO Login successful",
+      data: { user, token: appToken },
     });
   } catch (err) {
-    console.error("Error registering user:", err);
-    res.status(500).json({
-      status: false,
-      message: "Error registering user",
-      error: err.message,
-    });
+    console.error("SSO Login Error:", err);
+    res
+      .status(500)
+      .json({ status: false, message: "SSO Login failed", error: err.message });
   }
 };
 
-// Login a user
+// Admin Login Controller
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
+    // Validate fields
     if (!email || !password) {
-      return res.status(400).json({
-        status: false,
-        message: "Please provide email and password.",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "Email and password are required" });
     }
 
-    // Find user by email
+    // Find user
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid email or password",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid credentials" });
+    }
+
+    // Check if user is admin
+    if (user.role !== "admin") {
+      return res.status(403).json({ status: false, message: "Access denied" });
     }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid email or password",
-      });
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid credentials" });
     }
 
-    // Generate JWT Token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    // Generate JWT
+    const token = generateToken(user._id);
 
     res.status(200).json({
       status: true,
-      message: "User logged in successfully",
-      data: {
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          profilePicture: user.profilePicture,
-        },
-        token,
-      },
+      message: "Admin login successful",
+      data: { user, token },
     });
   } catch (err) {
-    console.error("Error logging in user:", err);
+    console.error("Admin Login Error:", err);
+    res
+      .status(500)
+      .json({ status: false, message: "Server error", error: err.message });
+  }
+};
+
+// Create User Profile Controller
+const createUserProfile = async (req, res) => {
+  try {
+    const { username } = req.body;
+    let profilePicture = "";
+
+    if (req.file) {
+      profilePicture = `/uploads/${req.file.filename}`;
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    // Check if username is unique
+    const existingUser = await User.findOne({ username: username.trim() });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Username already taken" });
+    }
+
+    // Update user profile
+    user.username = username.trim();
+    if (profilePicture) user.profilePicture = profilePicture;
+    await user.save();
+
+    // Generate new JWT if needed
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      status: true,
+      message: "Profile created successfully",
+      data: { user, token },
+    });
+  } catch (err) {
+    console.error("Profile Creation Error:", err);
     res.status(500).json({
       status: false,
-      message: "Error logging in user",
+      message: "Profile creation failed",
       error: err.message,
     });
   }
 };
 
-// Get authenticated user's profile
+// Get User Profile
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password"); // Exclude password
-
+    const user = await User.findById(req.user.id).select(
+      "-password -communities"
+    );
     if (!user) {
-      return res.status(404).json({
-        status: false,
-        message: "User not found",
-      });
+      return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    res.status(200).json({
-      status: true,
-      data: user,
-    });
+    res.status(200).json({ status: true, data: user });
   } catch (err) {
-    console.error("Error fetching user profile:", err);
+    console.error("Get Profile Error:", err);
     res.status(500).json({
       status: false,
-      message: "Error fetching user profile",
+      message: "Error fetching profile",
       error: err.message,
     });
   }
 };
 
 module.exports = {
-  registerUser,
+  ssoLoginUser,
   loginUser,
+  createUserProfile,
   getUserProfile,
 };

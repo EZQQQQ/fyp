@@ -4,18 +4,20 @@
 require("dotenv").config();
 
 const express = require("express");
+const app = express();
 const cors = require("cors");
 const path = require("path");
-const app = express();
 const bodyParser = require("body-parser");
 const connectToDatabase = require("./db");
 const router = require("./routers");
+const userRoutes = require("./routers/User");
+const communityRoutes = require("./routers/Community");
 const errorHandler = require("./middlewares/errorHandler");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
 
 // Connect to Database
 connectToDatabase();
-
-// Middleware
 
 // CORS Configuration
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
@@ -39,25 +41,20 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json());
 
 // API Routes
+app.use("/api/user", userRoutes); // User routes
+app.use("/api/community", communityRoutes); // Community routes
 app.use("/api", router); // Existing API routes
 
-// Static Resources (if any)
-app.use("/uploads", express.static(path.join(__dirname, "/uploads"))); // Ensure consistency
+// Serve Static Files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Error-Handling Middleware (should be after all other middleware and routes)
-app.use(errorHandler);
-
-// Swagger
-const swaggerUi = require("swagger-ui-express");
-const swaggerJsdoc = require("swagger-jsdoc");
-
-const options = {
+// Swagger Setup
+const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
@@ -68,12 +65,15 @@ const options = {
   apis: ["./routers/*.js"], // Path to the API docs
 };
 
-const specs = swaggerJsdoc(options);
+const specs = swaggerJsdoc(swaggerOptions);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
-// Server Listen
-const PORT = process.env.PORT || 5001;
+// Error Handling Middleware
+app.use(errorHandler);
+
+// Start Server
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

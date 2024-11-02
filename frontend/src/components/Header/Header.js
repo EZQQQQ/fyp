@@ -88,27 +88,6 @@ function Header({ darkMode, setDarkMode }) {
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </button>
 
-            {/* Remove Community Links from Header */}
-            {/*
-            {user && (
-              <Link
-                to="/communities"
-                className="text-gray-800 dark:text-gray-200 hover:underline"
-              >
-                Communities
-              </Link>
-            )}
-
-            {user && ["professor", "admin"].includes(user.role) && (
-              <Link
-                to="/communities/create"
-                className="text-gray-800 dark:text-gray-200 hover:underline"
-              >
-                Create Community
-              </Link>
-            )}
-            */}
-
             {/* User Avatar */}
             <div className="relative">
               <button onClick={handleSignOut} className="focus:outline-none">

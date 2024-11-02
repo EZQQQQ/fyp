@@ -80,6 +80,9 @@
 │   │   │   ├── AddQuestion
 │   │   │   │   └── Question.js
 │   │   │   ├── Auth
+│   │   │   │   ├── AdminAuth.js
+│   │   │   │   ├── MiccrosoftLogin.js
+│   │   │   │   ├── Unauthorized.js
 │   │   │   │   └── index.js
 │   │   │   ├── Community
 │   │   │   │   ├── CommunityCard.js
@@ -100,6 +103,7 @@
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
 │   │   │   │   └── VoteButtons.js
+│   │   │   ├── ProfileCreation.js
 │   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
 │   │   │       ├── TextContent.js

@@ -16,6 +16,10 @@ import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
 import AddQuestion from "./components/AddQuestion/Question";
 import Auth from "./components/Auth";
+import AdminAuth from "./components/Auth/AdminAuth";
+import ProfileCreation from "./components/ProfileCreation";
+import Dashboard from "./components/Dashboard";
+import Unauthorized from "./components/Auth/Unauthorized";
 import "./index.css";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -43,10 +47,8 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    // Check if user is already logged in (e.g., token in localStorage)
     const token = localStorage.getItem("token");
     if (token) {
-      // Dispatch the fetchUserData thunk without parameters
       dispatch(fetchUserData());
     } else {
       dispatch(logout());
@@ -57,10 +59,52 @@ function App() {
     <div className="app">
       <Router>
         <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
         <div className="flex">
           <Sidebar />
           <div className="flex-1 p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
             <Routes>
+              {/* Authentication Route */}
+              <Route path="/auth" element={<Auth />} />
+
+              {/* Admin Authentication Route */}
+              <Route path="/admin/login" element={<AdminAuth />} />
+
+              {/* Profile Creation Route */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfileCreation />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Unauthorized Access Route */}
+              <Route path="/unauthorized" element={<Unauthorized />} />
+
+              {/* Dashboard */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute
+                    requiredRoles={["student", "professor", "admin"]}
+                  >
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Home Route - All Questions */}
               <Route
                 path="/"
@@ -105,7 +149,7 @@ function App() {
               <Route
                 path="/communities/create"
                 element={
-                  <ProtectedRoute requiredRole={["professor", "admin"]}>
+                  <ProtectedRoute requiredRoles={["professor", "admin"]}>
                     <CreateCommunity />
                   </ProtectedRoute>
                 }
@@ -121,26 +165,12 @@ function App() {
                 }
               />
 
-              {/* Authentication Routes */}
-              <Route path="/auth" element={<Auth />} />
-
               {/* Catch-All Route */}
               <Route
                 path="*"
                 element={<Navigate to={user ? "/" : "/auth"} replace />}
               />
             </Routes>
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
           </div>
         </div>
       </Router>
