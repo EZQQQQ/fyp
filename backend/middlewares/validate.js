@@ -124,7 +124,7 @@ module.exports = {
   validateGetAnswers,
   validateAddComment,
   validateGetComments,
-  validateRegisterUser,
-  validateLoginUser,
+  // validateRegisterUser,
+  // validateLoginUser,
   handleValidationResults, // Export this function
 };
