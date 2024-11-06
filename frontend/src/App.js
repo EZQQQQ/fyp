@@ -10,7 +10,7 @@ import {
 import Header from "./components/Header/Header";
 import Sidebar from "./components/KnowledgeNode/Sidebar";
 import CreateCommunity from "./components/Community/CreateCommunity";
-import CommunityList from "./components/Community/CommunityList";
+import CommunityList from "./components/Community/CommunityList"; // Will be repurposed as Explore
 import CommunityDetail from "./components/Community/CommunityDetail";
 import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
@@ -135,12 +135,12 @@ function App() {
                 }
               />
 
-              {/* List All Communities */}
+              {/* Explore Communities */}
               <Route
-                path="/communities"
+                path="/explore"
                 element={
                   <ProtectedRoute>
-                    <CommunityList />
+                    <CommunityList isTileView={true} />{" "}
                   </ProtectedRoute>
                 }
               />

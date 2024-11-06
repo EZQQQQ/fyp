@@ -2,51 +2,77 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { joinCommunity } from "../../features/communitySlice";
+import CommunityAvatar from "./CommunityAvatar"; // Adjust the path
 import { toast } from "react-toastify";
+import config from "../../config"; // Adjust the path as needed
 
-const CommunityCard = ({ community }) => {
-  const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.user);
+const CommunityCard = ({ community, isMember, handleJoin }) => {
+  const backendUrl = config.BACKEND_URL;
 
-  const handleJoin = async () => {
-    try {
-      await dispatch(joinCommunity(community._id)).unwrap();
-      toast.success("Joined community successfully!");
-    } catch (err) {
-      console.error("Error joining community:", err);
-      toast.error(err || "Failed to join community.");
-    }
-  };
+  const communityName = community.name || "Unnamed Community";
+  const creatorName = community.createdBy?.name || "Unknown";
+
+  const creatorAvatar = community.createdBy?.profilePicture
+    ? community.createdBy.profilePicture.startsWith("http")
+      ? community.createdBy.profilePicture
+      : `${backendUrl}${community.createdBy.profilePicture}`
+    : `${backendUrl}/uploads/defaults/default-avatar-user.jpeg`;
+
+  const communityAvatar =
+    community.avatar && community.avatar !== ""
+      ? community.avatar.startsWith("http")
+        ? community.avatar
+        : `${backendUrl}${community.avatar}`
+      : `${backendUrl}/uploads/defaults/default-avatar.jpeg`;
+
+  console.log("Community Avatar:", communityAvatar);
+  console.log("Creator Avatar:", creatorAvatar);
 
   return (
-    <li className="bg-white dark:bg-gray-800 p-4 rounded-md shadow">
-      <div className="flex justify-between items-center">
-        <div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
+      {/* Community Details */}
+      <div className="p-4 flex flex-col flex-grow">
+        {/* Community Name and Avatar */}
+        <div className="flex items-center mb-2">
+          <CommunityAvatar avatarUrl={communityAvatar} name={communityName} />
           <Link
             to={`/communities/${community._id}`}
-            className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            className="ml-2 text-lg sm:text-base font-semibold text-blue-600 dark:text-blue-400 hover:underline"
           >
-            {community.name}
+            {communityName}
           </Link>
-          <p className="text-gray-700 dark:text-gray-300">
-            {community.description}
-          </p>
         </div>
-        {!community.members.includes(user?._id) && user?.role === "student" && (
+
+        {/* Community Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-4 flex-grow">
+          {community.description || "No description provided."}
+        </p>
+
+        {/* Community Creator */}
+        {community.createdBy && (
+          <div className="flex items-center mb-4">
+            <CommunityAvatar avatarUrl={creatorAvatar} name={creatorName} />
+            <span className="ml-2 text-sm sm:text-xs text-gray-700 dark:text-gray-300">
+              Created by {creatorName}
+            </span>
+          </div>
+        )}
+
+        {/* Join Button */}
+        {!isMember ? (
           <button
-            onClick={handleJoin}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            onClick={() => handleJoin(community._id)}
+            className="mt-auto bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 active:bg-green-700 focus:outline-none focus:ring focus:ring-green-300 transition-colors duration-200"
           >
             Join
           </button>
-        )}
-        {community.members.includes(user?._id) && (
-          <span className="text-green-500 font-medium">Joined</span>
+        ) : (
+          <span className="mt-auto inline-block bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+            Joined
+          </span>
         )}
       </div>
-    </li>
+    </div>
   );
 };
 

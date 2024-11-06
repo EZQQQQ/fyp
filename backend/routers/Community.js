@@ -5,19 +5,24 @@ const router = express.Router();
 const auth = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorize"); // If using role-based authorization
 const CommunityController = require("../controllers/communityController");
+const uploadCommunity = require("../middlewares/uploadCommunity");
 
 // Create a new community (Professor and Admin only)
 router.post(
   "/",
-  auth,
-  authorizeRoles("professor", "admin"), // Use role-based middleware
+  auth, // Ensure the user is authenticated
+  uploadCommunity, // Handle 'avatar' and 'files' fields
+  authorizeRoles("professor", "admin"), // Role-based access
   CommunityController.createCommunity
 );
 
 // Get all communities
 router.get("/", auth, CommunityController.getAllCommunities);
 
-// Join a community (Student only)
+// Fetch user's communities
+router.get("/user", auth, CommunityController.getUserCommunities);
+
+// Join a community
 router.post(
   "/:id/join",
   auth,
@@ -25,7 +30,7 @@ router.post(
   CommunityController.joinCommunity
 );
 
-// Optional: Leave a community
+// Leave a community
 router.post(
   "/:id/leave",
   auth,

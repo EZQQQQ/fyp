@@ -25,6 +25,19 @@ export const fetchCommunities = createAsyncThunk(
   }
 );
 
+// Thunk to fetch user's communities
+export const fetchUserCommunities = createAsyncThunk(
+  "communities/fetchUserCommunities",
+  async (_, thunkAPI) => {
+    try {
+      const response = await communityService.getUserCommunities();
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response.data);
+    }
+  }
+);
+
 // Thunk to create a community
 export const createCommunity = createAsyncThunk(
   "communities/createCommunity",
@@ -32,7 +45,7 @@ export const createCommunity = createAsyncThunk(
     try {
       const response = await communityService.createCommunity(communityData);
       if (response.status) {
-        return response.data; // Return the newly created community
+        return response.data.data; // Return the newly created community
       } else {
         return thunkAPI.rejectWithValue("Failed to create community.");
       }
@@ -69,6 +82,8 @@ const communitySlice = createSlice({
   name: "communities",
   initialState: {
     communities: [],
+    userCommunities: [],
+    status: "idle",
     loading: false,
     error: null,
   },
@@ -89,45 +104,54 @@ const communitySlice = createSlice({
       .addCase(fetchCommunities.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        toast.error(action.payload);
+        toast.error(action.payload); // Only for fetching communities
+      })
+
+      // Handle fetchUserCommunities
+      .addCase(fetchUserCommunities.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchUserCommunities.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.userCommunities = action.payload.communities;
+      })
+      .addCase(fetchUserCommunities.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload.message;
       })
 
       // Handle createCommunity
-      .addCase(createCommunity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(createCommunity.fulfilled, (state, action) => {
         state.loading = false;
-        state.communities.push(action.payload); // Add new community to the list
-        toast.success("Community created successfully!");
-      })
-      .addCase(createCommunity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-        toast.error(action.payload);
+        state.communities.push(action.payload); // Add to all communities
+        state.userCommunities.push(action.payload); // Add to user's communities
       })
 
       // Handle joinCommunity
-      .addCase(joinCommunity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(joinCommunity.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally, update specific community data here
-        // For example, updating the members array
-        // This depends on your backend's response structure
-      })
-      .addCase(joinCommunity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-        toast.error(action.payload);
+        // Assuming the backend returns the updated community
+        const updatedCommunity = action.payload;
+        const index = state.communities.findIndex(
+          (community) => community._id === updatedCommunity._id
+        );
+        if (index !== -1) {
+          state.communities[index] = updatedCommunity;
+        }
+        // Add to user's communities if not already present
+        const userCommunityExists = state.userCommunities.some(
+          (community) => community._id === updatedCommunity._id
+        );
+        if (!userCommunityExists) {
+          state.userCommunities.push(updatedCommunity);
+        }
       });
   },
 });
 
 // Selector to access communities from the state
 export const selectCommunities = (state) => state.communities.communities;
+export const selectUserCommunities = (state) =>
+  state.communities.userCommunities;
 
 export default communitySlice.reducer;

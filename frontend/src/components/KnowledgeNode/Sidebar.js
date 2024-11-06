@@ -12,21 +12,22 @@ import SidebarLink from "./SidebarLink";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../features/userSlice";
 import {
-  fetchCommunities,
-  selectCommunities,
+  fetchUserCommunities,
+  selectUserCommunities,
 } from "../../features/communitySlice";
+import CommunityAvatar from "../Community/CommunityAvatar";
 
 function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const user = useSelector(selectUser);
-  const communities = useSelector(selectCommunities);
+  const userCommunities = useSelector(selectUserCommunities);
   const dispatch = useDispatch();
 
-  // Fetch communities only if the user is authenticated
+  // Fetch user's communities only
   useEffect(() => {
     if (user) {
-      dispatch(fetchCommunities());
+      dispatch(fetchUserCommunities());
     }
   }, [dispatch, user]);
 
@@ -84,7 +85,7 @@ function Sidebar() {
           <div className="flex flex-col">
             <button
               onClick={toggleDropdown}
-              className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w/full focus:outline-none ${
+              className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w-full focus:outline-none ${
                 dropdownOpen
                   ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   : "text-gray-700 dark:text-gray-200"
@@ -94,7 +95,7 @@ function Sidebar() {
             >
               <div className="flex items-center">
                 <PeopleIcon className="mr-2" />
-                <span className="font-medium">Communities</span>
+                <span className="font-medium">My Communities</span>
               </div>
               {dropdownOpen ? (
                 <ArrowDropUpIcon className="text-gray-700 dark:text-gray-200" />
@@ -118,20 +119,27 @@ function Sidebar() {
                     </SidebarLink>
                   )}
 
-                {/* Dynamically Render Community Links */}
-                {Array.isArray(communities) && communities.length > 0 ? (
-                  communities.map((community) => (
+                {/* Dynamically Render User's Community Links */}
+                {Array.isArray(userCommunities) &&
+                userCommunities.length > 0 ? (
+                  userCommunities.map((community) => (
                     <SidebarLink
                       key={community._id}
                       to={`/communities/${community._id}`}
                       onClick={handleCommunityClick}
                     >
-                      {community.name}
+                      <div className="flex items-center space-x-2">
+                        <CommunityAvatar
+                          avatarUrl={community.avatar}
+                          name={community.name}
+                        />
+                        <span>{community.name}</span>
+                      </div>
                     </SidebarLink>
                   ))
                 ) : (
                   <span className="text-gray-500 dark:text-gray-400 text-sm">
-                    No communities found.
+                    You are not part of any communities.
                   </span>
                 )}
               </div>

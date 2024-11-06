@@ -3,15 +3,23 @@
 import axiosInstance from "../utils/axiosConfig";
 
 // Create a new community
-const createCommunity = async (communityData) => {
-  const response = await axiosInstance.post("/communities", communityData);
-  return response.data;
+const createCommunity = (formData) => {
+  return axiosInstance.post("/communities", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 };
 
 // Fetch all communities
 const fetchCommunities = async () => {
   const response = await axiosInstance.get("/communities");
   return response.data;
+};
+
+// Fetch user's communities
+const getUserCommunities = () => {
+  return axiosInstance.get("/communities/user");
 };
 
 // Join a community
@@ -37,6 +45,7 @@ const getCommunityById = async (communityId) => {
 export default {
   createCommunity,
   fetchCommunities,
+  getUserCommunities,
   joinCommunity,
   leaveCommunity,
   getCommunityById,

@@ -10,6 +10,20 @@ import PropTypes from "prop-types";
 function QuestionCard({ question, onUpvote, onDownvote }) {
   return (
     <div className="flex flex-col md:flex-row bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+      {/* Community Info */}
+      {question.community && (
+        <div className="flex items-center mb-4 md:mb-0 md:mr-6">
+          <Avatar
+            src={question.community.avatar}
+            alt={question.community.name}
+            className="h-8 w-8 mr-2"
+          />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {question.community.name}
+          </span>
+        </div>
+      )}
+
       {/* Question Stats */}
       <div className="flex md:flex-col items-center justify-between md:justify-start md:mr-6 mb-4 md:mb-0">
         <VoteButtons
@@ -66,6 +80,10 @@ QuestionCard.propTypes = {
     user: PropTypes.shape({
       profilePicture: PropTypes.string,
       name: PropTypes.string,
+    }),
+    community: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      avatar: PropTypes.string, // URL to community avatar
     }),
   }).isRequired,
   onUpvote: PropTypes.func.isRequired,

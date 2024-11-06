@@ -2,6 +2,7 @@
 
 const Community = require("../models/Community");
 const User = require("../models/User");
+const path = require("path");
 
 // Create a new community
 const createCommunity = async (req, res) => {
@@ -9,14 +10,31 @@ const createCommunity = async (req, res) => {
     const { name, description } = req.body;
     const createdBy = req.user._id;
 
+    let avatar = "/uploads/defaults/default-avatar.jpeg"; // Default avatar path
+
+    // Check if avatar was uploaded
+    if (req.files && req.files.avatar && req.files.avatar.length > 0) {
+      // Assuming the server serves static files from '/uploads'
+      avatar = `/uploads/communityAvatars/${req.files.avatar[0].filename}`;
+      console.log("Avatar uploaded:", avatar); // Logging
+    }
+
     const community = new Community({
       name,
       description,
       createdBy,
       members: [createdBy], // Initial member is the creator
+      avatar, // Set avatar path
     });
 
     await community.save();
+
+    // Update the user's communities array
+    const updatedUser = await User.findByIdAndUpdate(
+      createdBy,
+      { $push: { communities: community._id } },
+      { new: true } // Return the updated document
+    );
 
     res.status(201).json({
       status: true,
@@ -25,6 +43,15 @@ const createCommunity = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating community:", error);
+
+    // Check if the error is a duplicate key error for the 'name' field
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+      return res.status(400).json({
+        status: false,
+        message: "Community name already exists.",
+      });
+    }
+
     res.status(500).json({
       status: false,
       message: "Error creating community.",
@@ -54,6 +81,24 @@ const getAllCommunities = async (req, res) => {
   }
 };
 
+// Fetch user's communities
+const getUserCommunities = async (req, res, next) => {
+  try {
+    const communities = await Community.find({
+      members: req.user._id,
+    })
+      .populate("createdBy", "name email")
+      .populate("members", "name email");
+
+    res.status(200).json({
+      status: true,
+      communities,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Join a community
 const joinCommunity = async (req, res) => {
   try {
@@ -76,8 +121,16 @@ const joinCommunity = async (req, res) => {
       });
     }
 
+    // Add user to community's members
     community.members.push(userId);
     await community.save();
+
+    // Add community to user's communities
+    const user = await User.findById(userId);
+    if (!user.communities.includes(communityId)) {
+      user.communities.push(communityId);
+      await user.save();
+    }
 
     res.status(200).json({
       status: true,
@@ -139,6 +192,7 @@ const leaveCommunity = async (req, res) => {
 module.exports = {
   createCommunity,
   getAllCommunities,
+  getUserCommunities,
   joinCommunity,
   leaveCommunity,
 };

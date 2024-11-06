@@ -1,6 +1,6 @@
 // /frontend/src/components/AddQuestion/Question.js
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   TextField,
@@ -9,6 +9,7 @@ import {
   Chip,
   Tabs,
   Tab,
+  Avatar,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -20,13 +21,19 @@ import ImageIcon from "@mui/icons-material/Image";
 import PollIcon from "@mui/icons-material/Poll";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../features/userSlice";
+import {
+  selectCommunities,
+  fetchUserCommunities,
+} from "../../features/communitySlice";
 import axiosInstance from "../../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
 
 function Question() {
   const user = useSelector(selectUser);
+  const communities = useSelector(selectCommunities);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // State variables
@@ -45,12 +52,12 @@ function Question() {
   // Error handling
   const [submissionError, setSubmissionError] = useState("");
 
-  // Communities data (replace with actual data)
-  const communities = [
-    { title: "Community1" },
-    { title: "Community2" },
-    { title: "Community3" },
-  ];
+  useEffect(() => {
+    // Fetch user's communities when component mounts
+    if (user) {
+      dispatch(fetchUserCommunities());
+    }
+  }, [user, dispatch]);
 
   const handleCommunityChange = (event, value) => {
     setCommunity(value);
@@ -141,7 +148,7 @@ function Question() {
 
     try {
       const formData = new FormData();
-      formData.append("community", community ? community.title : "");
+      formData.append("community", community ? community._id : ""); // Assuming community has an _id
       formData.append("title", title.trim());
       formData.append("contentType", contentType);
       formData.append("tags", JSON.stringify(tags));
@@ -201,9 +208,19 @@ function Question() {
         <PeopleIcon className="text-gray-500 dark:text-gray-400 mr-3" />
         <Autocomplete
           options={communities}
-          getOptionLabel={(option) => option.title}
+          getOptionLabel={(option) => option.name} // Assuming community has a 'name' field
           onChange={handleCommunityChange}
           value={community}
+          renderOption={(props, option) => (
+            <li {...props}>
+              <Avatar
+                src={option.avatar}
+                alt={option.name}
+                className="h-6 w-6 mr-2"
+              />
+              {option.name}
+            </li>
+          )}
           renderInput={(params) => (
             <TextField
               {...params}

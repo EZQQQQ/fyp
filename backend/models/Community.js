@@ -5,13 +5,17 @@ const mongoose = require("mongoose");
 const CommunitySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, "Community name is required."],
     unique: true,
     trim: true,
   },
   description: {
     type: String,
-    trim: true,
+    default: "",
+  },
+  avatar: {
+    type: String,
+    default: "/uploads/defaults/default-avatar.jpeg",
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

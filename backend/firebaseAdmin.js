@@ -3,9 +3,6 @@
 const admin = require("firebase-admin");
 require("dotenv").config(); // Ensure environment variables are loaded
 
-// Temporary Debugging
-console.log("Private Key:", process.env.FIREBASE_PRIVATE_KEY);
-
 // Initialize Firebase Admin SDK with environment variables
 admin.initializeApp({
   credential: admin.credential.cert({

@@ -1,10 +1,8 @@
 import axios from "axios";
+import config from "../config";
 
-// Define API Base URL from environment variables
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5001/api";
+const API_BASE_URL = `${config.BACKEND_URL}/api`;
 
-// Create a centralized Axios instance
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true, // Include cookies if needed

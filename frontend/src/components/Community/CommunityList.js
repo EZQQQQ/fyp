@@ -8,10 +8,11 @@ import {
   selectCommunities,
 } from "../../features/communitySlice";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify"; // Ensure correct import
+import { toast, ToastContainer } from "react-toastify"; // Ensure ToastContainer is included
 import "react-toastify/dist/ReactToastify.css";
+import CommunityCard from "./CommunityCard"; // Ensure you have a CommunityCard component
 
-const CommunityList = () => {
+const CommunityList = ({ isTileView = false }) => {
   const dispatch = useDispatch();
   const communities = useSelector(selectCommunities);
   const loading = useSelector((state) => state.communities.loading);
@@ -19,10 +20,8 @@ const CommunityList = () => {
   const user = useSelector((state) => state.user.user); // Assuming user state
 
   useEffect(() => {
-    if (communities.length === 0) {
-      dispatch(fetchCommunities());
-    }
-  }, [dispatch, communities.length]);
+    dispatch(fetchCommunities());
+  }, [dispatch]);
 
   const handleJoin = async (communityId) => {
     try {
@@ -47,50 +46,83 @@ const CommunityList = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-        Communities
+    <div className="max-w-7xl mx-auto p-6">
+      <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
+        {isTileView ? "Explore Communities" : "Communities"}
       </h2>
       {communities.length === 0 ? (
         <p className="text-gray-500 dark:text-gray-400">
           No communities available.
         </p>
+      ) : isTileView ? (
+        // Tile (Grid) View
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {communities.map((community) => {
+            // Check if user is a member
+            const isMember = community.members.some(
+              (member) => member._id === user?._id
+            );
+
+            return (
+              <CommunityCard
+                key={community._id}
+                community={community}
+                isMember={isMember}
+                handleJoin={handleJoin}
+              />
+            );
+          })}
+        </div>
       ) : (
+        // List View
         <ul className="space-y-4">
-          {communities.map((community) => (
-            <li
-              key={community._id}
-              className="bg-white dark:bg-gray-800 p-4 rounded-md shadow"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <Link
-                    to={`/communities/${community._id}`}
-                    className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    {community.name}
-                  </Link>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    {community.description}
-                  </p>
-                </div>
-                {!community.members.includes(user?._id) &&
-                  user?.role === "student" && (
-                    <button
-                      onClick={() => handleJoin(community._id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+          {communities.map((community) => {
+            // Check if user is a member
+            const isMember = community.members.some(
+              (member) => member._id === user?._id
+            );
+
+            return (
+              <li
+                key={community._id}
+                className="bg-white dark:bg-gray-800 p-4 rounded-md shadow"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <Link
+                      to={`/communities/${community._id}`}
+                      className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                     >
-                      Join
-                    </button>
+                      {community.name}
+                    </Link>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {community.description}
+                    </p>
+                  </div>
+                  {user && (
+                    <>
+                      {!isMember && user.role === "student" && (
+                        <button
+                          onClick={() => handleJoin(community._id)}
+                          className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                        >
+                          Join
+                        </button>
+                      )}
+                      {isMember && (
+                        <span className="text-green-500 font-medium">
+                          Joined
+                        </span>
+                      )}
+                    </>
                   )}
-                {community.members.includes(user?._id) && (
-                  <span className="text-green-500 font-medium">Joined</span>
-                )}
-              </div>
-            </li>
-          ))}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
+      <ToastContainer /> {/* Ensure ToastContainer is included */}
     </div>
   );
 };

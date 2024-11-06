@@ -47,7 +47,7 @@ app.use(express.json());
 
 // API Routes
 app.use("/api/user", userRoutes); // User routes
-app.use("/api/community", communityRoutes); // Community routes
+app.use("/api/communities", communityRoutes); // Community routes
 app.use("/api", router); // Existing API routes
 
 // Serve Static Files

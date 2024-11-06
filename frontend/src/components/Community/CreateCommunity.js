@@ -5,12 +5,42 @@ import { useDispatch } from "react-redux";
 import { createCommunity } from "../../features/communitySlice"; // Use createCommunity thunk
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { Button, TextField, Avatar } from "@mui/material";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
 
 const CreateCommunity = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+      ];
+      const maxSize = 4 * 1024 * 1024; // 4MB
+
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Only JPEG, JPG, PNG, and GIF files are allowed!");
+        return;
+      }
+
+      if (file.size > maxSize) {
+        toast.error("File size exceeds 4MB!");
+        return;
+      }
+
+      setAvatar(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,14 +49,27 @@ const CreateCommunity = () => {
       return;
     }
     try {
-      await dispatch(createCommunity({ name, description })).unwrap();
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("description", description.trim());
+      if (avatar) {
+        formData.append("avatar", avatar); // Ensure the field name is 'avatar'
+      }
+
+      await dispatch(createCommunity(formData)).unwrap();
       setName("");
       setDescription("");
+      setAvatar(null);
+      setAvatarPreview(null);
       toast.success("Community created successfully!");
       navigate("/communities"); // Redirect to community list after creation
     } catch (error) {
-      // Error handling is already managed in the slice via toast
       console.error("Error creating community:", error);
+      if (error === "Community name already exists.") {
+        toast.error("Community name already exists.");
+      } else {
+        toast.error("Error creating community.");
+      }
     }
   };
 
@@ -40,7 +83,7 @@ const CreateCommunity = () => {
           <label className="block text-gray-700 dark:text-gray-300 mb-2">
             Community Name
           </label>
-          <input
+          <TextField
             type="text"
             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={name}
@@ -60,6 +103,36 @@ const CreateCommunity = () => {
             placeholder="Enter community description"
             rows="4"
           ></textarea>
+        </div>
+        {/* Avatar Upload */}
+        <div className="mb-4">
+          <label className="block text-gray-700 dark:text-gray-300 mb-2">
+            Community Icon (Optional)
+          </label>
+          <div className="flex items-center">
+            <Avatar
+              src={avatarPreview}
+              alt="Community Icon"
+              className="h-12 w-12 mr-4"
+            />
+            <label htmlFor="avatar-upload">
+              <input
+                accept="image/*"
+                id="avatar-upload"
+                type="file"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                component="span"
+                startIcon={<PhotoCamera />}
+              >
+                Upload Icon
+              </Button>
+            </label>
+          </div>
         </div>
         <button
           type="submit"
