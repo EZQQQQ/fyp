@@ -15,7 +15,7 @@ const CommunitySchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
-    default: "/uploads/defaults/default-avatar.jpeg",
+    default: "",
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

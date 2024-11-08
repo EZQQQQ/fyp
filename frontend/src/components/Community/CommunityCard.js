@@ -2,31 +2,37 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import CommunityAvatar from "./CommunityAvatar"; // Adjust the path
+import CommunityAvatar from "./CommunityAvatar";
 import { toast } from "react-toastify";
-import config from "../../config"; // Adjust the path as needed
 
 const CommunityCard = ({ community, isMember, handleJoin }) => {
-  const backendUrl = config.BACKEND_URL;
+  const backendUrl =
+    process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
 
   const communityName = community.name || "Unnamed Community";
   const creatorName = community.createdBy?.name || "Unknown";
 
-  const creatorAvatar = community.createdBy?.profilePicture
-    ? community.createdBy.profilePicture.startsWith("http")
-      ? community.createdBy.profilePicture
-      : `${backendUrl}${community.createdBy.profilePicture}`
-    : `${backendUrl}/uploads/defaults/default-avatar-user.jpeg`;
+  // Handle creator's avatar
+  let creatorAvatar = community.createdBy?.profilePicture;
 
-  const communityAvatar =
-    community.avatar && community.avatar !== ""
-      ? community.avatar.startsWith("http")
-        ? community.avatar
-        : `${backendUrl}${community.avatar}`
-      : `${backendUrl}/uploads/defaults/default-avatar.jpeg`;
+  if (creatorAvatar) {
+    // User-uploaded avatar from backend
+    creatorAvatar = `${backendUrl}${creatorAvatar}`;
+  } else {
+    // Default avatar from frontend public directory
+    creatorAvatar = "/uploads/defaults/default-avatar-user.jpeg";
+  }
 
-  console.log("Community Avatar:", communityAvatar);
-  console.log("Creator Avatar:", creatorAvatar);
+  // Handle community's avatar
+  let communityAvatar = community.avatar;
+
+  if (communityAvatar) {
+    // User-uploaded avatar from backend
+    communityAvatar = `${backendUrl}${communityAvatar}`;
+  } else {
+    // Default avatar from frontend public directory
+    communityAvatar = "/uploads/defaults/default-avatar.jpeg";
+  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
@@ -44,7 +50,7 @@ const CommunityCard = ({ community, isMember, handleJoin }) => {
         </div>
 
         {/* Community Description */}
-        <p className="text-gray-600 dark:text-gray-300 mb-4 flex-grow">
+        <p className="text-gray-600 dark:text-gray-300 mb-4 flex-grow line-clamp-3">
           {community.description || "No description provided."}
         </p>
 

@@ -68,6 +68,7 @@ function AllQuestions() {
     const fetchQuestions = async () => {
       try {
         const response = await axiosInstance.get("/question");
+        console.log("Fetched questions:", response.data.data);
         setQuestions(response.data.data || []);
         // Initialize vote data in Redux
         response.data.data.forEach((question) => {

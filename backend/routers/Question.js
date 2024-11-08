@@ -34,7 +34,7 @@ router.post(
   questionController.createQuestion
 );
 
-// @route GET /api/question
+// @route GET /api/question/
 // @desc Get all questions
 router.get("/", auth, questionController.getAllQuestions);
 

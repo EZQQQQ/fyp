@@ -5,7 +5,8 @@ const mongoose = require("mongoose");
 const QuestionSchema = new mongoose.Schema(
   {
     community: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Community",
       required: true,
     },
     title: {

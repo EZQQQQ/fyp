@@ -29,7 +29,7 @@ const UserSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      default: "", // URL or path to profile picture
+      default: "",
     },
     communities: [
       {

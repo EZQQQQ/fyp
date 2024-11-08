@@ -3,7 +3,6 @@
 import React from "react";
 import { Avatar } from "@mui/material";
 import PropTypes from "prop-types";
-import config from "../../config"; // Adjust the path as needed
 
 const CommunityAvatar = ({ avatarUrl, name }) => {
   const initial =
@@ -11,16 +10,33 @@ const CommunityAvatar = ({ avatarUrl, name }) => {
       ? name.charAt(0).toUpperCase()
       : "";
 
-  // Construct the full avatar URL if needed
-  const fullAvatarUrl = avatarUrl.startsWith("/")
-    ? `${config.BACKEND_URL}${avatarUrl}`
-    : avatarUrl;
+  // Construct the full avatar URL
+  let fullAvatarUrl = avatarUrl;
+
+  if (
+    avatarUrl &&
+    avatarUrl.startsWith("/uploads/") &&
+    !avatarUrl.includes("/defaults/")
+  ) {
+    // User-uploaded avatar from backend
+    fullAvatarUrl = `${process.env.REACT_APP_BACKEND_URL}${avatarUrl}`;
+  } else {
+    // Default avatar from frontend public directory
+    fullAvatarUrl = avatarUrl || "/uploads/defaults/default-avatar.jpeg";
+  }
+
+  // Handle image loading errors
+  const handleError = (e) => {
+    e.target.onerror = null; // Prevents infinite loop
+    e.target.src = "/uploads/defaults/default-avatar.jpeg";
+  };
 
   return (
     <Avatar
       src={fullAvatarUrl}
       alt={name || "Community Avatar"}
       className="h-8 w-8"
+      onError={handleError}
     >
       {initial}
     </Avatar>
@@ -28,7 +44,7 @@ const CommunityAvatar = ({ avatarUrl, name }) => {
 };
 
 CommunityAvatar.propTypes = {
-  avatarUrl: PropTypes.string.isRequired,
+  avatarUrl: PropTypes.string,
   name: PropTypes.string.isRequired,
 };
 

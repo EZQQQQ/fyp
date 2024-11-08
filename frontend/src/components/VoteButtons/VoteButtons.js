@@ -1,6 +1,7 @@
 // /frontend/src/components/VoteButtons/VoteButtons.js
 
 import React from "react";
+import { IconButton } from "@mui/material";
 import { ArrowUpward, ArrowDownward } from "@mui/icons-material";
 import PropTypes from "prop-types";
 
@@ -12,38 +13,26 @@ function VoteButtons({
   userHasDownvoted,
 }) {
   return (
-    <div className="flex flex-col items-center">
-      <button
+    <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 space-x-1">
+      <IconButton
         onClick={onUpvote}
-        className={`p-1 ${
-          userHasUpvoted
-            ? "text-blue-400 cursor-pointer"
-            : "text-gray-500 hover:text-blue-300"
-        }`}
-        title={
-          userHasUpvoted ? "Click to remove your upvote" : "Click to upvote"
-        }
+        size="small"
+        color={userHasUpvoted ? "primary" : "default"}
+        className="p-0"
+        title={userHasUpvoted ? "Remove upvote" : "Upvote"}
       >
-        <ArrowUpward />
-      </button>
-      <p className="text-xl font-semibold text-gray-900 dark:text-gray-100 my-1">
-        {voteCount || 0}
-      </p>
-      <button
+        <ArrowUpward fontSize="small" />
+      </IconButton>
+      <span className="text-sm font-medium">{voteCount || 0}</span>
+      <IconButton
         onClick={onDownvote}
-        className={`p-1 ${
-          userHasDownvoted
-            ? "text-red-400 cursor-pointer"
-            : "text-gray-500 hover:text-red-300"
-        }`}
-        title={
-          userHasDownvoted
-            ? "Click to remove your downvote"
-            : "Click to downvote"
-        }
+        size="small"
+        color={userHasDownvoted ? "secondary" : "default"}
+        className="p-0"
+        title={userHasDownvoted ? "Remove downvote" : "Downvote"}
       >
-        <ArrowDownward />
-      </button>
+        <ArrowDownward fontSize="small" />
+      </IconButton>
     </div>
   );
 }

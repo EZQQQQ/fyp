@@ -9,9 +9,11 @@ const cors = require("cors");
 const path = require("path");
 const bodyParser = require("body-parser");
 const connectToDatabase = require("./db");
-const router = require("./routers");
 const userRoutes = require("./routers/User");
 const communityRoutes = require("./routers/Community");
+const questionRoutes = require("./routers/Question");
+const answerRoutes = require("./routers/Answer");
+const commentRoutes = require("./routers/Comment");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -47,8 +49,10 @@ app.use(express.json());
 
 // API Routes
 app.use("/api/user", userRoutes); // User routes
+app.use("/api/answer", answerRoutes); // Answer routes
+app.use("/api/comment", commentRoutes); // Comment routes
 app.use("/api/communities", communityRoutes); // Community routes
-app.use("/api", router); // Existing API routes
+app.use("/api/question", questionRoutes); // Mount Question routes under /api/question
 
 // Serve Static Files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

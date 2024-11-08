@@ -1,6 +1,8 @@
 // /backend/controllers/questionController.js
 
 const Question = require("../models/Question");
+const Answer = require("../models/Answer");
+const Comment = require("../models/Comment");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
@@ -45,32 +47,59 @@ const createQuestion = async (req, res) => {
 };
 
 const getAllQuestions = async (req, res) => {
+  console.log("getAllQuestions function called");
   try {
     const userId = req.user._id; // Extract userId from authenticated user
 
     const questions = await Question.find()
       .populate("user", "name profilePicture")
-      .sort({ createdAt: -1 }) // Adjust as needed
-      .lean(); // Convert to plain JavaScript objects
+      .populate("community", "name avatar")
+      .sort({ createdAt: -1 });
 
-    // Add vote status to each question
-    const questionsWithVoteStatus = questions.map((question) => ({
-      ...question,
-      userHasUpvoted: question.upvoters
-        ? question.upvoters.some(
-            (voterId) => voterId.toString() === userId.toString()
-          )
-        : false,
-      userHasDownvoted: question.downvoters
-        ? question.downvoters.some(
-            (voterId) => voterId.toString() === userId.toString()
-          )
-        : false,
-    }));
+    // Log to check if questions are populated
+    console.log("Questions after populate:", questions);
+
+    // Add vote status and counts to each question
+    const questionsWithExtras = await Promise.all(
+      questions.map(async (question) => {
+        const userHasUpvoted = question.upvoters
+          ? question.upvoters.some(
+              (voterId) => voterId.toString() === userId.toString()
+            )
+          : false;
+        const userHasDownvoted = question.downvoters
+          ? question.downvoters.some(
+              (voterId) => voterId.toString() === userId.toString()
+            )
+          : false;
+
+        // Use 'question_id' in your queries
+        const answersCount = await Answer.countDocuments({
+          question_id: question._id,
+        });
+        const commentsCount = await Comment.countDocuments({
+          question_id: question._id,
+        });
+
+        // Convert Mongoose document to plain object
+        const questionObj = question.toObject();
+
+        // Log the individual question to check if community is populated
+        console.log("Question with populated community:", questionObj);
+
+        return {
+          ...questionObj,
+          userHasUpvoted,
+          userHasDownvoted,
+          answersCount,
+          commentsCount,
+        };
+      })
+    );
 
     res.status(200).json({
       status: true,
-      data: questionsWithVoteStatus,
+      data: questionsWithExtras,
     });
   } catch (err) {
     console.error("Error fetching questions:", err);
@@ -89,6 +118,7 @@ const getQuestionById = async (req, res) => {
 
     const question = await Question.findById(id)
       .populate("user", "name profilePicture")
+      .populate("community", "name avatar") // Ensure community is populated
       .populate({
         path: "answers",
         populate: { path: "user", select: "name profilePicture" },
