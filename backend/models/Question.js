@@ -79,4 +79,7 @@ QuestionSchema.virtual("comments", {
   foreignField: "question_id",
 });
 
+// Create text index
+QuestionSchema.index({ title: "text", content: "text", tags: "text" });
+
 module.exports = mongoose.model("Question", QuestionSchema);

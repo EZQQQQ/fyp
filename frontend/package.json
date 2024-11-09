@@ -2,7 +2,7 @@
   "name": "fyp",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://localhost:5001",
+  "proxy": "http://localhost:5001",
   "dependencies": {
     "@azure/msal-browser": "^3.26.1",
     "@azure/msal-react": "^2.1.1",
@@ -39,6 +39,7 @@
     "react-tag-input-component": "^2.0.2",
     "react-toastify": "^10.0.6",
     "react-typed": "^2.0.12",
+    "redux-persist": "^6.0.0",
     "rehype-highlight": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "web-vitals": "^2.1.4"

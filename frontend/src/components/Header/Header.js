@@ -1,31 +1,30 @@
-// /frontend/src/components/Header/Header.js
+// frontend/src/components/Header/Header.js
 
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications"; // Import NotificationsIcon
-import { Avatar, IconButton } from "@mui/material"; // Import IconButton
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import { Avatar, IconButton } from "@mui/material";
 import Logo from "../../assets/logo.png";
 import LogoMobile from "../../assets/logo-downsized.png";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser, logout } from "../../features/userSlice";
 import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebase-config";
+import SearchBar from "../Search/Searchbar";
 
 function Header({ darkMode, setDarkMode, toggleSidebar }) {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Handle user sign out
   const handleSignOut = () => {
     if (user) {
       signOut(auth)
         .then(() => {
           dispatch(logout());
-          console.log("User signed out");
           navigate("/auth");
         })
         .catch((error) => {
@@ -67,70 +66,45 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
             </Link>
           </div>
 
-          {/* Search Bar (Visible on medium and larger screens) */}
-          <div className="hidden md:block w-1/2">
-            <div className="relative text-gray-600 dark:text-gray-300">
-              <input
-                type="search"
-                name="search"
-                placeholder="Search..."
-                className="bg-gray-100 dark:bg-gray-700 h-10 px-5 pr-10 rounded-full text-sm focus:outline-none focus:bg-white dark:focus:bg-gray-600 w-full"
-              />
-              <button
-                type="submit"
-                className="absolute right-0 top-0 mt-3 mr-4"
-                aria-label="Search"
-              >
-                <svg
-                  className="h-4 w-4 fill-current"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 56.966 56.966"
-                >
-                  <path
-                    d="M55.146,51.887L41.588,38.329c3.486-4.074,5.597-9.297,5.597-14.829
-                    c0-12.682-10.318-23-23-23s-23,10.318-23,23s10.318,23,23,23
-                    c5.532,0,10.754-2.111,14.829-5.597l13.558,13.558
-                    c0.779,0.779,2.047,0.779,2.826,0l2.829-2.829
-                    C55.925,53.934,55.925,52.666,55.146,51.887z 
-                    M23,36c-8.284,0-15-6.716-15-15s6.716-15,15-15
-                    s15,6.716,15,15S31.284,36,23,36z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          {/* Conditionally Render Search Bar and Right Side Only If User is Authenticated */}
+          {user && (
+            <>
+              {/* Search Bar */}
+              <SearchBar />
 
-          {/* Right Side */}
-          <div className="flex items-center space-x-4">
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl"
-              aria-label="Toggle Dark Mode"
-            >
-              {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-            </button>
-            {/* Notification Icon */}
-            <IconButton
-              aria-label="Notifications"
-              className="text-gray-800 dark:text-gray-200"
-              size="large"
-            >
-              <NotificationsIcon fontSize="medium" />{" "}
-              {/* Increased icon size */}
-            </IconButton>
-            {/* User Avatar */}
-            <div className="relative">
-              <Avatar
-                src={
-                  user?.photo || "/uploads/defaults/default-avatar-user.jpeg"
-                }
-                alt={user?.displayName || "Default Avatar"}
-                className="cursor-pointer border border-gray-300"
-                onClick={handleSignOut}
-              />
-            </div>
-          </div>
+              {/* Right Side */}
+              <div className="flex items-center space-x-4">
+                {/* Dark Mode Toggle */}
+                <button
+                  onClick={() => setDarkMode(!darkMode)}
+                  className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl"
+                  aria-label="Toggle Dark Mode"
+                >
+                  {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+                </button>
+                {/* Notification Icon */}
+                <IconButton
+                  aria-label="Notifications"
+                  className="text-gray-800 dark:text-gray-200"
+                  size="large"
+                >
+                  <NotificationsIcon fontSize="medium" />
+                </IconButton>
+                {/* User Avatar */}
+                <div className="relative">
+                  <Avatar
+                    src={
+                      user?.photo ||
+                      "/uploads/defaults/default-avatar-user.jpeg"
+                    }
+                    alt={user?.displayName || "Default Avatar"}
+                    className="cursor-pointer border border-gray-300"
+                    onClick={handleSignOut}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>

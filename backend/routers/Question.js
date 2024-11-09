@@ -45,12 +45,10 @@ router.get(
   questionController.getUserQuestions
 );
 
-// Route to get questions by community ID
-router.get(
-  "/communities/:id/questions",
-  auth,
-  questionController.getQuestionsByCommunity
-);
+// Search Questions Route
+// @route GET /api/question/search
+// @desc Search questions with fuzzy matching
+router.get("/search", auth, questionController.searchQuestions);
 
 // @route GET /api/question/:id
 // @desc Get a specific question

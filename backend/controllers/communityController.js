@@ -85,24 +85,27 @@ const getAllCommunities = async (req, res) => {
   }
 };
 
-// Fetch user's communities
-const getUserCommunities = async (req, res, next) => {
+// Get User Communities Controller
+const getUserCommunities = async (req, res) => {
   try {
+    const userId = req.user.id; // Retrieved from authenticate middleware
+
     const communities = await Community.find({
-      members: req.user._id,
-    })
-      .populate("createdBy", "name email")
-      .populate("members", "name email");
+      members: { $in: [userId] }, // Check if user is a member
+    }).populate("createdBy", "name email");
 
     res.status(200).json({
       status: true,
       communities,
     });
   } catch (error) {
-    next(error);
+    console.error("Error fetching user communities:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error.",
+    });
   }
 };
-
 // Join a community
 const joinCommunity = async (req, res) => {
   try {

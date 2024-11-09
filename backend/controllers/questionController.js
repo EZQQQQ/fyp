@@ -1,17 +1,47 @@
 // /backend/controllers/questionController.js
 
+const mongoose = require("mongoose");
 const Question = require("../models/Question");
 const Community = require("../models/Community");
 const Answer = require("../models/Answer");
 const Comment = require("../models/Comment");
-const mongoose = require("mongoose");
-const multer = require("multer");
-const path = require("path");
 
+/**
+ * Helper function to escape special regex characters in user input
+ * to prevent regex injection attacks.
+ */
+const escapeRegex = (text) => {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
+
+/**
+ * Create a new question.
+ */
 const createQuestion = async (req, res) => {
   try {
     const { community, title, contentType, content, pollOptions, tags } =
       req.body;
+
+    // Validate required fields
+    if (!community || !title || !contentType || !content) {
+      return res.status(400).json({
+        status: false,
+        message: "Community, title, contentType, and content are required.",
+      });
+    }
+
+    // Validate if the user is a member of the specified community
+    const isMember = await Community.exists({
+      _id: community,
+      members: req.user.id,
+    });
+
+    if (!isMember) {
+      return res.status(403).json({
+        status: false,
+        message: "You are not a member of the specified community.",
+      });
+    }
 
     const files = req.files ? req.files.map((file) => file.filename) : [];
 
@@ -47,11 +77,31 @@ const createQuestion = async (req, res) => {
   }
 };
 
+/**
+ * Get all questions.
+ * Note: Depending on your application's requirements, you might want to restrict this
+ * to only the communities the user is a member of or implement pagination.
+ */
 const getAllQuestions = async (req, res) => {
   try {
     const userId = req.user._id; // Extract userId from authenticated user
 
-    const questions = await Question.find()
+    // Fetch questions from communities the user is a member of
+    const userCommunities = await Community.find({ members: userId }).select(
+      "_id"
+    );
+
+    if (!userCommunities || userCommunities.length === 0) {
+      return res.status(200).json({
+        status: true,
+        data: [],
+        message: "You are not a member of any communities.",
+      });
+    }
+
+    const communityIds = userCommunities.map((c) => c._id);
+
+    const questions = await Question.find({ community: { $in: communityIds } })
       .populate("user", "name profilePicture")
       .populate("community", "name avatar")
       .sort({ createdAt: -1 });
@@ -70,7 +120,6 @@ const getAllQuestions = async (req, res) => {
             )
           : false;
 
-        // Use 'question_id' in your queries
         const answersCount = await Answer.countDocuments({
           question_id: question._id,
         });
@@ -105,7 +154,9 @@ const getAllQuestions = async (req, res) => {
   }
 };
 
-// New Function: Get Questions from User's Communities
+/**
+ * Get questions from user's communities.
+ */
 const getUserQuestions = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -170,10 +221,21 @@ const getUserQuestions = async (req, res) => {
   }
 };
 
+/**
+ * Get a question by its ID.
+ */
 const getQuestionById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user._id; // Extracting userId from authenticated user
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid question ID format.",
+      });
+    }
 
     const question = await Question.findById(id)
       .populate("user", "name profilePicture")
@@ -192,6 +254,20 @@ const getQuestionById = async (req, res) => {
       return res.status(404).json({
         status: false,
         message: "Question not found",
+      });
+    }
+
+    // Check if the user is a member of the community containing the question
+    const isMember = await Community.exists({
+      _id: question.community._id,
+      members: userId,
+    });
+
+    if (!isMember) {
+      return res.status(403).json({
+        status: false,
+        message:
+          "You are not a member of the community containing this question.",
       });
     }
 
@@ -245,6 +321,9 @@ const getQuestionById = async (req, res) => {
   }
 };
 
+/**
+ * Get questions by community ID.
+ */
 const getQuestionsByCommunity = async (req, res) => {
   try {
     const communityId = req.params.id;
@@ -255,6 +334,19 @@ const getQuestionsByCommunity = async (req, res) => {
       return res
         .status(400)
         .json({ status: false, message: "Invalid Community ID format" });
+    }
+
+    // Check if the user is a member of the specified community
+    const isMember = await Community.exists({
+      _id: communityId,
+      members: userId,
+    });
+
+    if (!isMember) {
+      return res.status(403).json({
+        status: false,
+        message: "You are not a member of this community.",
+      });
     }
 
     const questions = await Question.find({ community: communityId })
@@ -302,10 +394,203 @@ const getQuestionsByCommunity = async (req, res) => {
   }
 };
 
+/**
+ * Search Questions Controller
+ * Implements search within communities the user is a member of.
+ */
+const searchQuestions = async (req, res) => {
+  try {
+    console.log("Received search request with:", req.query);
+    const { query, community } = req.query;
+    const userId = req.user.id; // Ensure userId is obtained correctly
+
+    // Validate 'query' parameter
+    if (!query || query.trim() === "") {
+      return res.status(400).json({
+        status: false,
+        message: "Query parameter is required.",
+      });
+    }
+
+    // Initialize aggregation pipeline
+    const pipeline = [];
+
+    // Handle 'community' parameter
+    if (community && community.toLowerCase() !== "all") {
+      // User specified a specific community
+      if (!mongoose.Types.ObjectId.isValid(community)) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid community ID.",
+        });
+      }
+
+      // Check if the user is a member of the specified community
+      const isMember = await Community.exists({
+        _id: community,
+        members: userId,
+      });
+
+      if (!isMember) {
+        // User is not a member; deny access to search within this community
+        return res.status(403).json({
+          status: false,
+          message: "You are not a member of this community.",
+        });
+      }
+
+      // Add a match stage to filter questions within the specified community
+      pipeline.push({
+        $match: { community: mongoose.Types.ObjectId(community) },
+      });
+    } else {
+      // 'community=all' or no community specified; restrict to user's communities
+
+      // Fetch communities the user is a member of
+      const userCommunities = await Community.find({ members: userId }).select(
+        "_id"
+      );
+
+      if (!userCommunities || userCommunities.length === 0) {
+        // User is not a member of any communities; return empty results
+        return res.status(200).json({
+          status: true,
+          data: [],
+          message: "You are not a member of any communities.",
+        });
+      }
+
+      const communityIds = userCommunities.map((c) => c._id);
+
+      // Add a match stage to filter questions within the user's communities
+      pipeline.push({
+        $match: { community: { $in: communityIds } },
+      });
+    }
+
+    // Escape user input to prevent regex injection
+    const escapedQuery = escapeRegex(query);
+
+    // Create regex patterns for case-insensitive partial matching
+    const titleRegex = new RegExp(escapedQuery, "i"); // Case-insensitive
+    const contentRegex = new RegExp(escapedQuery, "i"); // Case-insensitive
+
+    // Add a match stage for title, content, and exact tag matches
+    pipeline.push({
+      $match: {
+        $or: [
+          { title: { $regex: titleRegex } }, // Partial title match
+          { content: { $regex: contentRegex } }, // Partial content match
+          { tags: query }, // Exact tag match
+        ],
+      },
+    });
+
+    // Add a 'score' field to determine relevance based on match type
+    pipeline.push({
+      $addFields: {
+        score: {
+          $add: [
+            {
+              $cond: [
+                { $in: [query, "$tags"] }, // Exact match in tags
+                3,
+                0,
+              ],
+            },
+            {
+              $cond: [
+                { $regexMatch: { input: "$title", regex: titleRegex } }, // Partial title match
+                2,
+                0,
+              ],
+            },
+            {
+              $cond: [
+                { $regexMatch: { input: "$content", regex: contentRegex } }, // Partial content match
+                1,
+                0,
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    // Sort results by 'score' in descending order to prioritize relevance
+    pipeline.push({ $sort: { score: -1 } });
+
+    // Populate the 'user' field
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    });
+    pipeline.push({ $unwind: "$user" });
+
+    // Populate the 'community' field
+    pipeline.push({
+      $lookup: {
+        from: "communities",
+        localField: "community",
+        foreignField: "_id",
+        as: "community",
+      },
+    });
+    pipeline.push({ $unwind: "$community" });
+
+    // Project only necessary fields to optimize performance
+    pipeline.push({
+      $project: {
+        title: 1,
+        content: 1,
+        tags: 1,
+        user: { name: 1, profilePicture: 1 },
+        community: { name: 1, avatar: 1 },
+        upvoters: 1,
+        downvoters: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        score: 1, // Optional: Include for debugging or frontend use
+      },
+    });
+
+    console.log("Aggregation Pipeline:", JSON.stringify(pipeline, null, 2));
+
+    // Execute aggregation pipeline
+    const questions = await Question.aggregate(pipeline).exec();
+
+    console.log("Questions found:", questions.length);
+
+    // Add vote status for the user
+    const results = questions.map((question) => ({
+      ...question,
+      userHasUpvoted: question.upvoters.includes(userId),
+      userHasDownvoted: question.downvoters.includes(userId),
+    }));
+
+    res.status(200).json({
+      status: true,
+      data: results,
+    });
+  } catch (error) {
+    console.error("Error searching questions:", error);
+    res.status(500).json({
+      status: false,
+      message: "Internal Server Error.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestion,
   getAllQuestions,
   getUserQuestions,
   getQuestionById,
   getQuestionsByCommunity,
+  searchQuestions,
 };

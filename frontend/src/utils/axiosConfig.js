@@ -1,5 +1,8 @@
+// frontend/src/utils/axiosConfig.js
+
 import axios from "axios";
 import config from "../config";
+import { store } from "../app/store";
 
 const API_BASE_URL = `${config.BACKEND_URL}/api`;
 
@@ -11,10 +14,11 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add a request interceptor to include the JWT token if it exists
+// Add a request interceptor to include the JWT token from the Redux store
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // Ensure the token is stored in localStorage after login
+    const state = store.getState();
+    const token = state.user.token;
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }

@@ -82,7 +82,7 @@
 │   │   │   ├── logo-downsized.png
 │   │   │   └── logo.png
 │   │   ├── common
-│   │   │   └── UserAvatar.png
+│   │   │   └── UserAvatar.js
 │   │   ├── components
 │   │   │   ├── AddQuestion
 │   │   │   │   └── Question.js
@@ -92,6 +92,7 @@
 │   │   │   │   ├── Unauthorized.js
 │   │   │   │   └── index.js
 │   │   │   ├── Community
+│   │   │   │   ├── CommunityAvatar.js
 │   │   │   │   ├── CommunityCard.js
 │   │   │   │   ├── CommunityDetail.js
 │   │   │   │   ├── CommunityList.js
@@ -103,10 +104,14 @@
 │   │   │   │   ├── AllQuestions.js
 │   │   │   │   ├── CreateQuestionButton.js
 │   │   │   │   ├── FilterButton.js
-│   │   │   │   ├── Main.js
 │   │   │   │   ├── QuestionCard.js
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   └── SidebarLink.js
+│   │   │   ├── Modal
+│   │   │   │   └── CommunitySelectModal.js
+│   │   │   ├── Search
+│   │   │   │   ├── Searchbar.js
+│   │   │   │   └── SearchResults.js
 │   │   │   ├── TextEditor
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
@@ -123,6 +128,10 @@
 │   │   │   ├── communitySlice.js
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
+│   │   ├── hooks
+│   │   │   ├── useSearchQuestions.js
+│   │   │   ├── useUserCommunities.js
+│   │   │   └── useVote.js
 │   │   ├── services
 │   │   │   ├── communityService.js
 │   │   │   ├── questionService.js

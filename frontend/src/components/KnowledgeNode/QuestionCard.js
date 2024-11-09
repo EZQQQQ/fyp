@@ -1,4 +1,4 @@
-// /frontend/src/components/KnowledgeNode/QuestionCard.js
+// frontend/src/components/KnowledgeNode/QuestionCard.js
 
 import React from "react";
 import { Avatar } from "@mui/material";
@@ -8,10 +8,9 @@ import VoteButtons from "../VoteButtons/VoteButtons";
 import PropTypes from "prop-types";
 import { IconButton } from "@mui/material";
 import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
-import useVote from "../../hooks/useVote"; // Import the custom hook
+import useVote from "../../hooks/useVote";
 
 function QuestionCard({ question, updateQuestionVote }) {
-  // Destructure the necessary fields from question
   const {
     _id,
     title,
@@ -27,29 +26,24 @@ function QuestionCard({ question, updateQuestionVote }) {
     commentsCount,
   } = question;
 
-  // Calculate total responses
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
 
-  // Define a function to update local state based on voting
-  // This function will be passed to the custom hook
   const handleVoteUpdate = (voteData) => {
     if (updateQuestionVote) {
       updateQuestionVote(_id, voteData);
     }
   };
 
-  // Use the custom hook
   const { handleUpvote, handleDownvote, loading } = useVote(
     _id,
     true,
     handleVoteUpdate
-  ); // Assuming it's a question
+  );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 w-full">
       {/* Top Row: Community Info and Bookmark */}
       <div className="flex items-center justify-between mb-2">
-        {/* Community Info */}
         {community && (
           <div className="flex items-center">
             <Avatar
@@ -62,14 +56,13 @@ function QuestionCard({ question, updateQuestionVote }) {
             </span>
           </div>
         )}
-        {/* Bookmark Icon */}
         <BookmarkBorder className="text-gray-500 dark:text-gray-400 cursor-pointer" />
       </div>
 
       {/* Question Title */}
       <Link
         to={`/question/${_id}`}
-        className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2 block"
+        className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2 block break-words"
       >
         {title}
       </Link>
@@ -79,25 +72,23 @@ function QuestionCard({ question, updateQuestionVote }) {
         <TextContent
           content={content || textcontent}
           type="question"
-          className="line-clamp-3 md:line-clamp-6"
+          className="line-clamp-3 md:line-clamp-6 break-words"
         />
       </div>
 
       {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-center">
         {/* Left Side: Vote Buttons and Total Responses */}
         <div className="flex items-center space-x-4">
-          {/* Vote Buttons */}
           <VoteButtons
             voteCount={voteCount}
             onUpvote={handleUpvote}
             onDownvote={handleDownvote}
             userHasUpvoted={userHasUpvoted}
             userHasDownvoted={userHasDownvoted}
-            loading={loading} // Pass loading prop
+            loading={loading}
           />
 
-          {/* Total Responses with Rounded Border */}
           <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-2">
             <IconButton size="small" color="default" className="p-0">
               <ChatBubbleOutline
@@ -112,7 +103,7 @@ function QuestionCard({ question, updateQuestionVote }) {
         </div>
 
         {/* Right Side: Time Posted and User Info */}
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 md:mt-0">
           <span className="mr-2">{new Date(createdAt).toLocaleString()}</span>
           <Avatar
             src={
@@ -152,7 +143,7 @@ QuestionCard.propTypes = {
     answersCount: PropTypes.number,
     commentsCount: PropTypes.number,
   }).isRequired,
-  updateQuestionVote: PropTypes.func, // New prop for updating parent state
+  updateQuestionVote: PropTypes.func,
 };
 
 export default QuestionCard;

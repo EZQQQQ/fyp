@@ -1,41 +1,46 @@
+/* frontend/src/index.css */
+
+/* Tailwind CSS Imports */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Styles */
+
+/* Reset Styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
 html,
-body {
+body,
+#root {
   height: 100%;
-  margin: 0;
-  padding: 0;
 }
 
-/* Adjust icon sizes on mobile */
+/* Remove fixed layout styles to prevent conflicts */
 @media (max-width: 768px) {
-  .header-icon {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-/* Adjust logo sizes */
-@media (max-width: 768px) {
-  .logo-desktop {
-    display: none;
-  }
-  .logo-mobile {
-    display: block;
-    width: 30px;
+  .sidebar {
+    width: 200px;
+    position: relative;
     height: auto;
+    margin-top: 0;
+  }
+  .main-content {
+    margin-left: 0;
   }
 }
 
-@import "./custom.css";
+@media (max-width: 768px) {
+  .all-questions-container {
+    max-height: 800px; /* Enough for ~3 cards plus buttons */
+  }
+}
+*/
 
+/* Retain scrollbar styles if necessary, but ensure they don't interfere with responsiveness */
 .styled-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #a0aec0 #edf2f7;
@@ -57,12 +62,12 @@ body {
 
 /* Dark Mode for ReactQuill */
 .quill-dark .ql-editor {
-  background-color: #1f2937; /* Tailwind's gray-800 */
-  color: #f3f4f6; /* Tailwind's gray-100 */
+  background-color: #1f2937;
+  color: #f3f4f6;
 }
 
 .quill-dark .ql-toolbar {
-  background-color: #374151; /* Tailwind's gray-700 */
+  background-color: #374151;
   border: none;
 }
 

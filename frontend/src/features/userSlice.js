@@ -73,7 +73,7 @@ export const fetchUserData = createAsyncThunk(
 
 const initialState = {
   user: null,
-  token: localStorage.getItem("token") || null,
+  token: null,
   loading: false,
   error: null,
 };
@@ -86,6 +86,7 @@ const userSlice = createSlice({
       state.user = null;
       state.token = null;
       localStorage.removeItem("token");
+      toast.info("Logged out successfully.");
     },
   },
   extraReducers: (builder) => {
@@ -157,7 +158,7 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error(action.payload);
-        // Optionally, logout the user if fetching data fails
+        // Logout the user if fetching data fails
         state.user = null;
         state.token = null;
         localStorage.removeItem("token");

@@ -1,4 +1,4 @@
-// /frontend/src/App.js
+// frontend/src/App.js
 
 import React, { useEffect, useState } from "react";
 import {
@@ -10,7 +10,7 @@ import {
 import Header from "./components/Header/Header";
 import Sidebar from "./components/KnowledgeNode/Sidebar";
 import CreateCommunity from "./components/Community/CreateCommunity";
-import CommunityList from "./components/Community/CommunityList"; // Will be repurposed as Explore
+import CommunityList from "./components/Community/CommunityList";
 import CommunityDetail from "./components/Community/CommunityDetail";
 import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
@@ -26,7 +26,8 @@ import { logout, selectUser, fetchUserData } from "./features/userSlice";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/ProtectedRoute";
-import CommunityPage from "./components/Community/CommunityPage"; // Import CommunityPage
+import CommunityPage from "./components/Community/CommunityPage";
+import SearchResults from "./components/Search/SearchResults";
 
 function App() {
   const user = useSelector(selectUser);
@@ -37,7 +38,8 @@ function App() {
     return savedMode === "true" || false;
   });
 
-  const [sidebarOpen, setSidebarOpen] = useState(false); // State for Sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [appLoading, setAppLoading] = useState(true);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -50,18 +52,34 @@ function App() {
   }, [darkMode]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      dispatch(fetchUserData());
-    } else {
-      dispatch(logout());
-    }
+    const initializeUser = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await dispatch(fetchUserData()).unwrap();
+        } catch (error) {
+          dispatch(logout());
+        }
+      } else {
+        dispatch(logout());
+      }
+      setAppLoading(false);
+    };
+    initializeUser();
   }, [dispatch]);
 
+  if (appLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <p className="text-xl text-gray-700 dark:text-gray-300">Loading...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="app">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
       <Router>
-        {/* Pass toggleSidebar to Header */}
+        {/* Header */}
         <Header
           darkMode={darkMode}
           setDarkMode={setDarkMode}
@@ -78,22 +96,30 @@ function App() {
           draggable
           pauseOnHover
         />
-        <div className="flex pt-16">
-          {/* Render Sidebar only if user is logged in */}
+        <div className="flex flex-1 pt-16">
+          {/* Sidebar */}
           {user && (
             <Sidebar
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
             />
           )}
-          <div className="flex-1 p-6 bg-gray-100 dark:bg-gray-900 min-h-screen md:ml-64">
+
+          {/* Overlay for Mobile Sidebar */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            ></div>
+          )}
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto">
             <Routes>
               {/* Authentication Route */}
               <Route path="/auth" element={<Auth />} />
-
               {/* Admin Authentication Route */}
               <Route path="/admin/login" element={<AdminAuth />} />
-
               {/* Profile Creation Route */}
               <Route
                 path="/profile"
@@ -103,10 +129,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Unauthorized Access Route */}
               <Route path="/unauthorized" element={<Unauthorized />} />
-
               {/* Dashboard */}
               <Route
                 path="/dashboard"
@@ -118,7 +142,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Home Route - All Questions */}
               <Route
                 path="/"
@@ -128,7 +151,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* View Specific Question */}
               <Route
                 path="/question/:questionId"
@@ -138,7 +160,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Add New Question */}
               <Route
                 path="/add-question"
@@ -148,7 +169,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Explore Communities */}
               <Route
                 path="/explore"
@@ -158,7 +178,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* Create New Community - Professors and Admins Only */}
               <Route
                 path="/communities/create"
@@ -168,7 +187,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               {/* View Community Page */}
               <Route
                 path="/communities/:id"
@@ -178,7 +196,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
+              {/* Search Results */}
+              <Route path="/search" element={<SearchResults />} />
               {/* Catch-All Route */}
               <Route
                 path="*"

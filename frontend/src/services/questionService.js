@@ -6,7 +6,14 @@ const questionService = {
   getQuestionsByCommunity: (communityId) => {
     return axiosInstance.get(`/communities/${communityId}/questions`);
   },
-  // ... other question-related services
+  searchQuestions: (query, community) => {
+    return axiosInstance.get("/question/search", {
+      params: {
+        query,
+        community,
+      },
+    });
+  },
 };
 
 export default questionService;
