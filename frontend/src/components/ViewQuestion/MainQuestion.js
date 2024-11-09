@@ -389,11 +389,7 @@ function MainQuestion() {
                 {/* Author Info */}
                 <div className="flex items-center space-x-2 ">
                   {/* Use UserAvatar Component */}
-                  <UserAvatar
-                    user={answer.user}
-                    handleSignOut={() => {}}
-                    className="bg-blue-500"
-                  />
+                  <UserAvatar user={answer.user} handleSignOut={() => {}} />
                   <p className="text-gray-900 dark:text-gray-100 font-medium">
                     {answer.user?.name}
                   </p>
