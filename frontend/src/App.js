@@ -26,6 +26,7 @@ import { logout, selectUser, fetchUserData } from "./features/userSlice";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CommunityPage from "./components/Community/CommunityPage"; // Import CommunityPage
 
 function App() {
   const user = useSelector(selectUser);
@@ -35,6 +36,8 @@ function App() {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode === "true" || false;
   });
+
+  const [sidebarOpen, setSidebarOpen] = useState(false); // State for Sidebar
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -58,7 +61,12 @@ function App() {
   return (
     <div className="app">
       <Router>
-        <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+        {/* Pass toggleSidebar to Header */}
+        <Header
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        />
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -70,9 +78,15 @@ function App() {
           draggable
           pauseOnHover
         />
-        <div className="flex">
-          <Sidebar />
-          <div className="flex-1 p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
+        <div className="flex pt-16">
+          {/* Render Sidebar only if user is logged in */}
+          {user && (
+            <Sidebar
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+            />
+          )}
+          <div className="flex-1 p-6 bg-gray-100 dark:bg-gray-900 min-h-screen md:ml-64">
             <Routes>
               {/* Authentication Route */}
               <Route path="/auth" element={<Auth />} />
@@ -140,7 +154,7 @@ function App() {
                 path="/explore"
                 element={
                   <ProtectedRoute>
-                    <CommunityList isTileView={true} />{" "}
+                    <CommunityList isTileView={true} />
                   </ProtectedRoute>
                 }
               />
@@ -155,12 +169,12 @@ function App() {
                 }
               />
 
-              {/* View Community Details */}
+              {/* View Community Page */}
               <Route
                 path="/communities/:id"
                 element={
                   <ProtectedRoute>
-                    <CommunityDetail />
+                    <CommunityPage />
                   </ProtectedRoute>
                 }
               />

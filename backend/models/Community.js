@@ -22,6 +22,12 @@ const CommunitySchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  rules: [
+    {
+      type: String,
+      required: false,
+    },
+  ],
   members: [
     {
       type: mongoose.Schema.Types.ObjectId,

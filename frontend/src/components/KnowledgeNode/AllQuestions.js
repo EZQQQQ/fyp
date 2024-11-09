@@ -10,7 +10,6 @@ import { useDispatch } from "react-redux";
 import { setVoteData } from "../../features/voteSlice"; // Import the action
 import { toast } from "react-toastify"; // Toastify
 import "react-toastify/dist/ReactToastify.css"; // Toastify CSS
-import handleVote from "../../services/votingService"; // Voting service
 
 function AllQuestions() {
   const [filter, setFilter] = useState("newest");
@@ -21,54 +20,27 @@ function AllQuestions() {
     setFilter(filterType);
   };
 
-  // Define Upvote and Downvote Handlers
-  const handleVoteUpdate = async (type, questionId) => {
-    try {
-      const voteResult = await handleVote(type, questionId, true);
-      setQuestions((prevQuestions) =>
-        prevQuestions.map((q) =>
-          q._id === questionId
-            ? {
-                ...q,
-                voteCount: voteResult.voteCount,
-                userHasUpvoted: voteResult.userHasUpvoted,
-                userHasDownvoted: voteResult.userHasDownvoted,
-              }
-            : q
-        )
-      );
-      // Update Redux store
-      dispatch(
-        setVoteData({
-          targetId: questionId,
-          voteInfo: {
-            voteCount: voteResult.voteCount,
-            userHasUpvoted: voteResult.userHasUpvoted,
-            userHasDownvoted: voteResult.userHasDownvoted,
-          },
-        })
-      );
-      // Show toast only if it's a new vote
-      if (voteResult.action === "voted") {
-        toast.success(
-          type === "upvote"
-            ? "Question upvoted successfully!"
-            : "Question downvoted successfully!"
-        );
-      }
-    } catch (error) {
-      console.error("Voting Error:", error.response?.data);
-      toast.error(
-        error.response?.data?.message || `Failed to ${type} the question.`
-      );
-    }
+  // Function to update a specific question's vote data
+  const updateQuestionVote = (questionId, voteData) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q._id === questionId
+          ? {
+              ...q,
+              voteCount: voteData.voteCount,
+              userHasUpvoted: voteData.userHasUpvoted,
+              userHasDownvoted: voteData.userHasDownvoted,
+            }
+          : q
+      )
+    );
   };
 
+  // Fetch Questions on Component Mount
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await axiosInstance.get("/question");
-        console.log("Fetched questions:", response.data.data);
         setQuestions(response.data.data || []);
         // Initialize vote data in Redux
         response.data.data.forEach((question) => {
@@ -146,8 +118,7 @@ function AllQuestions() {
           <QuestionCard
             key={question._id}
             question={question}
-            onUpvote={() => handleVoteUpdate("upvote", question._id)}
-            onDownvote={() => handleVoteUpdate("downvote", question._id)}
+            updateQuestionVote={updateQuestionVote} // Pass the callback
           />
         ))}
       </div>

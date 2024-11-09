@@ -7,7 +7,7 @@ const path = require("path");
 // Create a new community
 const createCommunity = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, rules } = req.body;
     const createdBy = req.user._id;
 
     let avatar = "/uploads/defaults/default-avatar.jpeg"; // Default avatar path
@@ -19,12 +19,16 @@ const createCommunity = async (req, res) => {
       console.log("Avatar uploaded:", avatar); // Logging
     }
 
+    // Ensure rules is an array
+    const parsedRules = Array.isArray(rules) ? rules : [rules];
+
     const community = new Community({
       name,
       description,
       createdBy,
       members: [createdBy], // Initial member is the creator
-      avatar, // Set avatar path
+      avatar,
+      rules: parsedRules,
     });
 
     await community.save();
@@ -189,10 +193,41 @@ const leaveCommunity = async (req, res) => {
   }
 };
 
+// Get community by ID
+const getCommunityById = async (req, res) => {
+  try {
+    const communityId = req.params.id;
+
+    // Validate ObjectId format
+    if (!communityId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid Community ID format" });
+    }
+
+    const community = await Community.findById(communityId)
+      .populate("createdBy", "name email")
+      .populate("members", "username email")
+      .exec();
+
+    if (!community) {
+      return res
+        .status(404)
+        .json({ status: false, message: "Community not found" });
+    }
+
+    res.status(200).json({ status: true, data: community });
+  } catch (error) {
+    console.error("Error fetching community by ID:", error);
+    res.status(500).json({ status: false, message: "Server Error" });
+  }
+};
+
 module.exports = {
   createCommunity,
   getAllCommunities,
   getUserCommunities,
   joinCommunity,
   leaveCommunity,
+  getCommunityById,
 };

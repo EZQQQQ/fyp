@@ -38,6 +38,13 @@ router.post(
 // @desc Get all questions
 router.get("/", auth, questionController.getAllQuestions);
 
+// Route to get questions by community ID
+router.get(
+  "/communities/:id/questions",
+  auth,
+  questionController.getQuestionsByCommunity
+);
+
 // @route GET /api/question/:id
 // @desc Get a specific question
 router.get(

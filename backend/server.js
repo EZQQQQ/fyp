@@ -14,6 +14,7 @@ const communityRoutes = require("./routers/Community");
 const questionRoutes = require("./routers/Question");
 const answerRoutes = require("./routers/Answer");
 const commentRoutes = require("./routers/Comment");
+const voteRoutes = require("./routers/Vote");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -53,6 +54,7 @@ app.use("/api/answer", answerRoutes); // Answer routes
 app.use("/api/comment", commentRoutes); // Comment routes
 app.use("/api/communities", communityRoutes); // Community routes
 app.use("/api/question", questionRoutes); // Mount Question routes under /api/question
+app.use("/api", voteRoutes); // Vote routes
 
 // Serve Static Files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

@@ -47,7 +47,6 @@ const createQuestion = async (req, res) => {
 };
 
 const getAllQuestions = async (req, res) => {
-  console.log("getAllQuestions function called");
   try {
     const userId = req.user._id; // Extract userId from authenticated user
 
@@ -55,9 +54,6 @@ const getAllQuestions = async (req, res) => {
       .populate("user", "name profilePicture")
       .populate("community", "name avatar")
       .sort({ createdAt: -1 });
-
-    // Log to check if questions are populated
-    console.log("Questions after populate:", questions);
 
     // Add vote status and counts to each question
     const questionsWithExtras = await Promise.all(
@@ -83,9 +79,6 @@ const getAllQuestions = async (req, res) => {
 
         // Convert Mongoose document to plain object
         const questionObj = question.toObject();
-
-        // Log the individual question to check if community is populated
-        console.log("Question with populated community:", questionObj);
 
         return {
           ...questionObj,
@@ -118,7 +111,7 @@ const getQuestionById = async (req, res) => {
 
     const question = await Question.findById(id)
       .populate("user", "name profilePicture")
-      .populate("community", "name avatar") // Ensure community is populated
+      .populate("community", "name avatar")
       .populate({
         path: "answers",
         populate: { path: "user", select: "name profilePicture" },
@@ -186,8 +179,66 @@ const getQuestionById = async (req, res) => {
   }
 };
 
+const getQuestionsByCommunity = async (req, res) => {
+  try {
+    const communityId = req.params.id;
+    const userId = req.user._id; // Assuming you have user authentication
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(communityId)) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Invalid Community ID format" });
+    }
+
+    const questions = await Question.find({ community: communityId })
+      .populate("user", "name username profilePicture")
+      .populate("community", "name avatar")
+      .sort({ createdAt: -1 })
+      .lean(); // Convert to plain JavaScript objects
+
+    // Enrich questions with vote data and counts
+    const questionsWithExtras = await Promise.all(
+      questions.map(async (question) => {
+        const userHasUpvoted = question.upvoters
+          ? question.upvoters.some(
+              (voterId) => voterId.toString() === userId.toString()
+            )
+          : false;
+        const userHasDownvoted = question.downvoters
+          ? question.downvoters.some(
+              (voterId) => voterId.toString() === userId.toString()
+            )
+          : false;
+
+        const answersCount = await Answer.countDocuments({
+          question_id: question._id,
+        });
+        const commentsCount = await Comment.countDocuments({
+          question_id: question._id,
+        });
+
+        return {
+          ...question,
+          voteCount: question.upvoters.length - question.downvoters.length,
+          userHasUpvoted,
+          userHasDownvoted,
+          answersCount,
+          commentsCount,
+        };
+      })
+    );
+
+    res.status(200).json({ status: true, data: questionsWithExtras });
+  } catch (error) {
+    console.error("Error fetching questions by community:", error);
+    res.status(500).json({ status: false, message: "Server Error" });
+  }
+};
+
 module.exports = {
   createQuestion,
   getAllQuestions,
   getQuestionById,
+  getQuestionsByCommunity,
 };

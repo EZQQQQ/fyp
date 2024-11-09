@@ -11,27 +11,53 @@ function VoteButtons({
   onDownvote,
   userHasUpvoted,
   userHasDownvoted,
+  loading,
 }) {
   return (
-    <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 space-x-1">
+    <div className="flex items-center space-x-2 border border-gray-300 dark:border-gray-600 rounded-full p-2">
+      {/* Upvote Button */}
       <IconButton
         onClick={onUpvote}
         size="small"
         color={userHasUpvoted ? "primary" : "default"}
         className="p-0"
         title={userHasUpvoted ? "Remove upvote" : "Upvote"}
+        disabled={loading}
+        aria-label={userHasUpvoted ? "Remove upvote" : "Upvote"}
       >
-        <ArrowUpward fontSize="small" />
+        <ArrowUpward
+          className={`${
+            userHasUpvoted
+              ? "text-blue-500 dark:text-blue-400"
+              : "text-gray-800 dark:text-white"
+          }`}
+          fontSize="small"
+        />
       </IconButton>
-      <span className="text-sm font-medium">{voteCount || 0}</span>
+
+      {/* Vote Count */}
+      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+        {voteCount}
+      </span>
+
+      {/* Downvote Button */}
       <IconButton
         onClick={onDownvote}
         size="small"
         color={userHasDownvoted ? "secondary" : "default"}
         className="p-0"
         title={userHasDownvoted ? "Remove downvote" : "Downvote"}
+        disabled={loading}
+        aria-label={userHasDownvoted ? "Remove downvote" : "Downvote"}
       >
-        <ArrowDownward fontSize="small" />
+        <ArrowDownward
+          className={`${
+            userHasDownvoted
+              ? "text-red-500 dark:text-red-400"
+              : "text-gray-800 dark:text-white"
+          }`}
+          fontSize="small"
+        />
       </IconButton>
     </div>
   );
@@ -43,6 +69,7 @@ VoteButtons.propTypes = {
   onDownvote: PropTypes.func.isRequired,
   userHasUpvoted: PropTypes.bool.isRequired,
   userHasDownvoted: PropTypes.bool.isRequired,
+  loading: PropTypes.bool.isRequired,
 };
 
 export default VoteButtons;

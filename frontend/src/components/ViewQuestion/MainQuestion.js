@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Bookmark, History } from "@mui/icons-material";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import { Avatar } from "@mui/material";
 import { Link, useParams } from "react-router-dom";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
 import axiosInstance from "../../utils/axiosConfig";
@@ -12,22 +11,27 @@ import { selectUser } from "../../features/userSlice";
 import { setVoteData, selectVoteData } from "../../features/voteSlice";
 import TextContent from "./TextContent";
 import VoteButtons from "../VoteButtons/VoteButtons";
-import handleVote from "../../services/votingService"; // Voting service
+import handleVote from "../../services/votingService";
+import useVote from "../../hooks/useVote";
 import { toast } from "react-toastify"; // Toastify
 import "react-toastify/dist/ReactToastify.css"; // Toastify CSS
+import UserAvatar from "../../common/UserAvatar";
 
 function MainQuestion() {
   const { questionId } = useParams();
+  const user = useSelector(selectUser);
+  const voteData = useSelector(selectVoteData);
+  const dispatch = useDispatch();
+
   const [question, setQuestion] = useState(null);
   const [comments, setComments] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [answerText, setAnswerText] = useState("");
   const [showCommentBox, setShowCommentBox] = useState(false);
-  const user = useSelector(selectUser);
-  const voteData = useSelector(selectVoteData);
-  const dispatch = useDispatch();
+  const [answerLoading, setAnswerLoading] = useState({}); // For managing loading states per answer
 
+  // Fetch Question Data on Mount
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
@@ -56,7 +60,7 @@ function MainQuestion() {
     fetchQuestion();
   }, [questionId, dispatch]);
 
-  // Update local state when vote data changes
+  // Update local question state when vote data changes
   useEffect(() => {
     if (voteData[questionId]) {
       setQuestion((prev) => ({
@@ -68,43 +72,48 @@ function MainQuestion() {
     }
   }, [voteData, questionId]);
 
-  // Handle voting for the question
-  const handleQuestionVote = async (type) => {
-    try {
-      const voteResult = await handleVote(type, questionId, true);
-      setQuestion((prev) => ({
-        ...prev,
-        voteCount: voteResult.voteCount,
-        userHasUpvoted: voteResult.userHasUpvoted,
-        userHasDownvoted: voteResult.userHasDownvoted,
-      }));
-      // Update Redux store
-      dispatch(
-        setVoteData({
-          targetId: questionId,
-          voteInfo: {
-            voteCount: voteResult.voteCount,
-            userHasUpvoted: voteResult.userHasUpvoted,
-            userHasDownvoted: voteResult.userHasDownvoted,
-          },
-        })
-      );
-      // Show toast only if it's a new vote, not a retraction
-      if (voteResult.action === "voted") {
-        toast.success(
-          type === "upvote"
-            ? "Question upvoted successfully!"
-            : "Question downvoted successfully!"
+  // Sync answer vote data from Redux to local state
+  useEffect(() => {
+    answers.forEach((answer) => {
+      if (voteData[answer._id]) {
+        setAnswers((prevAnswers) =>
+          prevAnswers.map((ans) =>
+            ans._id === answer._id
+              ? {
+                  ...ans,
+                  voteCount: voteData[ans._id].voteCount,
+                  userHasUpvoted: voteData[ans._id].userHasUpvoted,
+                  userHasDownvoted: voteData[ans._id].userHasDownvoted,
+                }
+              : ans
+          )
         );
       }
-    } catch (error) {
-      console.error("Voting Error:", error.response?.data);
-      toast.error(error.response?.data?.message || "Failed to vote.");
-    }
-  };
+    });
+  }, [voteData, answers]);
 
-  // Handle voting for answers
+  // Handle voting for the main question using useVote hook
+  const {
+    handleUpvote: handleQuestionUpvote,
+    handleDownvote: handleQuestionDownvote,
+    loading: questionLoading,
+  } = useVote(questionId, true, (voteData) => {
+    setQuestion((prev) => ({
+      ...prev,
+      voteCount: voteData.voteCount,
+      userHasUpvoted: voteData.userHasUpvoted,
+      userHasDownvoted: voteData.userHasDownvoted,
+    }));
+  });
+
+  // Handle voting for answers using existing functions with loading state
   const handleAnswerVote = async (type, answerId) => {
+    // Prevent voting if already loading
+    if (answerLoading[answerId]) return;
+
+    // Set loading state for this answer
+    setAnswerLoading((prev) => ({ ...prev, [answerId]: true }));
+
     try {
       const voteResult = await handleVote(type, answerId, false);
       setAnswers((prevAnswers) =>
@@ -137,10 +146,19 @@ function MainQuestion() {
             ? "Answer upvoted successfully!"
             : "Answer downvoted successfully!"
         );
+      } else if (voteResult.action === "removed") {
+        toast.info(
+          type === "upvote"
+            ? "Upvote removed from answer."
+            : "Downvote removed from answer."
+        );
       }
     } catch (error) {
       console.error("Voting Error:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to vote.");
+    } finally {
+      // Remove loading state for this answer
+      setAnswerLoading((prev) => ({ ...prev, [answerId]: false }));
     }
   };
 
@@ -190,12 +208,12 @@ function MainQuestion() {
   }
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 min-h-screen p-6">
+    <div className="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 sm:p-6">
       {/* ToastContainer should be included once in App.js */}
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between mb-6">
-          <h2 className="text-2xl font-bold mb-4 sm:mb-0 text-gray-900 dark:text-gray-100">
+          <h2 className="text-2xl font-bold mb-4 sm:mb-0 text-gray-900 dark:text-gray-100 break-words">
             {question.title}
           </h2>
           <Link to="/add-question">
@@ -232,137 +250,156 @@ function MainQuestion() {
 
         {/* Question Section */}
         <div className="mb-8">
-          <div className="flex">
-            {/* Voting */}
-            <div className="flex flex-col items-center mr-6">
-              <VoteButtons
-                voteCount={question.voteCount}
-                onUpvote={() => handleQuestionVote("upvote")}
-                onDownvote={() => handleQuestionVote("downvote")}
-                userHasUpvoted={question.userHasUpvoted}
-                userHasDownvoted={question.userHasDownvoted}
-              />
+          {/* Content */}
+          <div className="mb-4">
+            <TextContent content={question.content} type="question" />
+          </div>
+
+          {/* Files */}
+          {question.files?.length > 0 && (
+            <div className="my-4 flex flex-wrap gap-4">
+              {question.files.map((fileUrl, index) => (
+                <img
+                  key={index}
+                  src={fileUrl}
+                  alt={`Attachment ${index + 1}`}
+                  className="max-w-xs sm:max-w-sm md:max-w-md rounded-md object-contain"
+                />
+              ))}
             </div>
-            {/* Content */}
-            <div className="flex-1">
-              <TextContent content={question.content} type="question" />
+          )}
 
-              {/* Files */}
-              {question.files?.length > 0 && (
-                <div className="my-4">
-                  {question.files.map((fileUrl, index) => (
-                    <img
-                      key={index}
-                      src={fileUrl}
-                      alt={`Attachment ${index + 1}`}
-                      className="max-w-full rounded-md"
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Poll Options */}
-              {question.pollOptions?.length > 0 && (
-                <div className="my-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Poll Options:
-                  </h3>
-                  <ul className="list-disc list-inside text-gray-800 dark:text-gray-200">
-                    {question.pollOptions.map((option, index) => (
-                      <li key={index}>{option}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Author Info */}
-              <div className="flex items-center justify-end mt-6">
-                <small className="text-gray-500 dark:text-gray-400 mr-2">
-                  asked {new Date(question.createdAt).toLocaleString()}
-                </small>
-                <div className="flex items-center">
-                  <Avatar src={question.user?.profilePicture} />
-                  <p className="ml-2 font-medium text-gray-900 dark:text-gray-100">
-                    {question.user?.name}
-                  </p>
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div className="mt-6">
-                {comments.map((comment) => (
-                  <div className="mb-2" key={comment._id}>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      {comment.comment} -{" "}
-                      <span className="font-medium">{comment.user.name}</span>{" "}
-                      <small className="text-gray-500 dark:text-gray-400">
-                        {new Date(comment.createdAt).toLocaleString()}
-                      </small>
-                    </p>
-                  </div>
+          {/* Poll Options */}
+          {question.pollOptions?.length > 0 && (
+            <div className="my-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Poll Options:
+              </h3>
+              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                {question.pollOptions.map((option, index) => (
+                  <li key={index}>{option}</li>
                 ))}
-                <p
-                  className="text-sm text-blue-500 cursor-pointer hover:underline"
-                  onClick={handleToggleCommentBox}
-                >
-                  Add a comment
-                </p>
-                {showCommentBox && (
-                  <div className="mt-4">
-                    <textarea
-                      placeholder="Add your comment..."
-                      rows={5}
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    ></textarea>
-                    <button
-                      onClick={handleCommentSubmit}
-                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-2"
-                    >
-                      Add Comment
-                    </button>
-                  </div>
-                )}
-              </div>
+              </ul>
             </div>
+          )}
+
+          {/* Author Info and Voting Buttons */}
+          <div className="flex items-center justify-between mt-6">
+            {/* Voting Buttons */}
+            <VoteButtons
+              voteCount={question.voteCount}
+              onUpvote={handleQuestionUpvote}
+              onDownvote={handleQuestionDownvote}
+              userHasUpvoted={question.userHasUpvoted}
+              userHasDownvoted={question.userHasDownvoted}
+              loading={questionLoading} // Pass loading prop
+            />
+
+            {/* Author Info */}
+            <div className="flex items-center space-x-2">
+              {/* Use UserAvatar Component */}
+              <UserAvatar
+                user={question.user}
+                handleSignOut={() => {}}
+                className=""
+              />
+              <p className="text-gray-900 dark:text-gray-100 font-medium">
+                {question.user?.name}
+              </p>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {new Date(question.createdAt).toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="mt-6">
+            <h3 className="text-sm text-gray-700 dark:text-gray-400 mb-2">
+              Comments
+            </h3>
+            {comments.map((comment) => (
+              <div
+                className="mb-4 pl-4 border-l border-gray-300 dark:border-gray-600"
+                key={comment._id} // Ensure unique key
+              >
+                <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
+                  {comment.comment} -{" "}
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-medium">
+                    {comment.user.name}
+                  </span>{" "}
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </span>
+                </p>
+              </div>
+            ))}
+            <button
+              className="text-sm text-blue-500 hover:underline"
+              onClick={handleToggleCommentBox}
+            >
+              Add a comment
+            </button>
+            {showCommentBox && (
+              <div className="mt-4 pl-4 border-l border-gray-300 dark:border-gray-600">
+                <textarea
+                  placeholder="Add your comment..."
+                  rows={3}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
+                ></textarea>
+                <button
+                  onClick={handleCommentSubmit}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-2"
+                >
+                  Add Comment
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Answers Section */}
         <div className="mb-8">
           <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-            {answers.length} Answers
+            {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
           </h3>
           {answers.map((answer) => (
             <div
-              className="flex mb-6 border-b pb-6 border-gray-200 dark:border-gray-700"
+              className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col"
               key={answer._id}
             >
-              {/* Voting */}
-              <div className="flex flex-col items-center mr-6">
+              {/* Content */}
+              <div className="mb-4">
+                <TextContent content={answer.answer} type="answer" />
+              </div>
+
+              {/* Voting and Author Info */}
+              <div className="flex items-center justify-between">
+                {/* Voting Buttons */}
                 <VoteButtons
                   voteCount={answer.voteCount}
                   onUpvote={() => handleAnswerVote("upvote", answer._id)}
                   onDownvote={() => handleAnswerVote("downvote", answer._id)}
                   userHasUpvoted={answer.userHasUpvoted}
                   userHasDownvoted={answer.userHasDownvoted}
+                  loading={answerLoading[answer._id] || false} // Pass loading state
                 />
-              </div>
-              {/* Content */}
-              <div className="flex-1">
-                <TextContent content={answer.answer} type="answer" />
+
                 {/* Author Info */}
-                <div className="flex items-center justify-end mt-6">
-                  <small className="text-gray-500 dark:text-gray-400 mr-2">
-                    answered {new Date(answer.createdAt).toLocaleString()}
-                  </small>
-                  <div className="flex items-center">
-                    <Avatar src={answer.user.profilePicture} />
-                    <p className="ml-2 font-medium text-gray-900 dark:text-gray-100">
-                      {answer.user.name}
-                    </p>
-                  </div>
+                <div className="flex items-center space-x-2 ">
+                  {/* Use UserAvatar Component */}
+                  <UserAvatar
+                    user={answer.user}
+                    handleSignOut={() => {}}
+                    className="bg-blue-500"
+                  />
+                  <p className="text-gray-900 dark:text-gray-100 font-medium">
+                    {answer.user?.name}
+                  </p>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {new Date(answer.createdAt).toLocaleString()}
+                  </span>
                 </div>
               </div>
             </div>
@@ -370,7 +407,7 @@ function MainQuestion() {
         </div>
 
         {/* Answer Form */}
-        <div>
+        <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm">
           <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
             Your Answer
           </h3>

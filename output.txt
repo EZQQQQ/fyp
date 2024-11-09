@@ -35,7 +35,9 @@
 │   │   └── Vote.js
 │   ├── server.js
 │   └── uploads
-│       └── 1730122299532-474043957-d4ec445b-5958-4b4b-ba92-9652642f3c23.png
+│       ├── profilePhotos
+│       ├── defaults
+│       └── communityAvatars
 ├── frontend
 │   ├── build
 │   │   ├── asset-manifest.json
@@ -77,7 +79,10 @@
 │   │   ├── assets
 │   │   │   ├── Google.png
 │   │   │   ├── Outlook.png
+│   │   │   ├── logo-downsized.png
 │   │   │   └── logo.png
+│   │   ├── common
+│   │   │   └── UserAvatar.png
 │   │   ├── components
 │   │   │   ├── AddQuestion
 │   │   │   │   └── Question.js
@@ -90,17 +95,18 @@
 │   │   │   │   ├── CommunityCard.js
 │   │   │   │   ├── CommunityDetail.js
 │   │   │   │   ├── CommunityList.js
+│   │   │   │   ├── CommunityPage.js
 │   │   │   │   └── CreateCommunity.js
 │   │   │   ├── Header
 │   │   │   │   ├── Header.js
 │   │   │   ├── KnowledgeNode
 │   │   │   │   ├── AllQuestions.js
+│   │   │   │   ├── CreateQuestionButton.js
 │   │   │   │   ├── FilterButton.js
 │   │   │   │   ├── Main.js
 │   │   │   │   ├── QuestionCard.js
 │   │   │   │   ├── Sidebar.js
-│   │   │   │   ├── SidebarLink.js
-│   │   │   │   └── index.js
+│   │   │   │   └── SidebarLink.js
 │   │   │   ├── TextEditor
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
@@ -110,8 +116,7 @@
 │   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
 │   │   │       ├── TextContent.js
-│   │   │       ├── MainQuestion.js
-│   │   │       └── index.js
+│   │   │       └── MainQuestion.js
 │   │   ├── config
 │   │   │   └── firebase-config.js
 │   │   ├── features
@@ -120,6 +125,7 @@
 │   │   │   └── userSlice.js
 │   │   ├── services
 │   │   │   ├── communityService.js
+│   │   │   ├── questionService.js
 │   │   │   ├── userService.js
 │   │   │   └── votingService.js
 │   │   ├── custom.css

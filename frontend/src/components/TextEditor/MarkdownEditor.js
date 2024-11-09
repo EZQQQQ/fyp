@@ -1,15 +1,13 @@
+// /frontend/src/components/MarkdownEditor/MarkdownEditor.js
+
 import React from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
-
-// Import Markdown Shortcuts module
 import MarkdownShortcuts from "quill-markdown-shortcuts";
 
-// Register the module with Quill
 Quill.register("modules/markdownShortcuts", MarkdownShortcuts);
 
-const MarkdownEditor = ({ value, onChange, placeholder }) => {
-  // Define modules and formats
+const MarkdownEditor = ({ value, onChange, placeholder, darkMode }) => {
   const modules = {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
@@ -37,14 +35,16 @@ const MarkdownEditor = ({ value, onChange, placeholder }) => {
   ];
 
   return (
-    <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      modules={modules}
-      formats={formats}
-      placeholder={placeholder}
-    />
+    <div className={darkMode ? "quill-dark" : "quill-light"}>
+      <ReactQuill
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder}
+      />
+    </div>
   );
 };
 

@@ -4,14 +4,17 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { Avatar } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import NotificationsIcon from "@mui/icons-material/Notifications"; // Import NotificationsIcon
+import { Avatar, IconButton } from "@mui/material"; // Import IconButton
 import Logo from "../../assets/logo.png";
+import LogoMobile from "../../assets/logo-downsized.png";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser, logout } from "../../features/userSlice";
 import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebase-config";
 
-function Header({ darkMode, setDarkMode }) {
+function Header({ darkMode, setDarkMode, toggleSidebar }) {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -34,13 +37,33 @@ function Header({ darkMode, setDarkMode }) {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md">
+    <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
+          {/* Menu Icon (Visible on mobile) */}
+          <div className="flex md:hidden">
+            <button
+              className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl mr-4"
+              onClick={toggleSidebar}
+              aria-label="Toggle Menu"
+            >
+              <MenuIcon />
+            </button>
+          </div>
+
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/">
+          <div className="flex-shrink-0 flex items-center">
+            {/* Desktop Logo */}
+            <Link to="/" className="hidden md:block">
               <img src={Logo} alt="KnowledgeNode Logo" className="h-8 w-auto" />
+            </Link>
+            {/* Mobile Logo */}
+            <Link to="/" className="block md:hidden">
+              <img
+                src={LogoMobile}
+                alt="KnowledgeNode Logo"
+                className="h-6 w-auto"
+              />
             </Link>
           </div>
 
@@ -87,43 +110,25 @@ function Header({ darkMode, setDarkMode }) {
             >
               {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
             </button>
-
+            {/* Notification Icon */}
+            <IconButton
+              aria-label="Notifications"
+              className="text-gray-800 dark:text-gray-200"
+              size="large"
+            >
+              <NotificationsIcon fontSize="medium" />{" "}
+              {/* Increased icon size */}
+            </IconButton>
             {/* User Avatar */}
             <div className="relative">
-              <button onClick={handleSignOut} className="focus:outline-none">
-                <Avatar
-                  src={user?.photo}
-                  alt={user?.displayName || "User Avatar"}
-                  className="cursor-pointer"
-                />
-              </button>
-              {/* Optional: Notifications Icon */}
-              {user && (
-                <div className="absolute top-0 right-0 mt-1 mr-1">
-                  <svg
-                    className="h-4 w-4 text-blue-500 dark:text-blue-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-label="Notifications"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 17h5l-1.405-1.405A2.032 
-                      2.032 0 0118 14.158V11a6.002 
-                      6.002 0 00-4-5.659V5a2 2 0 
-                      10-4 0v.341C7.67 6.165 6 
-                      7.388 6 9v5.159c0 .538-.214 
-                      1.055-.595 1.436L4 17h5m6 
-                      0v1a3 3 0 11-6 0v-1m6 
-                      0H9"
-                    />
-                  </svg>
-                </div>
-              )}
+              <Avatar
+                src={
+                  user?.photo || "/uploads/defaults/default-avatar-user.jpeg"
+                }
+                alt={user?.displayName || "Default Avatar"}
+                className="cursor-pointer border border-gray-300"
+                onClick={handleSignOut}
+              />
             </div>
           </div>
         </div>

@@ -8,30 +8,57 @@ import VoteButtons from "../VoteButtons/VoteButtons";
 import PropTypes from "prop-types";
 import { IconButton } from "@mui/material";
 import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
+import useVote from "../../hooks/useVote"; // Import the custom hook
 
-function QuestionCard({ question, onUpvote, onDownvote }) {
+function QuestionCard({ question, updateQuestionVote }) {
+  // Destructure the necessary fields from question
+  const {
+    _id,
+    title,
+    content,
+    textcontent,
+    voteCount,
+    userHasUpvoted,
+    userHasDownvoted,
+    createdAt,
+    user,
+    community,
+    answersCount,
+    commentsCount,
+  } = question;
+
   // Calculate total responses
-  console.log("Question data:", question);
-  const totalResponses =
-    (question.answersCount || 0) + (question.commentsCount || 0);
+  const totalResponses = (answersCount || 0) + (commentsCount || 0);
+
+  // Define a function to update local state based on voting
+  // This function will be passed to the custom hook
+  const handleVoteUpdate = (voteData) => {
+    if (updateQuestionVote) {
+      updateQuestionVote(_id, voteData);
+    }
+  };
+
+  // Use the custom hook
+  const { handleUpvote, handleDownvote, loading } = useVote(
+    _id,
+    true,
+    handleVoteUpdate
+  ); // Assuming it's a question
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
       {/* Top Row: Community Info and Bookmark */}
       <div className="flex items-center justify-between mb-2">
         {/* Community Info */}
-        {question.community && (
+        {community && (
           <div className="flex items-center">
             <Avatar
-              src={
-                question.community.avatar ||
-                "/uploads/defaults/default-avatar.jpeg"
-              }
-              alt={question.community.name || "Community Avatar"}
+              src={community.avatar || "/uploads/defaults/default-avatar.jpeg"}
+              alt={community.name || "Community Avatar"}
               className="h-8 w-8 mr-2"
             />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              {question.community.name || "Unknown Community"}
+              {community.name || "Unknown Community"}
             </span>
           </div>
         )}
@@ -41,57 +68,62 @@ function QuestionCard({ question, onUpvote, onDownvote }) {
 
       {/* Question Title */}
       <Link
-        to={`/question/${question._id}`}
+        to={`/question/${_id}`}
         className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline mb-2 block"
       >
-        {question.title}
+        {title}
       </Link>
 
       {/* Question Description */}
       <div className="mb-4">
         <TextContent
-          content={question.content || question.textcontent}
+          content={content || textcontent}
           type="question"
           className="line-clamp-3 md:line-clamp-6"
         />
       </div>
 
-      {/* Bottom Row: Vote Buttons, Total Responses, Time Posted, User Info */}
-      <div className="flex flex-wrap justify-between items-center">
-        {/* Vote Buttons */}
-        <div className="flex items-center mb-2 sm:mb-0">
+      {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
+      <div className="flex justify-between items-center">
+        {/* Left Side: Vote Buttons and Total Responses */}
+        <div className="flex items-center space-x-4">
+          {/* Vote Buttons */}
           <VoteButtons
-            voteCount={question.voteCount}
-            onUpvote={onUpvote}
-            onDownvote={onDownvote}
-            userHasUpvoted={question.userHasUpvoted}
-            userHasDownvoted={question.userHasDownvoted}
+            voteCount={voteCount}
+            onUpvote={handleUpvote}
+            onDownvote={handleDownvote}
+            userHasUpvoted={userHasUpvoted}
+            userHasDownvoted={userHasDownvoted}
+            loading={loading} // Pass loading prop
           />
+
+          {/* Total Responses with Rounded Border */}
+          <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-2">
+            <IconButton size="small" color="default" className="p-0">
+              <ChatBubbleOutline
+                className="text-gray-500 dark:text-white"
+                fontSize="small"
+              />
+            </IconButton>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              {totalResponses}
+            </span>
+          </div>
         </div>
 
-        {/* Total Responses */}
-        <div className="flex items-center border border-gray-300 dark:border-gray-700 rounded-md px-2 py-1 space-x-1">
-          <IconButton size="small" color="default" className="p-0">
-            <ChatBubbleOutline fontSize="small" />
-          </IconButton>
-          <span className="text-sm font-medium">{totalResponses}</span>
-        </div>
-
-        {/* Time Posted and User Info */}
+        {/* Right Side: Time Posted and User Info */}
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-          <span className="mr-2">
-            {new Date(question.createdAt).toLocaleString()}
-          </span>
+          <span className="mr-2">{new Date(createdAt).toLocaleString()}</span>
           <Avatar
             src={
-              question.user?.profilePicture ||
+              user?.profilePicture ||
               "/uploads/defaults/default-avatar-user.jpeg"
             }
-            alt={question.user?.name || "User Avatar"}
+            alt={user?.name || "User Avatar"}
             className="h-6 w-6 mr-2"
           />
           <p className="text-gray-800 dark:text-gray-100">
-            {question.user?.name || "Unknown User"}
+            {user?.name || "Unknown User"}
           </p>
         </div>
       </div>
@@ -120,8 +152,7 @@ QuestionCard.propTypes = {
     answersCount: PropTypes.number,
     commentsCount: PropTypes.number,
   }).isRequired,
-  onUpvote: PropTypes.func.isRequired,
-  onDownvote: PropTypes.func.isRequired,
+  updateQuestionVote: PropTypes.func, // New prop for updating parent state
 };
 
 export default QuestionCard;

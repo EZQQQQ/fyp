@@ -6,6 +6,7 @@ const auth = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorize"); // If using role-based authorization
 const CommunityController = require("../controllers/communityController");
 const uploadCommunity = require("../middlewares/uploadCommunity");
+const questionController = require("../controllers/questionController");
 
 // Create a new community (Professor and Admin only)
 router.post(
@@ -37,5 +38,11 @@ router.post(
   authorizeRoles("student", "professor", "admin"), // Allow multiple roles
   CommunityController.leaveCommunity
 );
+
+// Get community by ID
+router.get("/:id", auth, CommunityController.getCommunityById);
+
+// Route to get questions by community ID
+router.get("/:id/questions", auth, questionController.getQuestionsByCommunity);
 
 module.exports = router;

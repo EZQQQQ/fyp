@@ -12,7 +12,7 @@ function TextContent({ content, type }) {
       if (node.name === "pre") {
         return (
           <pre
-            className="bg-black text-white p-1 rounded-md overflow-x-auto"
+            className="bg-gray-800 dark:bg-gray-700 text-white p-2 rounded-md overflow-x-auto my-2"
             key={node.key}
           >
             {domToReact(node.children, options)}
@@ -21,16 +21,30 @@ function TextContent({ content, type }) {
       }
       if (node.name === "code") {
         return (
-          <code className="bg-black text-white p-1 rounded" key={node.key}>
+          <code
+            className="bg-gray-800 dark:bg-gray-700 text-white p-1 rounded"
+            key={node.key}
+          >
             {domToReact(node.children, options)}
           </code>
+        );
+      }
+      if (node.name === "img") {
+        // Ensure images are responsive
+        return (
+          <img
+            src={node.attribs.src}
+            alt={node.attribs.alt || "Image"}
+            className="max-w-full h-auto rounded-md my-2"
+            key={node.key}
+          />
         );
       }
     },
   };
 
   return (
-    <div className={`${type}-text-content`}>
+    <div className={`text-gray-800 dark:text-gray-200 break-words`}>
       {parse(sanitizedContent, options)}
     </div>
   );

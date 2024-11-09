@@ -132,7 +132,7 @@ const createUserProfile = async (req, res) => {
     let profilePicture = "";
 
     if (req.file) {
-      profilePicture = `/uploads/${req.file.filename}`;
+      profilePicture = `/uploads/profilePhotos/${req.file.filename}`;
     }
 
     const user = await User.findById(req.user.id);
