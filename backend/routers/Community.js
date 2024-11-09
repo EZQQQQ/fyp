@@ -42,7 +42,4 @@ router.post(
 // Get community by ID
 router.get("/:id", auth, CommunityController.getCommunityById);
 
-// Route to get questions by community ID
-router.get("/:id/questions", auth, questionController.getQuestionsByCommunity);
-
 module.exports = router;

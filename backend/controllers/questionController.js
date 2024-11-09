@@ -1,6 +1,7 @@
 // /backend/controllers/questionController.js
 
 const Question = require("../models/Question");
+const Community = require("../models/Community");
 const Answer = require("../models/Answer");
 const Comment = require("../models/Comment");
 const mongoose = require("mongoose");
@@ -99,6 +100,71 @@ const getAllQuestions = async (req, res) => {
     res.status(500).json({
       status: false,
       message: "Error fetching questions",
+      error: err.message,
+    });
+  }
+};
+
+// New Function: Get Questions from User's Communities
+const getUserQuestions = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch user's communities
+    const userCommunities = await Community.find({ members: userId }).select(
+      "_id"
+    );
+
+    if (!userCommunities || userCommunities.length === 0) {
+      return res.status(200).json({
+        status: true,
+        data: [],
+        message: "You are not a member of any communities.",
+      });
+    }
+
+    const communityIds = userCommunities.map((community) => community._id);
+
+    // Fetch questions from user's communities
+    const questions = await Question.find({ community: { $in: communityIds } })
+      .populate("user", "name profilePicture")
+      .populate("community", "name avatar")
+      .sort({ createdAt: -1 });
+
+    // Enrich questions with additional data
+    const questionsWithExtras = await Promise.all(
+      questions.map(async (question) => {
+        const userHasUpvoted = question.upvoters.includes(userId);
+        const userHasDownvoted = question.downvoters.includes(userId);
+
+        const answersCount = await Answer.countDocuments({
+          question_id: question._id,
+        });
+        const commentsCount = await Comment.countDocuments({
+          question_id: question._id,
+        });
+
+        const questionObj = question.toObject();
+
+        return {
+          ...questionObj,
+          userHasUpvoted,
+          userHasDownvoted,
+          answersCount,
+          commentsCount,
+        };
+      })
+    );
+
+    res.status(200).json({
+      status: true,
+      data: questionsWithExtras,
+    });
+  } catch (err) {
+    console.error("Error fetching user's questions:", err);
+    res.status(500).json({
+      status: false,
+      message: "Error fetching questions from your communities.",
       error: err.message,
     });
   }
@@ -239,6 +305,7 @@ const getQuestionsByCommunity = async (req, res) => {
 module.exports = {
   createQuestion,
   getAllQuestions,
+  getUserQuestions,
   getQuestionById,
   getQuestionsByCommunity,
 };

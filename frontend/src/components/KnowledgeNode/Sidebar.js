@@ -1,4 +1,4 @@
-// /frontend/src/components/KnowledgeNode/Sidebar.js
+// frontend/src/components/KnowledgeNode/Sidebar.js
 
 import React, { useState, useEffect } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -20,9 +20,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const userCommunities = useSelector(selectUserCommunities);
   const dispatch = useDispatch();
 
+  console.log("Current User:", user);
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // Fetch user's communities only
+  // Fetch user's communities only if logged in
   useEffect(() => {
     if (user) {
       dispatch(fetchUserCommunities());
@@ -37,6 +39,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     setSidebarOpen(false);
     setDropdownOpen(false);
   };
+
+  // Hide sidebar if not logged in
+  if (!user) {
+    return null;
+  }
 
   return (
     <>
@@ -85,15 +92,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 className="ml-6 mt-2 flex flex-col space-y-1 transition-all duration-300 ease-in-out"
               >
                 {/* "+ Create a Community" Link for Professors and Admins */}
-                {user &&
-                  (user.role === "admin" || user.role === "professor") && (
-                    <SidebarLink
-                      to="/communities/create"
-                      onClick={closeSidebar}
-                    >
-                      + Create a Community
-                    </SidebarLink>
-                  )}
+                {(user.role === "admin" || user.role === "professor") && (
+                  <SidebarLink to="/communities/create" onClick={closeSidebar}>
+                    + Create a Community
+                  </SidebarLink>
+                )}
 
                 {/* Dynamically Render User's Community Links */}
                 {Array.isArray(userCommunities) &&

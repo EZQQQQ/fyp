@@ -38,6 +38,13 @@ router.post(
 // @desc Get all questions
 router.get("/", auth, questionController.getAllQuestions);
 
+// New Route: Get User's Questions
+router.get(
+  "/user-questions",
+  auth, // Ensure the user is authenticated
+  questionController.getUserQuestions
+);
+
 // Route to get questions by community ID
 router.get(
   "/communities/:id/questions",

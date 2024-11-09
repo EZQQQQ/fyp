@@ -3,7 +3,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import userService from "../services/userService";
 import { toast } from "react-toastify";
-import { auth } from "../config/firebase-config"; // Ensure this path is correct
 
 // Async thunk for SSO login
 export const ssoLoginUser = createAsyncThunk(
@@ -55,24 +54,19 @@ export const createUserProfile = createAsyncThunk(
   }
 );
 
-// Async thunk to fetch user data
+// Async thunk for fetching user data
 export const fetchUserData = createAsyncThunk(
   "user/fetchUserData",
-  async () => {
-    const user = auth.currentUser;
-    if (user) {
-      return {
-        _id: user.uid,
-        name: user.displayName,
-        email: user.email,
-        role: "admin", // Adjust based on your backend
-        profilePicture: user.photoURL || "",
-        username: user.displayName.replace(/\s+/g, "").toLowerCase(),
-        createdAt: user.metadata.creationTime,
-        updatedAt: user.metadata.lastSignInTime,
-      };
-    } else {
-      return null;
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await userService.fetchUserData();
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch user data"
+      );
     }
   }
 );
@@ -157,7 +151,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload; // Updated to use action.payload directly
+        state.user = action.payload.data;
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.loading = false;
