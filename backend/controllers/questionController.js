@@ -412,6 +412,11 @@ const searchQuestions = async (req, res) => {
       });
     }
 
+    // Function to escape regex special characters
+    const escapeRegex = (string) => {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
     // Initialize aggregation pipeline
     const pipeline = [];
 
@@ -425,34 +430,17 @@ const searchQuestions = async (req, res) => {
         });
       }
 
-      // Check if the user is a member of the specified community
-      const isMember = await Community.exists({
-        _id: community,
-        members: userId,
-      });
-
-      if (!isMember) {
-        // User is not a member; deny access to search within this community
-        return res.status(403).json({
-          status: false,
-          message: "You are not a member of this community.",
-        });
-      }
-
-      // Add a match stage to filter questions within the specified community
+      // Check membership and add match stage
       pipeline.push({
-        $match: { community: mongoose.Types.ObjectId(community) },
+        $match: { community: new mongoose.Types.ObjectId(community) },
       });
     } else {
-      // 'community=all' or no community specified; restrict to user's communities
-
-      // Fetch communities the user is a member of
+      // Fetch user's communities
       const userCommunities = await Community.find({ members: userId }).select(
         "_id"
       );
 
       if (!userCommunities || userCommunities.length === 0) {
-        // User is not a member of any communities; return empty results
         return res.status(200).json({
           status: true,
           data: [],
@@ -460,9 +448,11 @@ const searchQuestions = async (req, res) => {
         });
       }
 
-      const communityIds = userCommunities.map((c) => c._id);
+      const communityIds = userCommunities.map(
+        (c) => new mongoose.Types.ObjectId(c._id)
+      );
 
-      // Add a match stage to filter questions within the user's communities
+      // Add match stage for user's communities
       pipeline.push({
         $match: { community: { $in: communityIds } },
       });
@@ -550,7 +540,7 @@ const searchQuestions = async (req, res) => {
       $lookup: {
         from: "answers",
         localField: "_id",
-        foreignField: "question",
+        foreignField: "question_id",
         as: "answers",
       },
     });
@@ -560,7 +550,7 @@ const searchQuestions = async (req, res) => {
       $lookup: {
         from: "comments",
         localField: "_id",
-        foreignField: "question",
+        foreignField: "question_id",
         as: "comments",
       },
     });
@@ -597,13 +587,19 @@ const searchQuestions = async (req, res) => {
     // Execute aggregation pipeline
     const questions = await Question.aggregate(pipeline).exec();
 
+    console.log("Detailed Questions with Answers and Comments:", questions);
+
     console.log("Questions found:", questions.length);
 
     // Map questions to include userHasUpvoted and userHasDownvoted
     const results = questions.map((question) => ({
       ...question,
-      userHasUpvoted: question.upvoters.includes(userId),
-      userHasDownvoted: question.downvoters.includes(userId),
+      userHasUpvoted: question.upvoters
+        .map((id) => id.toString())
+        .includes(userId),
+      userHasDownvoted: question.downvoters
+        .map((id) => id.toString())
+        .includes(userId),
     }));
 
     console.log("Processed Questions with voteCount:", results);

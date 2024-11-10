@@ -47,7 +47,7 @@ router.get(
 
 // Search Questions Route
 // @route GET /api/question/search
-// @desc Search questions with fuzzy matching
+// @desc Search questions with matching
 router.get("/search", auth, questionController.searchQuestions);
 
 // @route GET /api/question/:id

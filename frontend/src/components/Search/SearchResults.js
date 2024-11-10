@@ -27,6 +27,7 @@ function SearchResults() {
   const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
+    console.log("Fetched Questions:", fetchedQuestions);
     setQuestions(fetchedQuestions || []);
 
     fetchedQuestions.forEach((question) => {
