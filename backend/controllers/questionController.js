@@ -486,7 +486,7 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Add a 'score' field to determine relevance based on match type
+    // Add fields for relevance scoring and vote count
     pipeline.push({
       $addFields: {
         score: {
@@ -514,6 +514,9 @@ const searchQuestions = async (req, res) => {
             },
           ],
         },
+        voteCount: {
+          $subtract: [{ $size: "$upvoters" }, { $size: "$downvoters" }],
+        }, // Calculate voteCount
       },
     });
 
@@ -542,6 +545,34 @@ const searchQuestions = async (req, res) => {
     });
     pipeline.push({ $unwind: "$community" });
 
+    // Populate answers to get answersCount
+    pipeline.push({
+      $lookup: {
+        from: "answers",
+        localField: "_id",
+        foreignField: "question",
+        as: "answers",
+      },
+    });
+
+    // Populate comments to get commentsCount
+    pipeline.push({
+      $lookup: {
+        from: "comments",
+        localField: "_id",
+        foreignField: "question",
+        as: "comments",
+      },
+    });
+
+    // Add counts for answers and comments
+    pipeline.push({
+      $addFields: {
+        answersCount: { $size: "$answers" },
+        commentsCount: { $size: "$comments" },
+      },
+    });
+
     // Project only necessary fields to optimize performance
     pipeline.push({
       $project: {
@@ -555,6 +586,9 @@ const searchQuestions = async (req, res) => {
         createdAt: 1,
         updatedAt: 1,
         score: 1, // Optional: Include for debugging or frontend use
+        voteCount: 1, // Include voteCount in the projection
+        answersCount: 1,
+        commentsCount: 1,
       },
     });
 
@@ -565,12 +599,14 @@ const searchQuestions = async (req, res) => {
 
     console.log("Questions found:", questions.length);
 
-    // Add vote status for the user
+    // Map questions to include userHasUpvoted and userHasDownvoted
     const results = questions.map((question) => ({
       ...question,
       userHasUpvoted: question.upvoters.includes(userId),
       userHasDownvoted: question.downvoters.includes(userId),
     }));
+
+    console.log("Processed Questions with voteCount:", results);
 
     res.status(200).json({
       status: true,

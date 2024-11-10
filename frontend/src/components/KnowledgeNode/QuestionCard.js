@@ -11,6 +11,7 @@ import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
 import useVote from "../../hooks/useVote";
 
 function QuestionCard({ question, updateQuestionVote }) {
+  console.log("QuestionCard received question:", question);
   const {
     _id,
     title,

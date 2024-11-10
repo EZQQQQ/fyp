@@ -13,6 +13,7 @@ function VoteButtons({
   userHasDownvoted,
   loading,
 }) {
+  console.log("VoteButtons received voteCount:", voteCount);
   return (
     <div className="flex items-center space-x-2 border border-gray-300 dark:border-gray-600 rounded-full p-2">
       {/* Upvote Button */}

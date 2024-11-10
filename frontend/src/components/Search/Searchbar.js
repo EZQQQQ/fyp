@@ -2,50 +2,49 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux"; // Import useSelector
-import { selectUser } from "../../features/userSlice"; // Import selectUser
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/userSlice";
 import axiosInstance from "../../utils/axiosConfig";
 import PeopleIcon from "@mui/icons-material/People";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import Modal from "../Modal/CommunitySelectModal"; // Ensure this component exists
+import Modal from "../Modal/CommunitySelectModal";
 
 function SearchBar() {
-  const user = useSelector(selectUser); // Access user state
+  const user = useSelector(selectUser);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCommunity, setSelectedCommunity] = useState("all");
   const [communities, setCommunities] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false); // Adjusted loading state
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const dropdownRef = useRef(null);
-  const searchInputRef = useRef(null); // Define searchInputRef
+  const searchInputRef = useRef(null);
 
-  // Detect screen size for responsive behavior
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's md breakpoint
+      setIsMobile(window.innerWidth < 768);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Fetch user's communities whenever the user state changes and is authenticated
   useEffect(() => {
     const fetchCommunities = async () => {
       if (!user) {
-        setCommunities([]); // Clear communities if no user
+        setCommunities([]);
         return;
       }
 
-      setLoading(true); // Start loading
+      setLoading(true);
       try {
         const response = await axiosInstance.get("/communities/user");
+        console.log("Communities Response:", response.data);
         if (response.data.status && Array.isArray(response.data.communities)) {
           setCommunities(response.data.communities);
         } else {
@@ -54,15 +53,15 @@ function SearchBar() {
         }
       } catch (error) {
         console.error("Error fetching communities:", error);
+
         setCommunities([]);
       } finally {
-        setLoading(false); // End loading
+        setLoading(false);
       }
     };
     fetchCommunities();
-  }, [user]); // Depend on user state
+  }, [user]);
 
-  // Close the dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -87,7 +86,6 @@ function SearchBar() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (isMobile && selectedCommunity === "all") {
-      // Prompt user to select a community first
       setShowModal(true);
     } else {
       navigate(
@@ -114,7 +112,6 @@ function SearchBar() {
 
   return (
     <div className="w-full px-4">
-      {/* Mobile Modal for Selecting Community */}
       {showModal && (
         <Modal
           communities={communities}
@@ -125,7 +122,6 @@ function SearchBar() {
 
       <form onSubmit={handleSearchSubmit}>
         <div className="flex items-center space-x-2">
-          {/* Community Dropdown - Hidden on Mobile */}
           {!isMobile && (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -179,7 +175,6 @@ function SearchBar() {
             </div>
           )}
 
-          {/* Search Input */}
           <div className="flex-1 relative">
             <input
               type="search"
