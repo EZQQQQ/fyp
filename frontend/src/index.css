@@ -38,7 +38,6 @@ body,
     max-height: 800px; /* Enough for ~3 cards plus buttons */
   }
 }
-*/
 
 /* Retain scrollbar styles if necessary, but ensure they don't interfere with responsiveness */
 .styled-scrollbar {
