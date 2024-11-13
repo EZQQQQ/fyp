@@ -1,0 +1,77 @@
+/* /frontend/src/components/MarkdownEditor/MarkdownEditor.css */
+
+/* General styles */
+.ql-toolbar,
+.ql-container {
+  border-color: #d1d5db; /* gray-300 */
+}
+
+/* Rounded corners */
+.ql-toolbar,
+.ql-container {
+  border-radius: 1rem; /* rounded-md */
+}
+
+/* Light mode styles */
+.ql-toolbar {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.ql-container {
+  background-color: #ffffff; /* white */
+  color: #1f2937; /* gray-800 */
+}
+
+/* Dark mode styles */
+.dark .ql-toolbar,
+.dark .ql-container {
+  border-color: #4b5563; /* gray-600 */
+}
+
+.dark .ql-toolbar {
+  background-color: #374151; /* gray-700 */
+}
+
+.dark .ql-container {
+  background-color: #1f2937; /* gray-800 */
+  color: #d1d5db; /* gray-300 */
+}
+
+/* Toolbar button styles in dark mode */
+.dark .ql-toolbar .ql-picker,
+.dark .ql-toolbar button {
+  color: #d1d5db;
+}
+
+.dark .ql-toolbar .ql-picker:hover,
+.dark .ql-toolbar {
+  color: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-picker-label:hover .ql-stroke,
+.dark .ql-toolbar .ql-stroke {
+  stroke: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-picker-label:hover .ql-fill,
+.dark .ql-toolbar .ql-fill {
+  fill: #9ca3af;
+}
+
+/* Editor text color */
+.ql-editor {
+  min-height: 200px;
+}
+
+.dark .ql-editor {
+  color: #d1d5db; /* gray-300 */
+}
+
+/* Placeholder text color */
+.ql-editor.ql-blank::before {
+  color: #9ca3af; /* gray-400 */
+}
+
+.dark .ql-editor.ql-blank::before {
+  color: #6b7280; /* gray-500 */
+}

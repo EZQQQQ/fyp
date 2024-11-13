@@ -5,7 +5,8 @@ import { Avatar } from "@mui/material";
 import axiosInstance from "../utils/axiosConfig";
 
 const UserAvatar = ({ user, handleSignOut, className }) => {
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || "";
+  const backendUrl =
+    process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
 
   const avatarSrc = user?.profilePicture
     ? `${backendUrl}${user.profilePicture}`
@@ -23,7 +24,7 @@ const UserAvatar = ({ user, handleSignOut, className }) => {
   return (
     <Avatar
       src={avatarSrc}
-      alt={user?.name || "Default Avatar"}
+      alt={user?.username || user?.name || "Default Avatar"}
       className={`cursor-pointer border border-gray-300 ${className}`}
       onClick={handleAvatarClick}
     />

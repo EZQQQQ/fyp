@@ -24,17 +24,23 @@ const addAnswer = async (req, res) => {
       question_id: questionId,
       answer: answer.trim(),
       user: req.user._id, // From auth middleware
-      upvoters: [], // Initialize as empty array
-      downvoters: [], // Initialize as empty array
-      voteCount: 0, // Initialize vote count
+      upvoters: [],
+      downvoters: [],
+      voteCount: 0,
     });
 
     const savedAnswer = await newAnswer.save();
 
+    // Re-query the answer to ensure 'user' is populated
+    const populatedAnswer = await Answer.findById(savedAnswer._id).populate(
+      "user",
+      "name username profilePicture"
+    );
+
     res.status(201).json({
       status: true,
       message: "Answer added successfully",
-      data: savedAnswer,
+      data: populatedAnswer,
     });
   } catch (err) {
     console.error("Error adding answer:", err);

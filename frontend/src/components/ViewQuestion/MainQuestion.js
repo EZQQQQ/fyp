@@ -74,23 +74,21 @@ function MainQuestion() {
 
   // Sync answer vote data from Redux to local state
   useEffect(() => {
-    answers.forEach((answer) => {
-      if (voteData[answer._id]) {
-        setAnswers((prevAnswers) =>
-          prevAnswers.map((ans) =>
-            ans._id === answer._id
-              ? {
-                  ...ans,
-                  voteCount: voteData[ans._id].voteCount,
-                  userHasUpvoted: voteData[ans._id].userHasUpvoted,
-                  userHasDownvoted: voteData[ans._id].userHasDownvoted,
-                }
-              : ans
-          )
-        );
-      }
-    });
-  }, [voteData, answers]);
+    setAnswers((prevAnswers) =>
+      prevAnswers.map((ans) => {
+        if (voteData[ans._id]) {
+          const voteInfo = voteData[ans._id];
+          return {
+            ...ans,
+            voteCount: voteInfo.voteCount,
+            userHasUpvoted: voteInfo.userHasUpvoted,
+            userHasDownvoted: voteInfo.userHasDownvoted,
+          };
+        }
+        return ans;
+      })
+    );
+  }, [voteData]);
 
   // Handle voting for the main question using useVote hook
   const {
@@ -190,7 +188,17 @@ function MainQuestion() {
       const response = await axiosInstance.post(`/answer/${questionId}`, {
         answer: answerText,
       });
-      setAnswers([...answers, response.data.data]);
+      const newAnswer = response.data.data;
+
+      // Add default voting fields
+      const answerWithDefaults = {
+        ...newAnswer,
+        userHasUpvoted: false,
+        userHasDownvoted: false,
+      };
+
+      setAnswers((prevAnswers) => [...prevAnswers, answerWithDefaults]);
+
       setAnswerText("");
       toast.success("Answer posted successfully!");
     } catch (error) {
@@ -209,7 +217,6 @@ function MainQuestion() {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 sm:p-6">
-      {/* ToastContainer should be included once in App.js */}
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between mb-6">
@@ -298,7 +305,7 @@ function MainQuestion() {
                 className=""
               />
               <p className="text-gray-900 dark:text-gray-100 font-medium">
-                {question.user?.name}
+                {question.user?.username || question.user?.name || "Anonymous"}
               </p>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {new Date(question.createdAt).toLocaleString()}
@@ -377,15 +384,15 @@ function MainQuestion() {
                   onDownvote={() => handleAnswerVote("downvote", answer._id)}
                   userHasUpvoted={answer.userHasUpvoted}
                   userHasDownvoted={answer.userHasDownvoted}
-                  loading={answerLoading[answer._id] || false} // Pass loading state
+                  loading={answerLoading[answer._id] || false}
                 />
 
                 {/* Author Info */}
-                <div className="flex items-center space-x-2 ">
+                <div className="flex items-center space-x-2">
                   {/* Use UserAvatar Component */}
                   <UserAvatar user={answer.user} handleSignOut={() => {}} />
                   <p className="text-gray-900 dark:text-gray-100 font-medium">
-                    {answer.user?.name}
+                    {answer.user?.username || answer.user?.name || "Anonymous"}
                   </p>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(answer.createdAt).toLocaleString()}

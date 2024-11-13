@@ -1,0 +1,46 @@
+/* frontend/src/components/AddQuestion/styles.css */
+
+.listbox {
+  /* Ensure the listbox occupies the full width */
+  width: 100%;
+
+  /* Light mode styles */
+  background-color: white;
+  color: black;
+}
+
+.listbox .MuiAutocomplete-option {
+  background-color: white;
+  color: black;
+  border-radius: 4px;
+  padding: 8px 16px;
+}
+
+/* Light mode hover state */
+.listbox .MuiAutocomplete-option[data-focus="true"] {
+  background-color: #f3f4f6; /* Light hover */
+}
+
+/* Light mode selected state */
+.listbox .MuiAutocomplete-option[aria-selected="true"] {
+  background-color: #e5e7eb; /* Light selected */
+}
+
+/* Dark mode styles */
+.dark .listbox {
+  background-color: #374151; /* Dark mode background */
+  color: #d1d5db; /* Dark mode text */
+}
+
+.dark .listbox .MuiAutocomplete-option {
+  background-color: #374151 !important;
+  color: #d1d5db !important;
+}
+
+.dark .listbox .MuiAutocomplete-option[data-focus="true"] {
+  background-color: #4b5563; /* Dark hover */
+}
+
+.dark .listbox .MuiAutocomplete-option[aria-selected="true"] {
+  background-color: #4b5563; /* Dark selected */
+}

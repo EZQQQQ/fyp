@@ -3,6 +3,7 @@
 import React from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import "./MarkdownEditor.css"; // Import the custom CSS
 import MarkdownShortcuts from "quill-markdown-shortcuts";
 
 Quill.register("modules/markdownShortcuts", MarkdownShortcuts);
@@ -35,7 +36,7 @@ const MarkdownEditor = ({ value, onChange, placeholder, darkMode }) => {
   ];
 
   return (
-    <div className={darkMode ? "quill-dark" : "quill-light"}>
+    <div className={`rounded-md overflow-hidden ${darkMode ? "dark" : ""}`}>
       <ReactQuill
         theme="snow"
         value={value}

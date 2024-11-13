@@ -9,7 +9,6 @@ import {
   Chip,
   Tabs,
   Tab,
-  Avatar,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -21,22 +20,19 @@ import ImageIcon from "@mui/icons-material/Image";
 import PollIcon from "@mui/icons-material/Poll";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { selectUser } from "../../features/userSlice";
-import {
-  selectCommunities,
-  fetchUserCommunities,
-} from "../../features/communitySlice";
 import axiosInstance from "../../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
+import CommunityAvatar from "../Community/CommunityAvatar";
+import styles from "./styles.css";
 
 function Question() {
   const user = useSelector(selectUser);
-  const communities = useSelector(selectCommunities);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // State variables
+  const [communities, setCommunities] = useState([]);
   const [community, setCommunity] = useState(null);
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
@@ -54,10 +50,28 @@ function Question() {
 
   useEffect(() => {
     // Fetch user's communities when component mounts
-    if (user) {
-      dispatch(fetchUserCommunities());
-    }
-  }, [user, dispatch]);
+    const fetchUserCommunities = async () => {
+      if (!user) {
+        setCommunities([]);
+        return;
+      }
+
+      try {
+        const response = await axiosInstance.get("/communities/user");
+        if (response.data.status && Array.isArray(response.data.communities)) {
+          setCommunities(response.data.communities);
+        } else {
+          console.warn("No communities found or incorrect response structure.");
+          setCommunities([]);
+        }
+      } catch (error) {
+        console.error("Error fetching communities:", error);
+        setCommunities([]);
+      }
+    };
+
+    fetchUserCommunities();
+  }, [user]);
 
   const handleCommunityChange = (event, value) => {
     setCommunity(value);
@@ -122,6 +136,12 @@ function Question() {
       return;
     }
 
+    // Validate community selection
+    if (!community) {
+      setSubmissionError("Please select a community.");
+      return;
+    }
+
     // Adjust contentType mapping
     const contentTypeMapping = {
       0: 0, // Text
@@ -148,7 +168,7 @@ function Question() {
 
     try {
       const formData = new FormData();
-      formData.append("community", community ? community._id : ""); // Assuming community has an _id
+      formData.append("community", community ? community._id : "");
       formData.append("title", title.trim());
       formData.append("contentType", contentType);
       formData.append("tags", JSON.stringify(tags));
@@ -204,21 +224,25 @@ function Question() {
       </h1>
 
       {/* Community Selection */}
-      <div className="flex items-center mb-6">
-        <PeopleIcon className="text-gray-500 dark:text-gray-400 mr-3" />
+      <div className="flex items-center mb-6 space-x-3">
+        <PeopleIcon className="text-gray-600 dark:text-gray-300" />
         <Autocomplete
           options={communities}
-          getOptionLabel={(option) => option.name} // Assuming community has a 'name' field
+          getOptionLabel={(option) => option.name}
           onChange={handleCommunityChange}
           value={community}
           renderOption={(props, option) => (
             <li {...props}>
-              <Avatar
-                src={option.avatar}
-                alt={option.name}
-                className="h-6 w-6 mr-2"
-              />
-              {option.name}
+              <div className="flex items-center space-x-3">
+                <CommunityAvatar
+                  avatarUrl={option.avatar}
+                  name={option.name}
+                  className="h-8 w-8"
+                />
+                <span className="text-gray-800 dark:text-gray-200">
+                  {option.name}
+                </span>
+              </div>
             </li>
           )}
           renderInput={(params) => (
@@ -227,10 +251,22 @@ function Question() {
               label="Select a Community"
               variant="outlined"
               className="w-full"
+              InputLabelProps={{
+                className: "text-gray-700 dark:text-gray-300",
+              }}
+              InputProps={{
+                ...params.InputProps,
+                sx: { borderRadius: "30px" },
+                className:
+                  "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
+              }}
             />
           )}
           className="w-full"
           noOptionsText="No communities found"
+          classes={{
+            listbox: styles.listbox, // Apply the custom listbox class
+          }}
         />
       </div>
 
@@ -244,6 +280,14 @@ function Question() {
           onChange={handleTitleChange}
           error={titleError}
           helperText={titleError ? "Please provide a title." : ""}
+          InputProps={{
+            sx: { borderRadius: "20px" },
+            className:
+              "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
+          }}
+          InputLabelProps={{
+            className: "text-gray-700 dark:text-gray-300",
+          }}
         />
         {titleError && (
           <ErrorIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500" />
@@ -266,7 +310,7 @@ function Question() {
                 variant="outlined"
                 label={option}
                 {...getTagProps({ index })}
-                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full"
               />
             ))
           }
@@ -276,6 +320,15 @@ function Question() {
               variant="outlined"
               label="Tags"
               placeholder="Enter tags"
+              InputProps={{
+                ...params.InputProps,
+                sx: { borderRadius: "20px" },
+                className:
+                  "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
+              }}
+              InputLabelProps={{
+                className: "text-gray-700 dark:text-gray-300",
+              }}
             />
           )}
         />
@@ -297,28 +350,28 @@ function Question() {
         <Tab
           icon={<NotesIcon />}
           label="Text"
-          className={`flex flex-col items-center ${
+          className={`flex flex-col items-center transform transition-all duration-200 ${
             tabValue === 0
               ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400"
+              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
           }`}
         />
         <Tab
           icon={<ImageIcon />}
           label="Images & Video"
-          className={`flex flex-col items-center ${
+          className={`flex flex-col items-center transform transition-all duration-200 ${
             tabValue === 1
               ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400"
+              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
           }`}
         />
         <Tab
           icon={<PollIcon />}
           label="Poll"
-          className={`flex flex-col items-center ${
+          className={`flex flex-col items-center transform transition-all duration-200 ${
             tabValue === 2
               ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400"
+              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
           }`}
         />
       </Tabs>
@@ -337,7 +390,7 @@ function Question() {
             </div>
           )}
           {tabValue === 1 && (
-            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
               <CloudUploadIcon className="text-gray-500 dark:text-gray-400 text-4xl mb-4" />
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">
                 Drag and Drop or Upload Media
@@ -353,7 +406,7 @@ function Question() {
               />
               <label
                 htmlFor="media-upload"
-                className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                className="cursor-pointer px-4 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors duration-200"
               >
                 <CloudUploadIcon className="inline-block mr-2" />
                 Upload Files
@@ -396,7 +449,7 @@ function Question() {
                         >
                           {(provided, snapshot) => (
                             <div
-                              className={`flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-md ${
+                              className={`flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-full ${
                                 snapshot.isDragging
                                   ? "bg-gray-200 dark:bg-gray-600"
                                   : ""
@@ -420,12 +473,19 @@ function Question() {
                                   handlePollOptionChange(index, event)
                                 }
                                 className="flex-1"
+                                InputProps={{
+                                  className:
+                                    "bg-white dark:bg-gray-700 rounded-full",
+                                }}
+                                InputLabelProps={{
+                                  className: "text-gray-700 dark:text-gray-300",
+                                }}
                               />
                               {/* Remove Option Button */}
                               {pollOptions.length > 2 && (
                                 <IconButton
                                   onClick={() => removePollOption(index)}
-                                  className="text-red-500 dark:text-red-400 ml-2"
+                                  className="text-red-500 dark:text-red-400 ml-2 hover:text-red-600 dark:hover:text-red-300"
                                 >
                                   <RemoveCircleIcon />
                                 </IconButton>
@@ -444,7 +504,7 @@ function Question() {
                 variant="outlined"
                 color="primary"
                 onClick={addPollOption}
-                className="self-start"
+                className="self-start hover:bg-blue-50 dark:hover:bg-gray-600 rounded-full"
               >
                 Add Option
               </Button>
@@ -463,7 +523,7 @@ function Question() {
             variant="contained"
             color="primary"
             type="submit"
-            className="px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+            className="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors duration-200"
           >
             Post
           </Button>
