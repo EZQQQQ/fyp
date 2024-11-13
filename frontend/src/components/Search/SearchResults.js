@@ -72,7 +72,9 @@ function SearchResults() {
 
   return (
     <div className="p-4 md:p-6 overflow-x-hidden">
-      <h1 className="text-2xl font-semibold mb-4">Search Results</h1>
+      <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
+        Search Results
+      </h1>
       {questions.length > 0 ? (
         <div className="flex flex-col space-y-6">
           {questions.map((question) => (

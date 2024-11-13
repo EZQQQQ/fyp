@@ -216,12 +216,6 @@ function MainQuestion() {
           <h2 className="text-2xl font-bold mb-4 sm:mb-0 text-gray-900 dark:text-gray-100 break-words">
             {question.title}
           </h2>
-          <Link to="/add-question">
-            <button className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-              <QuestionAnswerIcon className="mr-2" />
-              Ask Question
-            </button>
-          </Link>
         </div>
 
         {/* Question Info */}

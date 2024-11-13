@@ -11,7 +11,6 @@ import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
 import useVote from "../../hooks/useVote";
 
 function QuestionCard({ question, updateQuestionVote }) {
-  console.log("QuestionCard received question:", question);
   const {
     _id,
     title,
@@ -78,7 +77,7 @@ function QuestionCard({ question, updateQuestionVote }) {
       </div>
 
       {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
-      <div className="flex flex-col md:flex-row justify-between items-center">
+      <div className="flex md:flex-row justify-between items-center">
         {/* Left Side: Vote Buttons and Total Responses */}
         <div className="flex items-center space-x-4">
           <VoteButtons
@@ -92,10 +91,12 @@ function QuestionCard({ question, updateQuestionVote }) {
 
           <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-2">
             <IconButton size="small" color="default" className="p-0">
-              <ChatBubbleOutline
-                className="text-gray-500 dark:text-white"
-                fontSize="small"
-              />
+              <Link to={`/question/${_id}`}>
+                <ChatBubbleOutline
+                  className="text-gray-500 dark:text-white"
+                  fontSize="small"
+                />
+              </Link>
             </IconButton>
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
               {totalResponses}

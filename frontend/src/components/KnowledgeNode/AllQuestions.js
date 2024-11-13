@@ -81,7 +81,7 @@ function AllQuestions() {
   return (
     <div className="p-4 md:p-6 overflow-x-hidden">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+      <div className="flex md:flex-row justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
           All Questions
         </h1>

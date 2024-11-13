@@ -44,7 +44,6 @@ function SearchBar() {
       setLoading(true);
       try {
         const response = await axiosInstance.get("/communities/user");
-        console.log("Communities Response:", response.data);
         if (response.data.status && Array.isArray(response.data.communities)) {
           setCommunities(response.data.communities);
         } else {

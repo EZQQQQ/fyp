@@ -400,7 +400,6 @@ const getQuestionsByCommunity = async (req, res) => {
  */
 const searchQuestions = async (req, res) => {
   try {
-    console.log("Received search request with:", req.query);
     const { query, community } = req.query;
     const userId = req.user.id; // Ensure userId is obtained correctly
 
@@ -582,14 +581,8 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    console.log("Aggregation Pipeline:", JSON.stringify(pipeline, null, 2));
-
     // Execute aggregation pipeline
     const questions = await Question.aggregate(pipeline).exec();
-
-    console.log("Detailed Questions with Answers and Comments:", questions);
-
-    console.log("Questions found:", questions.length);
 
     // Map questions to include userHasUpvoted and userHasDownvoted
     const results = questions.map((question) => ({
@@ -601,8 +594,6 @@ const searchQuestions = async (req, res) => {
         .map((id) => id.toString())
         .includes(userId),
     }));
-
-    console.log("Processed Questions with voteCount:", results);
 
     res.status(200).json({
       status: true,
