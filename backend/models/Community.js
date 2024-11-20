@@ -2,6 +2,14 @@
 
 const mongoose = require("mongoose");
 
+const AssessmentTaskSchema = new mongoose.Schema({
+  label: { type: String, required: true },
+  type: { type: String, required: true }, // e.g., 'votes', 'postings', 'quizzes'
+  contentType: { type: String }, // e.g., 'questions', 'answers' (if applicable)
+  total: { type: Number, required: true }, // Total required for 100%
+  weight: { type: Number, required: true }, // Weight towards total score
+});
+
 const CommunitySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -34,6 +42,7 @@ const CommunitySchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  assessmentTasks: [AssessmentTaskSchema],
   createdAt: {
     type: Date,
     default: Date.now,

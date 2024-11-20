@@ -41,7 +41,7 @@ function QuestionCard({ question, updateQuestionVote }) {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 w-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 w-full">
       {/* Top Row: Community Info and Bookmark */}
       <div className="flex items-center justify-between mb-2">
         {community && (

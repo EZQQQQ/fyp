@@ -3,7 +3,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import CommunityAvatar from "./CommunityAvatar";
-import { toast } from "react-toastify";
 
 const CommunityCard = ({ community, isMember, handleJoin }) => {
   const backendUrl =

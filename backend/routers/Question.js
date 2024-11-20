@@ -4,33 +4,71 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
 const {
-  validateQuestion,
+  validateQuestionFields,
+  validateQuestionFiles,
   handleValidationResults,
 } = require("../middlewares/validate");
 const questionController = require("../controllers/questionController");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const { param } = require("express-validator");
+
+const uploadDir = path.join(__dirname, "../uploads/");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../uploads/"));
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
 
-const upload = multer({ storage: storage });
+// Optional: Filter files by MIME type
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = ["image/jpeg", "image/png", "video/mp4"];
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `Invalid file type: ${file.originalname}. Only JPEG, PNG, and MP4 are allowed.`
+      ),
+      false
+    );
+  }
+};
+
+const upload = multer({ storage: storage, fileFilter: fileFilter });
+
+// Error handling middleware for Multer
+const uploadFiles = (req, res, next) => {
+  upload.array("files", 10)(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      // A Multer error occurred when uploading.
+      return res.status(400).json({ status: false, message: err.message });
+    } else if (err) {
+      // An unknown error occurred when uploading.
+      return res.status(400).json({ status: false, message: err.message });
+    }
+    // Everything went fine.
+    next();
+  });
+};
 
 // @route POST /api/question/create
 // @desc Create a new question
 router.post(
   "/create",
   auth,
-  upload.array("files", 10),
-  validateQuestion,
+  uploadFiles,
+  validateQuestionFields,
+  validateQuestionFiles,
   questionController.createQuestion
 );
 
@@ -38,16 +76,12 @@ router.post(
 // @desc Get all questions
 router.get("/", auth, questionController.getAllQuestions);
 
-// New Route: Get User's Questions
-router.get(
-  "/user-questions",
-  auth, // Ensure the user is authenticated
-  questionController.getUserQuestions
-);
+// @route GET /api/question/user-questions
+// @desc Get user's questions
+router.get("/user-questions", auth, questionController.getUserQuestions);
 
-// Search Questions Route
 // @route GET /api/question/search
-// @desc Search questions with matching
+// @desc Search questions
 router.get("/search", auth, questionController.searchQuestions);
 
 // @route GET /api/question/:id

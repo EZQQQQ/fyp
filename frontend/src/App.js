@@ -11,7 +11,7 @@ import Header from "./components/Header/Header";
 import Sidebar from "./components/KnowledgeNode/Sidebar";
 import CreateCommunity from "./components/Community/CreateCommunity";
 import CommunityList from "./components/Community/CommunityList";
-import CommunityDetail from "./components/Community/CommunityDetail";
+// import CommunityDetail from "./components/Community/CommunityDetail";
 import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
 import AddQuestion from "./components/AddQuestion/Question";
@@ -28,6 +28,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CommunityPage from "./components/Community/CommunityPage";
 import SearchResults from "./components/Search/SearchResults";
+import { ThemeProvider } from "@material-tailwind/react";
 
 function App() {
   const user = useSelector(selectUser);

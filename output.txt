@@ -21,6 +21,7 @@
 │   │   ├── Comment.js
 │   │   ├── Community.js
 │   │   ├── Question.js
+│   │   ├── Quiz.js
 │   │   └── User.js
 │   ├── firebaseAdmin.js
 │   ├── package-lock.json
@@ -92,6 +93,8 @@
 │   │   │   │   ├── Unauthorized.js
 │   │   │   │   └── index.js
 │   │   │   ├── Community
+│   │   │   │   ├── AdminAssessmentTasks.js
+│   │   │   │   ├── AssessmentTasks.js
 │   │   │   │   ├── CommunityAvatar.js
 │   │   │   │   ├── CommunityCard.js
 │   │   │   │   ├── CommunityDetail.js
@@ -108,6 +111,7 @@
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   └── SidebarLink.js
 │   │   │   ├── Modal
+│   │   │   │   ├── CustomDialog.js
 │   │   │   │   └── CommunitySelectModal.js
 │   │   │   ├── Search
 │   │   │   │   ├── Searchbar.js
@@ -125,6 +129,7 @@
 │   │   ├── config
 │   │   │   └── firebase-config.js
 │   │   ├── features
+│   │   │   ├── assessmentSlice.js
 │   │   │   ├── communitySlice.js
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
@@ -133,6 +138,7 @@
 │   │   │   ├── useUserCommunities.js
 │   │   │   └── useVote.js
 │   │   ├── services
+│   │   │   ├── assessmentService.js
 │   │   │   ├── communityService.js
 │   │   │   ├── questionService.js
 │   │   │   ├── userService.js

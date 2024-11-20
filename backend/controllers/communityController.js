@@ -1,7 +1,11 @@
 // /backend/controllers/communityController.js
 
+const mongoose = require("mongoose");
 const Community = require("../models/Community");
+const Question = require("../models/Question");
 const User = require("../models/User");
+const Answer = require("../models/Answer");
+const Quiz = require("../models/Quiz");
 const path = require("path");
 
 // Create a new community
@@ -226,6 +230,191 @@ const getCommunityById = async (req, res) => {
   }
 };
 
+// Get Assessment Tasks for a Community
+const getAssessmentTasks = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const community = await Community.findById(id).select("assessmentTasks");
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    res.json({ tasks: community.assessmentTasks });
+  } catch (error) {
+    console.error("Error fetching assessment tasks:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Get User Participation Metrics
+const getUserParticipation = async (req, res) => {
+  const { communityId } = req.params;
+  const userId = req.user.id; // Assuming auth middleware sets req.user
+
+  try {
+    const community = await Community.findById(communityId).select(
+      "assessmentTasks"
+    );
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    const participation = await Promise.all(
+      community.assessmentTasks.map(async (task) => {
+        let value = 0;
+
+        switch (task.type) {
+          case "votes":
+            if (task.contentType === "questions") {
+              // Example: Count upvotes and downvotes on user's questions
+              value = await Question.countDocuments({
+                author: userId,
+                "votes.type": { $in: ["upvote", "downvote"] },
+              });
+            } else if (task.contentType === "answers") {
+              value = await Answer.countDocuments({
+                author: userId,
+                "votes.type": { $in: ["upvote", "downvote"] },
+              });
+            }
+            break;
+
+          case "postings":
+            if (task.contentType === "questions") {
+              value = await Question.countDocuments({ author: userId });
+            } else if (task.contentType === "answers") {
+              value = await Answer.countDocuments({ author: userId });
+            }
+            break;
+
+          case "quizzes":
+            // Assuming quiz scores are stored and associated with the user
+            const latestQuiz = await Quiz.findOne({
+              user: userId,
+              community: communityId,
+            })
+              .sort({ createdAt: -1 })
+              .exec();
+            value = latestQuiz ? latestQuiz.score : 0;
+            break;
+
+          default:
+            value = 0;
+        }
+
+        return {
+          id: task._id,
+          label: task.label,
+          value,
+          total: task.total,
+          weight: task.weight,
+        };
+      })
+    );
+
+    res.json({ participation });
+  } catch (error) {
+    console.error("Error fetching user participation:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Create a new assessment task
+const createAssessmentTask = async (req, res) => {
+  const { communityId } = req.params;
+  const { label, type, contentType, total, weight } = req.body;
+
+  try {
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    const newTask = { label, type, contentType, total, weight };
+    community.assessmentTasks.push(newTask);
+    await community.save();
+
+    res
+      .status(201)
+      .json({ message: "Assessment task created.", task: newTask });
+  } catch (error) {
+    console.error("Error creating assessment task:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Update an existing assessment task
+const updateAssessmentTask = async (req, res) => {
+  const { communityId, taskId } = req.params;
+  const { label, type, contentType, total, weight } = req.body;
+
+  try {
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    const task = community.assessmentTasks.id(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Assessment task not found." });
+    }
+
+    // Update task fields
+    task.label = label !== undefined ? label : task.label;
+    task.type = type !== undefined ? type : task.type;
+    task.contentType =
+      contentType !== undefined ? contentType : task.contentType;
+    task.total = total !== undefined ? total : task.total;
+    task.weight = weight !== undefined ? weight : task.weight;
+
+    await community.save();
+
+    res.json({ message: "Assessment task updated.", task });
+  } catch (error) {
+    console.error("Error updating assessment task:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Delete an assessment task
+const deleteAssessmentTask = async (req, res) => {
+  console.log(`Received DELETE request for task ${req.params.taskId}`);
+  const { communityId, taskId } = req.params;
+
+  // Validate ObjectIds
+  if (!mongoose.Types.ObjectId.isValid(communityId)) {
+    return res.status(400).json({ message: "Invalid community ID." });
+  }
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    return res.status(400).json({ message: "Invalid task ID." });
+  }
+
+  try {
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    // Check if the task exists within the assessmentTasks array
+    const task = community.assessmentTasks.id(taskId);
+    if (!task) {
+      return res.status(404).json({ message: "Assessment task not found." });
+    }
+
+    // Remove the task using the pull method
+    community.assessmentTasks.pull(taskId);
+
+    // Save the updated community
+    await community.save();
+
+    res.json({ message: "Assessment task deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting assessment task:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
 module.exports = {
   createCommunity,
   getAllCommunities,
@@ -233,4 +422,9 @@ module.exports = {
   joinCommunity,
   leaveCommunity,
   getCommunityById,
+  getAssessmentTasks,
+  getUserParticipation,
+  createAssessmentTask,
+  updateAssessmentTask,
+  deleteAssessmentTask,
 };

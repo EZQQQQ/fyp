@@ -7,24 +7,36 @@ const mongoose = require("mongoose");
 const handleValidationResults = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    // Return the first error message for consistency
+    // Return all error messages for better debugging
     return res.status(400).json({
       status: false,
-      message: errors.array()[0].msg,
+      message: "Validation failed",
+      errors: errors.array(),
     });
   }
   next();
 };
 
 // **Validation for Questions**
-const validateQuestion = [
-  body("community").notEmpty().withMessage("Community is required"),
+const validateQuestionFields = [
+  body("community")
+    .notEmpty()
+    .withMessage("Community is required")
+    .bail()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .withMessage("Invalid community ID"),
   body("title").notEmpty().withMessage("Title is required"),
-  body("contentType").isIn([0, 1, 2]).withMessage("Invalid content type"),
-  // Additional validations based on contentType
+  body("contentType")
+    .isInt({ min: 0, max: 2 })
+    .withMessage("Invalid content type"),
+  // Conditionally validate 'content' based on 'contentType'
   body("content").custom((value, { req }) => {
-    if (parseInt(req.body.contentType) === 0 && !value) {
-      throw new Error("Content is required for text questions");
+    const contentType = parseInt(req.body.contentType);
+    if (
+      (contentType === 0 || contentType === 2) &&
+      (!value || value.trim() === "")
+    ) {
+      throw new Error("Content is required for Text and Poll questions");
     }
     return true;
   }),
@@ -35,7 +47,11 @@ const validateQuestion = [
       }
       let options = value;
       if (typeof options === "string") {
-        options = JSON.parse(options);
+        try {
+          options = JSON.parse(options);
+        } catch (err) {
+          throw new Error("Poll options must be a valid JSON array");
+        }
       }
       if (!Array.isArray(options) || options.length < 2) {
         throw new Error("At least two poll options are required");
@@ -43,18 +59,31 @@ const validateQuestion = [
     }
     return true;
   }),
-  body("files").custom((value, { req }) => {
-    if (parseInt(req.body.contentType) === 1) {
-      if (!req.files || req.files.length === 0) {
-        throw new Error(
-          "At least one file is required for image/video questions"
-        );
-      }
-    }
-    return true;
-  }),
   handleValidationResults,
 ];
+
+// **Separate File Validation Middleware**
+const validateQuestionFiles = (req, res, next) => {
+  if (parseInt(req.body.contentType) === 1) {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        status: false,
+        message: "At least one file is required for image/video questions",
+      });
+    }
+    // Optionally, validate file types here
+    const allowedMimeTypes = ["image/jpeg", "image/png", "video/mp4"];
+    for (let file of req.files) {
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        return res.status(400).json({
+          status: false,
+          message: `Invalid file type: ${file.originalname}`,
+        });
+      }
+    }
+  }
+  next();
+};
 
 // **Validation for Answers**
 // Validation for adding an answer (POST)
@@ -100,31 +129,13 @@ const validateGetComments = [
   handleValidationResults,
 ];
 
-// // **Validation for User Registration**
-// const validateRegisterUser = [
-//   body("name").isString().trim().notEmpty().withMessage("Name is required."),
-//   body("email").isEmail().withMessage("Valid email is required."),
-//   body("password")
-//     .isLength({ min: 6 })
-//     .withMessage("Password must be at least 6 characters."),
-//   handleValidationResults,
-// ];
-
-// // **Validation for User Login**
-// const validateLoginUser = [
-//   body("email").isEmail().withMessage("Valid email is required."),
-//   body("password").isString().withMessage("Password is required."),
-//   handleValidationResults,
-// ];
-
-// Export all validation functions, including handleValidationResults
+// Export all validation functions
 module.exports = {
-  validateQuestion,
+  validateQuestionFields,
+  validateQuestionFiles,
   validateAddAnswer,
   validateGetAnswers,
   validateAddComment,
   validateGetComments,
-  // validateRegisterUser,
-  // validateLoginUser,
-  handleValidationResults, // Export this function
+  handleValidationResults,
 };

@@ -11,7 +11,7 @@ export const fetchCommunities = createAsyncThunk(
     try {
       const response = await communityService.fetchCommunities();
       if (response.status) {
-        return response.data; // Return the array of communities
+        return response.data; // return the communities array
       } else {
         return thunkAPI.rejectWithValue("Failed to fetch communities.");
       }
@@ -31,9 +31,17 @@ export const fetchUserCommunities = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await communityService.getUserCommunities();
-      return response.data;
+      if (response.status) {
+        return response.communities; // return the communities array
+      } else {
+        return thunkAPI.rejectWithValue("Failed to fetch communities.");
+      }
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.response.data);
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch communities."
+      );
     }
   }
 );
@@ -66,7 +74,7 @@ export const joinCommunity = createAsyncThunk(
     try {
       const response = await communityService.joinCommunity(communityId);
       if (response.status) {
-        return response.data; // Return updated community data if needed
+        return response.data; // Assuming response.data is the updated community
       } else {
         return thunkAPI.rejectWithValue("Failed to join community.");
       }
@@ -113,7 +121,7 @@ const communitySlice = createSlice({
       })
       .addCase(fetchUserCommunities.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.userCommunities = action.payload.communities;
+        state.userCommunities = action.payload;
       })
       .addCase(fetchUserCommunities.rejected, (state, action) => {
         state.status = "failed";

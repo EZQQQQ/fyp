@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
-const authorizeRoles = require("../middlewares/authorize"); // If using role-based authorization
+const authorizeRoles = require("../middlewares/authorize"); // Role-based authorization middleware
 const CommunityController = require("../controllers/communityController");
 const uploadCommunity = require("../middlewares/uploadCommunity");
 const questionController = require("../controllers/questionController");
@@ -44,5 +44,41 @@ router.get("/:id", auth, CommunityController.getCommunityById);
 
 // Route to get questions by community ID
 router.get("/:id/questions", auth, questionController.getQuestionsByCommunity);
+
+// Routes to manage assessment tasks (protected)
+router.post(
+  "/:communityId/assessment-tasks",
+  auth,
+  authorizeRoles("professor", "admin"),
+  CommunityController.createAssessmentTask
+);
+
+router.put(
+  "/:communityId/assessment-tasks/:taskId",
+  auth,
+  authorizeRoles("professor", "admin"),
+  CommunityController.updateAssessmentTask
+);
+
+router.delete(
+  "/:communityId/assessment-tasks/:taskId",
+  auth,
+  authorizeRoles("professor", "admin"),
+  CommunityController.deleteAssessmentTask
+);
+
+// Route to get assessment tasks for a community
+router.get(
+  "/:id/assessment-tasks",
+  auth,
+  CommunityController.getAssessmentTasks
+);
+
+// Route to get user participation metrics
+router.get(
+  "/:communityId/user-participation",
+  auth,
+  CommunityController.getUserParticipation
+);
 
 module.exports = router;

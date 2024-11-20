@@ -35,6 +35,7 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.error(`Origin ${origin} not allowed by CORS`);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -47,6 +48,12 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log(
+    `Incoming Request: ${req.method} ${req.url} from Origin: ${req.headers.origin}`
+  );
+  next();
+});
 
 // API Routes
 app.use("/api/user", userRoutes); // User routes

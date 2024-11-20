@@ -190,7 +190,11 @@ function Question() {
         formData.append("content", body.trim());
       }
 
-      const response = await axiosInstance.post("/question/create", formData);
+      const response = await axiosInstance.post("/question/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.data.status) {
         alert("Question added successfully");

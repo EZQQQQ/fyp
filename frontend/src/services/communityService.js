@@ -18,8 +18,9 @@ const fetchCommunities = async () => {
 };
 
 // Fetch user's communities
-const getUserCommunities = () => {
-  return axiosInstance.get("/communities/user");
+const getUserCommunities = async () => {
+  const response = await axiosInstance.get("/communities/user");
+  return response.data;
 };
 
 // Join a community

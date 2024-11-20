@@ -23,10 +23,20 @@ const createQuestion = async (req, res) => {
       req.body;
 
     // Validate required fields
-    if (!community || !title || !contentType || !content) {
+    if (!community || !title || contentType === undefined) {
       return res.status(400).json({
         status: false,
-        message: "Community, title, contentType, and content are required.",
+        message: "Community, title, and contentType are required.",
+      });
+    }
+
+    if (
+      (parseInt(contentType) === 0 || parseInt(contentType) === 2) &&
+      !content
+    ) {
+      return res.status(400).json({
+        status: false,
+        message: "Content is required for Text and Poll questions.",
       });
     }
 

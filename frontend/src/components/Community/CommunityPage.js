@@ -1,16 +1,22 @@
-// /frontend/src/components/Community/CommunityPage.js
+// frontend/src/components/Community/CommunityPage.js
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import communityService from "../../services/communityService";
 import questionService from "../../services/questionService";
-import { useSelector, useDispatch } from "react-redux"; // Import useDispatch
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { selectUser } from "../../features/userSlice";
-import { setVoteData } from "../../features/voteSlice"; // Import Redux action
+import { setVoteData } from "../../features/voteSlice";
+import {
+  fetchAssessmentTasks,
+  fetchUserParticipation,
+} from "../../features/assessmentSlice";
 import QuestionCard from "../KnowledgeNode/QuestionCard";
 import CreateQuestionButton from "../KnowledgeNode/CreateQuestionButton";
 import CommunityAvatar from "./CommunityAvatar";
+import AssessmentTasks from "./AssessmentTasks";
+import AdminAssessmentTasks from "./AdminAssessmentTasks";
 import "react-toastify/dist/ReactToastify.css";
 
 function CommunityPage() {
@@ -23,6 +29,8 @@ function CommunityPage() {
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  const assessment = useSelector((state) => state.assessment);
 
   // Function to update a specific question's vote data
   const updateQuestionVote = (questionId, voteData) => {
@@ -105,6 +113,16 @@ function CommunityPage() {
     }
   }, [community, id, dispatch]);
 
+  // Fetch Assessment Tasks and User Participation
+  useEffect(() => {
+    if (community) {
+      dispatch(fetchAssessmentTasks(id));
+      if (user) {
+        dispatch(fetchUserParticipation(id));
+      }
+    }
+  }, [community, id, dispatch, user]);
+
   // Handle Joining the Community
   const handleJoin = async () => {
     try {
@@ -154,6 +172,9 @@ function CommunityPage() {
       </div>
     );
   }
+
+  // Determine if the user is an admin or professor
+  const isAdmin = user && (user.role === "professor" || user.role === "admin");
 
   return (
     <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-6">
@@ -243,6 +264,23 @@ function CommunityPage() {
 
         <hr className="border-gray-300 dark:border-gray-600" />
 
+        {/* Assessment Tasks */}
+        <div>
+          {isAdmin ? (
+            <AdminAssessmentTasks communityId={id} />
+          ) : assessment.loading ? (
+            <p className="text-gray-500 dark:text-gray-400">
+              Loading assessment tasks...
+            </p>
+          ) : assessment.error ? (
+            <p className="text-red-500 dark:text-red-400">{assessment.error}</p>
+          ) : (
+            <AssessmentTasks tasks={assessment.participation} />
+          )}
+        </div>
+
+        <hr className="border-gray-300 dark:border-gray-600" />
+
         {/* Members Section */}
         <div>
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
@@ -254,7 +292,8 @@ function CommunityPage() {
                 <li key={member._id} className="flex items-center">
                   <CommunityAvatar
                     avatarUrl={
-                      member.avatar || "/uploads/defaults/default-avatar.jpeg"
+                      member.avatar ||
+                      "/uploads/defaults/default-avatar-user.jpeg"
                     }
                     name={member.username || member.name}
                     size="small"
