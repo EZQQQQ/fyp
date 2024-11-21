@@ -110,6 +110,7 @@ const getUserCommunities = async (req, res) => {
     });
   }
 };
+
 // Join a community
 const joinCommunity = async (req, res) => {
   try {
