@@ -1,4 +1,4 @@
-// frontend/src/components/Community/CommunityPage.js
+// /frontend/src/components/Community/CommunityPage.js
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -117,11 +117,9 @@ function CommunityPage() {
   useEffect(() => {
     if (community) {
       dispatch(fetchAssessmentTasks(id));
-      if (user) {
-        dispatch(fetchUserParticipation(id));
-      }
+      dispatch(fetchUserParticipation(id));
     }
-  }, [community, id, dispatch, user]);
+  }, [community, id, dispatch]);
 
   // Handle Joining the Community
   const handleJoin = async () => {

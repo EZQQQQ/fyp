@@ -5,31 +5,33 @@ import userReducer from "../features/userSlice";
 import communityReducer from "../features/communitySlice";
 import voteReducer from "../features/voteSlice";
 import assessmentReducer from "../features/assessmentSlice";
-import {
-  persistStore,
-  persistReducer,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
-} from "redux-persist";
-import storage from "redux-persist/lib/storage"; // defaults to localStorage for web
+import { persistStore, persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 
-// Combine all reducers into a root reducer
-const rootReducer = combineReducers({
+// Combine all reducers into an app reducer
+const appReducer = combineReducers({
   user: userReducer,
   communities: communityReducer,
   vote: voteReducer,
   assessment: assessmentReducer,
 });
 
-// Single persist configuration for the entire store
+// Root reducer that resets state on 'user/logout' action
+const rootReducer = (state, action) => {
+  if (action.type === "user/logout") {
+    // Clear the persisted state
+    storage.removeItem("persist:root");
+    // Reset the state
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+
+// Persist configuration
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "communities", "vote", "assessment"], // Persist these slices
+  whitelist: ["user", "communities", "vote", "assessment"],
 };
 
 // Create a persisted reducer
@@ -42,7 +44,13 @@ export const store = configureStore({
     getDefaultMiddleware({
       serializableCheck: {
         // Ignore redux-persist actions
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredActions: [
+          "persist/PERSIST",
+          "persist/REHYDRATE",
+          "persist/PAUSE",
+          "persist/PURGE",
+          "persist/REGISTER",
+        ],
       },
     }),
 });

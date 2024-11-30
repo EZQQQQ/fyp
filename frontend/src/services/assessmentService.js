@@ -24,7 +24,7 @@ const createAssessmentTask = async (communityId, taskData) => {
     `/communities/${communityId}/assessment-tasks`,
     taskData
   );
-  return response.data;
+  return response.data.task;
 };
 
 // Update an assessment task
@@ -33,7 +33,7 @@ const updateAssessmentTask = async (communityId, taskId, taskData) => {
     `/communities/${communityId}/assessment-tasks/${taskId}`,
     taskData
   );
-  return response.data;
+  return response.data.task;
 };
 
 // Delete an assessment task

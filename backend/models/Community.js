@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 
 const AssessmentTaskSchema = new mongoose.Schema({
   label: { type: String, required: true },
+  adminLabel: { type: String, required: true },
   type: { type: String, required: true }, // e.g., 'votes', 'postings', 'quizzes'
   contentType: { type: String }, // e.g., 'questions', 'answers' (if applicable)
   total: { type: Number, required: true }, // Total required for 100%

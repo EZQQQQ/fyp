@@ -3,9 +3,9 @@
 const mongoose = require("mongoose");
 const Community = require("../models/Community");
 const Question = require("../models/Question");
-const User = require("../models/User");
 const Answer = require("../models/Answer");
-const Quiz = require("../models/Quiz");
+const QuizAttempt = require("../models/QuizAttempt");
+const User = require("../models/User");
 const path = require("path");
 
 // Create a new community
@@ -236,7 +236,7 @@ const getAssessmentTasks = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const community = await Community.findById(id).select("assessmentTasks");
+    const community = await Community.findById(id);
     if (!community) {
       return res.status(404).json({ message: "Community not found." });
     }
@@ -254,62 +254,24 @@ const getUserParticipation = async (req, res) => {
   const userId = req.user.id; // Assuming auth middleware sets req.user
 
   try {
-    const community = await Community.findById(communityId).select(
-      "assessmentTasks"
-    );
+    const community = await Community.findById(communityId);
     if (!community) {
       return res.status(404).json({ message: "Community not found." });
     }
 
     const participation = await Promise.all(
       community.assessmentTasks.map(async (task) => {
-        let value = 0;
+        const value = await calculateStudentProgress(userId, task, communityId);
 
-        switch (task.type) {
-          case "votes":
-            if (task.contentType === "questions") {
-              // Example: Count upvotes and downvotes on user's questions
-              value = await Question.countDocuments({
-                author: userId,
-                "votes.type": { $in: ["upvote", "downvote"] },
-              });
-            } else if (task.contentType === "answers") {
-              value = await Answer.countDocuments({
-                author: userId,
-                "votes.type": { $in: ["upvote", "downvote"] },
-              });
-            }
-            break;
-
-          case "postings":
-            if (task.contentType === "questions") {
-              value = await Question.countDocuments({ author: userId });
-            } else if (task.contentType === "answers") {
-              value = await Answer.countDocuments({ author: userId });
-            }
-            break;
-
-          case "quizzes":
-            // Assuming quiz scores are stored and associated with the user
-            const latestQuiz = await Quiz.findOne({
-              user: userId,
-              community: communityId,
-            })
-              .sort({ createdAt: -1 })
-              .exec();
-            value = latestQuiz ? latestQuiz.score : 0;
-            break;
-
-          default:
-            value = 0;
-        }
+        // console.log(
+        //   `User ${userId} participation for task ${task._id}: ${value}`
+        // );
 
         return {
-          id: task._id,
+          _id: task._id,
           label: task.label,
-          value,
           total: task.total,
-          weight: task.weight,
+          studentProgress: value,
         };
       })
     );
@@ -324,7 +286,7 @@ const getUserParticipation = async (req, res) => {
 // Create a new assessment task
 const createAssessmentTask = async (req, res) => {
   const { communityId } = req.params;
-  const { label, type, contentType, total, weight } = req.body;
+  const { label, adminLabel, type, contentType, total, weight } = req.body;
 
   try {
     const community = await Community.findById(communityId);
@@ -332,13 +294,30 @@ const createAssessmentTask = async (req, res) => {
       return res.status(404).json({ message: "Community not found." });
     }
 
-    const newTask = { label, type, contentType, total, weight };
+    // Create new assessment task
+    const newTask = {
+      label,
+      adminLabel,
+      type,
+      contentType,
+      total,
+      weight,
+    };
+
+    // Add the new task to the community's assessmentTasks array
     community.assessmentTasks.push(newTask);
+
+    // Save the community
     await community.save();
 
-    res
-      .status(201)
-      .json({ message: "Assessment task created.", task: newTask });
+    // Get the newly added task (it's the last one in the array)
+    const createdTask =
+      community.assessmentTasks[community.assessmentTasks.length - 1];
+
+    res.status(201).json({
+      message: "Assessment task created successfully.",
+      task: createdTask,
+    });
   } catch (error) {
     console.error("Error creating assessment task:", error);
     res.status(500).json({ message: "Server error." });
@@ -416,6 +395,212 @@ const deleteAssessmentTask = async (req, res) => {
   }
 };
 
+// Get assessment tasks with student progress
+const getAssessmentTasksWithProgress = async (req, res) => {
+  const { communityId } = req.params;
+  const userId = req.user.id;
+
+  try {
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    const tasksWithProgress = await Promise.all(
+      community.assessmentTasks.map(async (task) => {
+        const studentProgress = await calculateStudentProgress(
+          userId,
+          task,
+          communityId
+        );
+        return {
+          _id: task._id,
+          label: task.label,
+          total: task.total,
+          studentProgress,
+        };
+      })
+    );
+
+    res.json(tasksWithProgress);
+  } catch (error) {
+    console.error("Error fetching assessment tasks with progress:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+async function calculateStudentProgress(userId, task, communityId) {
+  let progress = 0;
+
+  switch (task.type) {
+    case "votes":
+      if (task.contentType === "questions") {
+        // Get all questions authored by the user in the community
+        const questions = await Question.find({
+          community: communityId,
+          user: userId,
+        });
+
+        progress = 0;
+
+        for (const question of questions) {
+          // Exclude votes from the author themselves
+          const upvotes = question.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = question.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          progress += netVotes;
+        }
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their questions in community ${communityId}`
+        // );
+      } else if (task.contentType === "answers") {
+        // Get all answers authored by the user
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        // Only include answers where question_id is populated (i.e., the question is in the community)
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        progress = 0;
+
+        for (const answer of filteredAnswers) {
+          // Exclude votes from the author themselves
+          const upvotes = answer.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = answer.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          progress += netVotes;
+        }
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their answers in community ${communityId}`
+        // );
+      } else if (task.contentType === "questions & answers") {
+        // Questions
+        const questions = await Question.find({
+          community: communityId,
+          user: userId,
+        });
+
+        let questionProgress = 0;
+
+        for (const question of questions) {
+          const upvotes = question.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = question.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          questionProgress += netVotes;
+        }
+
+        // Answers
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        let answerProgress = 0;
+
+        for (const answer of filteredAnswers) {
+          const upvotes = answer.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = answer.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          answerProgress += netVotes;
+        }
+
+        progress = questionProgress + answerProgress;
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their questions and answers in community ${communityId}`
+        // );
+      }
+      break;
+
+    case "postings":
+      if (task.contentType === "questions") {
+        progress = await Question.countDocuments({
+          user: userId,
+          community: communityId,
+        });
+      } else if (task.contentType === "answers") {
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        progress = filteredAnswers.length;
+      } else if (task.contentType === "both") {
+        const questionCount = await Question.countDocuments({
+          user: userId,
+          community: communityId,
+        });
+
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        const answerCount = filteredAnswers.length;
+
+        progress = questionCount + answerCount;
+      }
+      break;
+
+    case "quizzes":
+      // Fetch the latest quiz attempt for the user in this community
+      const quizAttempt = await QuizAttempt.findOne({
+        user: userId,
+        community: communityId,
+      })
+        .sort({ createdAt: -1 })
+        .exec();
+      progress = quizAttempt
+        ? (quizAttempt.score / quizAttempt.totalPossibleScore) * 100
+        : 0;
+      break;
+
+    default:
+      progress = 0;
+  }
+  // console.log(`User ${userId} participation for task ${task._id}: ${progress}`);
+
+  return progress;
+}
+
 module.exports = {
   createCommunity,
   getAllCommunities,
@@ -428,4 +613,5 @@ module.exports = {
   createAssessmentTask,
   updateAssessmentTask,
   deleteAssessmentTask,
+  getAssessmentTasksWithProgress,
 };

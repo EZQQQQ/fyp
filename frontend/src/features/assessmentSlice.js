@@ -1,4 +1,4 @@
-// frontend/src/features/assessmentSlice.js
+// /frontend/src/features/assessmentSlice.js
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import assessmentService from "../services/assessmentService";
@@ -9,7 +9,7 @@ export const fetchAssessmentTasks = createAsyncThunk(
   async (communityId, { rejectWithValue }) => {
     try {
       const data = await assessmentService.getAssessmentTasks(communityId);
-      return data;
+      return data.tasks; // Assuming data contains { tasks: [...] }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -22,7 +22,7 @@ export const fetchUserParticipation = createAsyncThunk(
   async (communityId, { rejectWithValue }) => {
     try {
       const data = await assessmentService.getUserParticipation(communityId);
-      return data;
+      return data.participation; // Assuming data contains { participation: [...] }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -38,7 +38,7 @@ export const createAssessmentTask = createAsyncThunk(
         communityId,
         taskData
       );
-      return data;
+      return data; // Returns the created task
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -55,7 +55,7 @@ export const updateAssessmentTask = createAsyncThunk(
         taskId,
         taskData
       );
-      return data;
+      return data; // Returns the updated task
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -79,7 +79,7 @@ const assessmentSlice = createSlice({
   name: "assessment",
   initialState: {
     tasks: [],
-    participation: {},
+    participation: [],
     loading: false,
     error: null,
   },
@@ -93,7 +93,7 @@ const assessmentSlice = createSlice({
       })
       .addCase(fetchAssessmentTasks.fulfilled, (state, action) => {
         state.loading = false;
-        state.tasks = action.payload.tasks || []; // Assign the tasks array
+        state.tasks = action.payload || []; // Assign the tasks array
       })
       .addCase(fetchAssessmentTasks.rejected, (state, action) => {
         state.loading = false;
@@ -108,7 +108,7 @@ const assessmentSlice = createSlice({
       })
       .addCase(fetchUserParticipation.fulfilled, (state, action) => {
         state.loading = false;
-        state.participation = action.payload;
+        state.participation = action.payload || [];
       })
       .addCase(fetchUserParticipation.rejected, (state, action) => {
         state.loading = false;
@@ -123,7 +123,6 @@ const assessmentSlice = createSlice({
       })
       .addCase(createAssessmentTask.fulfilled, (state, action) => {
         state.loading = false;
-        // Assuming the API returns the created task directly
         state.tasks.push(action.payload);
       })
       .addCase(createAssessmentTask.rejected, (state, action) => {
@@ -139,7 +138,6 @@ const assessmentSlice = createSlice({
       })
       .addCase(updateAssessmentTask.fulfilled, (state, action) => {
         state.loading = false;
-        // Assuming the API returns the updated task directly
         const index = state.tasks.findIndex(
           (task) => task._id === action.payload._id
         );
@@ -160,9 +158,7 @@ const assessmentSlice = createSlice({
       })
       .addCase(deleteAssessmentTask.fulfilled, (state, action) => {
         state.loading = false;
-        state.tasks = state.tasks.filter(
-          (task) => task._id !== action.payload.taskId
-        );
+        state.tasks = state.tasks.filter((task) => task._id !== action.payload);
       })
       .addCase(deleteAssessmentTask.rejected, (state, action) => {
         state.loading = false;

@@ -9,9 +9,12 @@ export const ssoLoginUser = createAsyncThunk(
   "user/ssoLogin",
   async ({ token, isAdmin }, { rejectWithValue }) => {
     try {
+      console.log("ssoLoginUser thunk called with:", { token, isAdmin });
       const data = await userService.ssoLogin({ token, isAdmin });
+      console.log("ssoLoginUser response:", data);
       return data;
     } catch (error) {
+      console.error("ssoLoginUser error:", error);
       return rejectWithValue(
         error.response?.data?.message || error.message || "SSO Login failed"
       );
@@ -159,7 +162,6 @@ const userSlice = createSlice({
         state.error = action.payload;
         toast.error(action.payload);
         // Logout the user if fetching data fails
-        state.user = null;
         state.token = null;
         localStorage.removeItem("token");
       });

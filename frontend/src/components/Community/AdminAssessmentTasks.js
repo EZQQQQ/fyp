@@ -1,13 +1,15 @@
-// frontend/src/components/Community/AdminAssessmentTasks.js
+// /frontend/src/components/Community/AdminAssessmentTasks.js
 
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createAssessmentTask,
   updateAssessmentTask,
+  deleteAssessmentTask,
   fetchAssessmentTasks,
 } from "../../features/assessmentSlice";
-import { Typography, Button } from "@material-tailwind/react"; // Removed Input import as it's unused
+
+import { Typography, Button } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import CustomDialog from "../Modal/CustomDialog";
 
@@ -67,8 +69,8 @@ function AdminAssessmentTasks({ communityId }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Generate label based on formData
-  const generateLabel = () => {
+  // Generate labels for admin and student
+  const generateLabel = (includeWeight = true) => {
     const { type, contentType, total, weight } = formData;
     if (!type || !weight) return "";
 
@@ -77,27 +79,32 @@ function AdminAssessmentTasks({ communityId }) {
     switch (type) {
       case "votes":
         if (contentType === "questions & answers") {
-          label = `Number of (upvotes + downvotes) for (questions & answers) count equals (${total}) (${weight}%)`;
+          label = `Number of (upvotes + downvotes) for (questions & answers) count equals (${total})`;
         } else if (contentType === "questions") {
-          label = `Number of (upvotes + downvotes) for (questions) count equals (${total}) (${weight}%)`;
+          label = `Number of (upvotes + downvotes) for (questions) count equals (${total})`;
         } else if (contentType === "answers") {
-          label = `Number of (upvotes + downvotes) for (answers) count equals (${total}) (${weight}%)`;
+          label = `Number of (upvotes + downvotes) for (answers) count equals (${total})`;
         }
         break;
       case "postings":
         if (contentType === "questions") {
-          label = `Number of (questions) (postings) count equals (${total}) (${weight}%)`;
+          label = `Number of (questions) (postings) count equals (${total})`;
         } else if (contentType === "answers") {
-          label = `Number of (answers) (postings) count equals (${total}) (${weight}%)`;
+          label = `Number of (answers) (postings) count equals (${total})`;
         } else if (contentType === "both") {
-          label = `Number of (questions + answers) (postings) count equals (${total}) (${weight}%)`;
+          label = `Number of (questions + answers) (postings) count equals (${total})`;
         }
         break;
       case "quizzes":
-        label = `Quiz Score (${weight}%)`;
+        label = `Quiz Score`;
         break;
       default:
-        label = `Assessment Task (${weight}%)`;
+        label = `Assessment Task`;
+    }
+
+    // Append weight if includeWeight is true
+    if (includeWeight) {
+      label += ` (${weight}%)`;
     }
 
     return label;
@@ -106,14 +113,18 @@ function AdminAssessmentTasks({ communityId }) {
   const handleConfirm = async (e) => {
     e.preventDefault();
 
-    const label = generateLabel();
-    if (!label) {
+    // Generate labels for admin and student
+    const adminLabel = generateLabel(true);
+    const studentLabel = generateLabel(false);
+
+    if (!adminLabel) {
       toast.error("Please fill in all required fields to generate a label.");
       return;
     }
 
     const payload = {
-      label,
+      adminLabel,
+      label: studentLabel, // Student-facing label without weight
       type: formData.type,
       contentType: formData.contentType,
       total: formData.total ? Number(formData.total) : 0,
@@ -144,31 +155,11 @@ function AdminAssessmentTasks({ communityId }) {
     }
   };
 
-  const token = localStorage.getItem("token");
   const handleDelete = async (taskId) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
-        const response = await fetch(
-          `/api/communities/${communityId}/assessment-tasks/${taskId}`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Failed to delete assessment task."
-          );
-        }
-
+        await dispatch(deleteAssessmentTask({ communityId, taskId })).unwrap();
         toast.success("Assessment task deleted successfully!");
-        // Refetch tasks to update the UI
-        dispatch(fetchAssessmentTasks(communityId));
       } catch (error) {
         console.error("Failed to delete assessment task:", error);
         toast.error(error.message || "Failed to delete assessment task.");
@@ -180,7 +171,7 @@ function AdminAssessmentTasks({ communityId }) {
   const isTasksArray = Array.isArray(tasks);
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="max-w-4xl mx-auto">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
         <Typography variant="h6" className="text-gray-900 dark:text-gray-100">
@@ -214,7 +205,7 @@ function AdminAssessmentTasks({ communityId }) {
                   variant="h6"
                   className="text-gray-800 dark:text-gray-200 mb-2"
                 >
-                  {task.label}
+                  {task.adminLabel}
                 </Typography>
                 <Typography variant="small" color="gray" className="block">
                   Type: {task.type}{" "}
