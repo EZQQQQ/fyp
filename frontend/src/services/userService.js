@@ -4,9 +4,9 @@ import axios from "../utils/axiosConfig";
 
 // SSO Login
 const ssoLogin = async ({ token, isAdmin }) => {
-  console.log("ssoLogin service called with:", { token, isAdmin });
+  // console.log("ssoLogin service called with:", { token, isAdmin });
   const response = await axios.post("/user/sso-login", { token, isAdmin });
-  console.log("ssoLogin service response:", response.data);
+  // console.log("ssoLogin service response:", response.data);
   return response.data;
 };
 

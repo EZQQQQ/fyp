@@ -9,9 +9,9 @@ export const ssoLoginUser = createAsyncThunk(
   "user/ssoLogin",
   async ({ token, isAdmin }, { rejectWithValue }) => {
     try {
-      console.log("ssoLoginUser thunk called with:", { token, isAdmin });
+      // console.log("ssoLoginUser thunk called with:", { token, isAdmin });
       const data = await userService.ssoLogin({ token, isAdmin });
-      console.log("ssoLoginUser response:", data);
+      // console.log("ssoLoginUser response:", data);
       return data;
     } catch (error) {
       console.error("ssoLoginUser error:", error);

@@ -2,7 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 
 function AssessmentTasks({ tasks }) {
-  if (!tasks || tasks.length === 0) {
+  console.log("tasks:", tasks);
+  if (!Array.isArray(tasks) || tasks.length === 0) {
     return (
       <p className="text-gray-500 dark:text-gray-400">
         No assessment tasks available.
