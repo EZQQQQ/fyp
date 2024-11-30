@@ -169,6 +169,6 @@ const userSlice = createSlice({
 });
 
 export const { logout } = userSlice.actions;
-export const selectUser = (state) => state.user.user;
-export const selectToken = (state) => state.user.token;
+export const selectUser = (state) => state.user?.user || null;
+export const selectToken = (state) => state.user?.token || null;
 export default userSlice.reducer;

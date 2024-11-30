@@ -21,8 +21,9 @@ const rootReducer = (state, action) => {
   if (action.type === "user/logout") {
     // Clear the persisted state
     storage.removeItem("persist:root");
-    // Reset the state
-    state = undefined;
+
+    // Reset only the user state
+    return appReducer({ ...state, user: undefined }, action);
   }
   return appReducer(state, action);
 };
