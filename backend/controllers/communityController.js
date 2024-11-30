@@ -327,7 +327,7 @@ const createAssessmentTask = async (req, res) => {
 // Update an existing assessment task
 const updateAssessmentTask = async (req, res) => {
   const { communityId, taskId } = req.params;
-  const { label, type, contentType, total, weight } = req.body;
+  const { label, adminLabel, type, contentType, total, weight } = req.body;
 
   try {
     const community = await Community.findById(communityId);
@@ -342,6 +342,7 @@ const updateAssessmentTask = async (req, res) => {
 
     // Update task fields
     task.label = label !== undefined ? label : task.label;
+    task.adminLabel = adminLabel !== undefined ? adminLabel : task.adminLabel;
     task.type = type !== undefined ? type : task.type;
     task.contentType =
       contentType !== undefined ? contentType : task.contentType;

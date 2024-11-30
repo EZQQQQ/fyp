@@ -61,8 +61,6 @@ function App() {
         } catch (error) {
           dispatch(logout());
         }
-      } else {
-        dispatch(logout());
       }
       setAppLoading(false);
     };

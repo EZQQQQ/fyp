@@ -26,9 +26,12 @@ function AdminAssessmentTasks({ communityId }) {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState(null);
+
+  // Updated formData to include adminLabel
   const [formData, setFormData] = useState({
+    adminLabel: "",
     type: "",
-    contentType: "", // Used for 'votes' and 'postings'
+    contentType: "",
     total: "",
     weight: "",
   });
@@ -37,6 +40,7 @@ function AdminAssessmentTasks({ communityId }) {
     setCurrentTask(task);
     if (task) {
       setFormData({
+        adminLabel: task.adminLabel || "",
         type: task.type,
         contentType: task.contentType || "",
         total: task.total,
@@ -44,6 +48,7 @@ function AdminAssessmentTasks({ communityId }) {
       });
     } else {
       setFormData({
+        adminLabel: "",
         type: "",
         contentType: "",
         total: "",
@@ -57,6 +62,7 @@ function AdminAssessmentTasks({ communityId }) {
     setIsDialogOpen(false);
     setCurrentTask(null);
     setFormData({
+      adminLabel: "",
       type: "",
       contentType: "",
       total: "",
@@ -69,42 +75,37 @@ function AdminAssessmentTasks({ communityId }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Generate labels for admin and student
-  const generateLabel = (includeWeight = true) => {
-    const { type, contentType, total, weight } = formData;
-    if (!type || !weight) return "";
+  // Generate student-facing label
+  const generateStudentLabel = () => {
+    const { type, contentType, total } = formData;
+    if (!type) return "";
 
     let label = "";
 
     switch (type) {
       case "votes":
         if (contentType === "questions & answers") {
-          label = `Number of (upvotes + downvotes) for (questions & answers) count equals (${total})`;
+          label = `Achieve a total of ${total} votes on questions and answers`;
         } else if (contentType === "questions") {
-          label = `Number of (upvotes + downvotes) for (questions) count equals (${total})`;
+          label = `Achieve a total of ${total} votes on questions`;
         } else if (contentType === "answers") {
-          label = `Number of (upvotes + downvotes) for (answers) count equals (${total})`;
+          label = `Achieve a total of ${total} votes on answers`;
         }
         break;
       case "postings":
         if (contentType === "questions") {
-          label = `Number of (questions) (postings) count equals (${total})`;
+          label = `Post ${total} questions`;
         } else if (contentType === "answers") {
-          label = `Number of (answers) (postings) count equals (${total})`;
+          label = `Provide ${total} answers`;
         } else if (contentType === "both") {
-          label = `Number of (questions + answers) (postings) count equals (${total})`;
+          label = `Make ${total} posts (questions or answers)`;
         }
         break;
       case "quizzes":
-        label = `Quiz Score`;
+        label = `Complete quizzes`;
         break;
       default:
         label = `Assessment Task`;
-    }
-
-    // Append weight if includeWeight is true
-    if (includeWeight) {
-      label += ` (${weight}%)`;
     }
 
     return label;
@@ -113,18 +114,18 @@ function AdminAssessmentTasks({ communityId }) {
   const handleConfirm = async (e) => {
     e.preventDefault();
 
-    // Generate labels for admin and student
-    const adminLabel = generateLabel(true);
-    const studentLabel = generateLabel(false);
-
-    if (!adminLabel) {
-      toast.error("Please fill in all required fields to generate a label.");
+    // Validation
+    if (!formData.adminLabel) {
+      toast.error("Admin Label is required.");
       return;
     }
 
+    // Generate student label
+    const studentLabel = generateStudentLabel();
+
     const payload = {
-      adminLabel,
-      label: studentLabel, // Student-facing label without weight
+      adminLabel: formData.adminLabel,
+      label: studentLabel,
       type: formData.type,
       contentType: formData.contentType,
       total: formData.total ? Number(formData.total) : 0,
@@ -259,6 +260,28 @@ function AdminAssessmentTasks({ communityId }) {
 
         {/* Dialog Form */}
         <form onSubmit={handleConfirm} className="space-y-6">
+          {/* Admin Label Input */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="adminLabel"
+              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+            >
+              Admin Label
+            </label>
+            <input
+              id="adminLabel"
+              name="adminLabel"
+              type="text"
+              value={formData.adminLabel}
+              onChange={(e) => handleChange(e.target.value, "adminLabel")}
+              required
+              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              placeholder="Enter admin label"
+            />
+          </div>
+
           {/* Type Selection */}
           <div className="flex flex-col">
             <label
