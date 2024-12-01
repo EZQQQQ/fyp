@@ -7,8 +7,6 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { IconButton } from "@mui/material";
-import Logo from "../../assets/logo.png";
-import LogoMobile from "../../assets/logo-downsized.png";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser, logout } from "../../features/userSlice";
 import { signOut } from "firebase/auth";
@@ -16,11 +14,18 @@ import { auth } from "../../config/firebase-config";
 import SearchBar from "../Search/Searchbar";
 import UserAvatar from "../../common/UserAvatar";
 
+// Importing Images
+import LogoLight from "../../assets/logo.png"; // Web light mode
+import LogoMobileLight from "../../assets/logo-downsized.png"; // Mobile light mode
+import LogoDark from "../../assets/logo-dark.png"; // Web dark mode
+import LogoMobileDark from "../../assets/logo-downsized-dark.png"; // Mobile dark mode
+
 function Header({ darkMode, setDarkMode, toggleSidebar }) {
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // Handle user sign-out
   const handleSignOut = () => {
     if (user) {
       signOut(auth)
@@ -36,6 +41,22 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
     }
   };
 
+  // Determine the appropriate logo based on dark mode
+  const getLogo = () => {
+    if (darkMode) {
+      return {
+        desktop: LogoDark,
+        mobile: LogoMobileDark,
+      };
+    }
+    return {
+      desktop: LogoLight,
+      mobile: LogoMobileLight,
+    };
+  };
+
+  const { desktop: LogoDesktop, mobile: LogoMobileImg } = getLogo();
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +66,7 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
             <button
               className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl mr-4"
               onClick={toggleSidebar}
-              aria-label="Toggle Menu"
+              aria-label="Toggle Sidebar Menu"
             >
               <MenuIcon />
             </button>
@@ -55,12 +76,16 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
           <div className="flex-shrink-0 flex items-center">
             {/* Desktop Logo */}
             <Link to="/" className="hidden md:block">
-              <img src={Logo} alt="KnowledgeNode Logo" className="h-8 w-auto" />
+              <img
+                src={LogoDesktop}
+                alt="KnowledgeNode Logo"
+                className="h-8 w-auto"
+              />
             </Link>
             {/* Mobile Logo */}
             <Link to="/" className="block md:hidden">
               <img
-                src={LogoMobile}
+                src={LogoMobileImg}
                 alt="KnowledgeNode Logo"
                 className="h-6 w-auto"
               />
@@ -85,7 +110,7 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
                 </button>
                 {/* Notification Icon */}
                 <IconButton
-                  aria-label="Notifications"
+                  aria-label="View Notifications"
                   className="text-gray-800 dark:text-gray-200"
                   size="large"
                 >

@@ -7,10 +7,14 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+
+// Components
 import Header from "./components/Header/Header";
 import Sidebar from "./components/KnowledgeNode/Sidebar";
 import CreateCommunity from "./components/Community/CreateCommunity";
 import CommunityList from "./components/Community/CommunityList";
+import CommunityPage from "./components/Community/CommunityPage";
 import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
 import AddQuestion from "./components/AddQuestion/Question";
@@ -19,19 +23,22 @@ import AdminAuth from "./components/Auth/AdminAuth";
 import ProfileCreation from "./components/ProfileCreation";
 import Dashboard from "./components/Dashboard";
 import Unauthorized from "./components/Auth/Unauthorized";
-import "./index.css";
-import { useDispatch, useSelector } from "react-redux";
+import SearchResults from "./components/Search/SearchResults";
+import ProtectedRoute from "./components/ProtectedRoute";
+
+// Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
+
+// Styles and Notifications
+import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ProtectedRoute from "./components/ProtectedRoute";
-import CommunityPage from "./components/Community/CommunityPage";
-import SearchResults from "./components/Search/SearchResults";
 
 function App() {
-  const user = useSelector(selectUser);
   const dispatch = useDispatch();
+  const user = useSelector(selectUser);
 
+  // State Management
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode === "true" || false;
@@ -43,7 +50,7 @@ function App() {
   // State for CreateCommunity Modal
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
 
-  // Handle dark mode toggle
+  // Handle dark mode toggle and persist preference
   useEffect(() => {
     const root = window.document.documentElement;
     if (darkMode) {
@@ -62,6 +69,7 @@ function App() {
         try {
           await dispatch(fetchUserData()).unwrap();
         } catch (error) {
+          console.error("Failed to fetch user data:", error);
           dispatch(logout());
         }
       }
@@ -80,15 +88,9 @@ function App() {
   }
 
   // Handlers to open and close the CreateCommunity modal
-  const openCreateCommunityModal = () => {
-    setIsCreateCommunityOpen(true);
-  };
+  const openCreateCommunityModal = () => setIsCreateCommunityOpen(true);
+  const closeCreateCommunityModal = () => setIsCreateCommunityOpen(false);
 
-  const closeCreateCommunityModal = () => {
-    setIsCreateCommunityOpen(false);
-  };
-
-  // Render the app
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
       <Router>
@@ -99,7 +101,7 @@ function App() {
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
-        {/* Single ToastContainer */}
+        {/* Toast Notifications */}
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -118,7 +120,7 @@ function App() {
             <Sidebar
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
-              openCreateCommunityModal={openCreateCommunityModal} // Pass the handler
+              openCreateCommunityModal={openCreateCommunityModal}
             />
           )}
 
@@ -127,17 +129,19 @@ function App() {
             <div
               className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
               onClick={() => setSidebarOpen(false)}
+              aria-label="Close Sidebar"
             ></div>
           )}
 
           {/* Main Content */}
           <div className="flex-1 overflow-auto">
             <Routes>
-              {/* Authentication Route */}
+              {/* Authentication Routes */}
               <Route path="/auth" element={<Auth />} />
-              {/* Admin Authentication Route */}
               <Route path="/admin/login" element={<AdminAuth />} />
-              {/* Profile Creation Route */}
+              <Route path="/unauthorized" element={<Unauthorized />} />
+
+              {/* Protected Routes */}
               <Route
                 path="/profile"
                 element={
@@ -146,20 +150,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Unauthorized Access Route */}
-              <Route path="/unauthorized" element={<Unauthorized />} />
-              {/* Dashboard */}
               <Route
                 path="/dashboard"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={["student", "professor", "admin"]}
-                  >
+                  <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
                     <Dashboard />
                   </ProtectedRoute>
                 }
               />
-              {/* Home Route - All Questions */}
               <Route
                 path="/"
                 element={
@@ -168,7 +166,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* View Specific Question */}
               <Route
                 path="/question/:questionId"
                 element={
@@ -177,7 +174,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Add New Question */}
               <Route
                 path="/add-question"
                 element={
@@ -186,7 +182,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Explore Communities */}
               <Route
                 path="/explore"
                 element={
@@ -195,7 +190,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* View Community Page */}
               <Route
                 path="/communities/:id"
                 element={
@@ -204,8 +198,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Search Results */}
               <Route path="/search" element={<SearchResults />} />
+
               {/* Catch-All Route */}
               <Route
                 path="*"
