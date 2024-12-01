@@ -1,6 +1,7 @@
 // /src/config.js
 
-const BACKEND_URL = "http://localhost:5001";
+const BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
 
 export default {
   BACKEND_URL,
