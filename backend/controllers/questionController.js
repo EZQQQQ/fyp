@@ -248,15 +248,15 @@ const getQuestionById = async (req, res) => {
     }
 
     const question = await Question.findById(id)
-      .populate("user", "name profilePicture")
+      .populate("user", "name username profilePicture")
       .populate("community", "name avatar")
       .populate({
         path: "answers",
-        populate: { path: "user", select: "name profilePicture" },
+        populate: { path: "user", select: "name username profilePicture" },
       })
       .populate({
         path: "comments",
-        populate: { path: "user", select: "name profilePicture" },
+        populate: { path: "user", select: "name username profilePicture" },
       })
       .lean(); // Convert to plain JavaScript object
 

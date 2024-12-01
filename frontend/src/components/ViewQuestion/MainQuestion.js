@@ -326,7 +326,7 @@ function MainQuestion() {
                 <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
                   {comment.comment} -{" "}
                   <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-medium">
-                    {comment.user.name}
+                    {comment.user?.username || comment.user?.name || "Anonymous"}
                   </span>{" "}
                   <span className="text-xs text-gray-500 dark:text-gray-400">
                     {new Date(comment.createdAt).toLocaleString()}
