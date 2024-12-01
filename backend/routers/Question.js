@@ -2,6 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const auth = require("../middlewares/auth");
 const {
   validateQuestionFields,
@@ -9,42 +10,11 @@ const {
   handleValidationResults,
 } = require("../middlewares/validate");
 const questionController = require("../controllers/questionController");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const { param } = require("express-validator");
+const createUploadMiddleware = require("../middlewares/upload");
 
-const uploadDir = path.join(__dirname, "../uploads/");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-// Optional: Filter files by MIME type
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ["image/jpeg", "image/png", "video/mp4"];
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new Error(
-        `Invalid file type: ${file.originalname}. Only JPEG, PNG, and MP4 are allowed.`
-      ),
-      false
-    );
-  }
-};
-
-const upload = multer({ storage: storage, fileFilter: fileFilter });
+// Initialize the upload middleware for community posts
+const upload = createUploadMiddleware("communityPosts");
 
 // Error handling middleware for Multer
 const uploadFiles = (req, res, next) => {

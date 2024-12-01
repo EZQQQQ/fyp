@@ -67,7 +67,6 @@ const createQuestion = async (req, res) => {
       upvoters: [], // Initialize as empty array
       downvoters: [], // Initialize as empty array
       voteCount: 0, // Initialize vote count
-      views: 0, // Initialize views count
     });
 
     await question.save();

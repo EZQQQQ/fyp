@@ -68,11 +68,17 @@ const validateQuestionFiles = (req, res, next) => {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         status: false,
-        message: "At least one file is required for image/video questions",
+        message:
+          "At least one file is required for image, video, or PDF questions",
       });
     }
-    // Optionally, validate file types here
-    const allowedMimeTypes = ["image/jpeg", "image/png", "video/mp4"];
+    // Validate file types here
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "video/mp4",
+      "application/pdf",
+    ];
     for (let file of req.files) {
       if (!allowedMimeTypes.includes(file.mimetype)) {
         return res.status(400).json({

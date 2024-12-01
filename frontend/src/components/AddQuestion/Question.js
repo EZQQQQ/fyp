@@ -402,7 +402,7 @@ function Question() {
               <input
                 type="file"
                 multiple
-                accept="image/*,video/*"
+                accept="image/*,video/*,application/pdf"
                 name="files"
                 onChange={handleFileChange}
                 className="hidden"
