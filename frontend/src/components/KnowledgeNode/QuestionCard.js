@@ -1,7 +1,6 @@
 // frontend/src/components/KnowledgeNode/QuestionCard.js
 
 import React from "react";
-import { Avatar } from "@mui/material";
 import { Link } from "react-router-dom";
 import TextContent from "../ViewQuestion/TextContent";
 import VoteButtons from "../VoteButtons/VoteButtons";
@@ -9,8 +8,11 @@ import PropTypes from "prop-types";
 import { IconButton } from "@mui/material";
 import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
 import useVote from "../../hooks/useVote";
+import UserAvatar from "../../common/UserAvatar";
+import CommunityAvatar from "../Community/CommunityAvatar";
 
 function QuestionCard({ question, updateQuestionVote }) {
+  console.log("QuestionCard Props:", question);
   const {
     _id,
     title,
@@ -45,11 +47,10 @@ function QuestionCard({ question, updateQuestionVote }) {
       {/* Top Row: Community Info and Bookmark */}
       <div className="flex items-center justify-between mb-2">
         {community && (
-          <div className="flex items-center">
-            <Avatar
-              src={community.avatar || "/uploads/defaults/default-avatar.jpeg"}
-              alt={community.name || "Community Avatar"}
-              className="h-8 w-8 mr-2"
+          <div className="flex items-center gap-2">
+            <CommunityAvatar
+              avatarUrl={community.avatar}
+              name={community.name}
             />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
               {community.name || "Unknown Community"}
@@ -89,7 +90,7 @@ function QuestionCard({ question, updateQuestionVote }) {
             loading={loading}
           />
 
-          <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-2">
+          <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-2 ">
             <IconButton size="small" color="default" className="p-0">
               <Link to={`/question/${_id}`}>
                 <ChatBubbleOutline
@@ -107,16 +108,13 @@ function QuestionCard({ question, updateQuestionVote }) {
         {/* Right Side: Time Posted and User Info */}
         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 md:mt-0">
           <span className="mr-2">{new Date(createdAt).toLocaleString()}</span>
-          <Avatar
-            src={
-              user?.profilePicture ||
-              "/uploads/defaults/default-avatar-user.jpeg"
-            }
-            alt={user?.name || "User Avatar"}
+          <UserAvatar
+            user={user}
+            handleSignOut={() => {}}
             className="h-6 w-6 mr-2"
           />
           <p className="text-gray-800 dark:text-gray-100">
-            {user?.name || "Unknown User"}
+            {user?.username || "Unknown User"}
           </p>
         </div>
       </div>
@@ -137,6 +135,7 @@ QuestionCard.propTypes = {
     user: PropTypes.shape({
       profilePicture: PropTypes.string,
       name: PropTypes.string,
+      username: PropTypes.string,
     }),
     community: PropTypes.shape({
       name: PropTypes.string.isRequired,

@@ -6,7 +6,7 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { Avatar, IconButton } from "@mui/material";
+import { IconButton } from "@mui/material";
 import Logo from "../../assets/logo.png";
 import LogoMobile from "../../assets/logo-downsized.png";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,7 @@ import { selectUser, logout } from "../../features/userSlice";
 import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebase-config";
 import SearchBar from "../Search/Searchbar";
+import UserAvatar from "../../common/UserAvatar";
 
 function Header({ darkMode, setDarkMode, toggleSidebar }) {
   const user = useSelector(selectUser);
@@ -92,14 +93,10 @@ function Header({ darkMode, setDarkMode, toggleSidebar }) {
                 </IconButton>
                 {/* User Avatar */}
                 <div className="relative">
-                  <Avatar
-                    src={
-                      user?.photo ||
-                      "/uploads/defaults/default-avatar-user.jpeg"
-                    }
-                    alt={user?.displayName || "Default Avatar"}
-                    className="cursor-pointer border border-gray-300"
-                    onClick={handleSignOut}
+                  <UserAvatar
+                    user={user}
+                    handleSignOut={handleSignOut}
+                    className="h-8 w-8"
                   />
                 </div>
               </div>

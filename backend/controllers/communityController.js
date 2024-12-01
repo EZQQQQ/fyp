@@ -73,7 +73,7 @@ const getAllCommunities = async (req, res) => {
   try {
     const communities = await Community.find()
       .populate("createdBy", "name email")
-      .populate("members", "name email");
+      .populate("members", "name email profilePicture");
 
     res.status(200).json({
       status: true,
@@ -215,7 +215,7 @@ const getCommunityById = async (req, res) => {
 
     const community = await Community.findById(communityId)
       .populate("createdBy", "name email")
-      .populate("members", "username email")
+      .populate("members", "username email profilePicture")
       .exec();
 
     if (!community) {

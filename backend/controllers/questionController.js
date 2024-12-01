@@ -188,7 +188,7 @@ const getUserQuestions = async (req, res) => {
 
     // Fetch questions from user's communities
     const questions = await Question.find({ community: { $in: communityIds } })
-      .populate("user", "name profilePicture")
+      .populate("user", "name username profilePicture")
       .populate("community", "name avatar")
       .sort({ createdAt: -1 });
 

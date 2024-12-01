@@ -1,4 +1,4 @@
-// /frontend/src/components/Community/CommunityPage.js
+// frontend/src/components/Community/CommunityPage.js
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -17,6 +17,7 @@ import CreateQuestionButton from "../KnowledgeNode/CreateQuestionButton";
 import CommunityAvatar from "./CommunityAvatar";
 import AssessmentTasks from "./AssessmentTasks";
 import AdminAssessmentTasks from "./AdminAssessmentTasks";
+import UserAvatar from "../../common/UserAvatar";
 import "react-toastify/dist/ReactToastify.css";
 
 function CommunityPage() {
@@ -184,7 +185,7 @@ function CommunityPage() {
             <CommunityAvatar
               avatarUrl={community.avatar}
               name={community.name}
-              size="large"
+              className="h-12 w-12" // Adjusted size via className
             />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {community.name}
@@ -288,15 +289,12 @@ function CommunityPage() {
             {community.members && community.members.length > 0 ? (
               community.members.map((member) => (
                 <li key={member._id} className="flex items-center">
-                  <CommunityAvatar
-                    avatarUrl={
-                      member.avatar ||
-                      "/uploads/defaults/default-avatar-user.jpeg"
-                    }
-                    name={member.username || member.name}
-                    size="small"
+                  <UserAvatar
+                    user={member}
+                    handleSignOut={() => {}}
+                    className="h-8 w-8 mr-2"
                   />
-                  <span className="ml-2 text-gray-700 dark:text-gray-300">
+                  <span className="text-gray-700 dark:text-gray-300">
                     {member.username || member.name}
                   </span>
                 </li>
