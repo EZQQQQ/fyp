@@ -45,6 +45,9 @@ router.get("/:id", auth, CommunityController.getCommunityById);
 // Route to get questions by community ID
 router.get("/:id/questions", auth, questionController.getQuestionsByCommunity);
 
+// Check if community name exists
+router.get("/check/:name", auth, CommunityController.checkCommunityName);
+
 // Routes to manage assessment tasks (protected)
 router.post(
   "/:communityId/assessment-tasks",

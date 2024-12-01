@@ -248,6 +248,27 @@ const getAssessmentTasks = async (req, res) => {
   }
 };
 
+// Check if community name exists
+const checkCommunityName = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    // Search for a community with the given name (case-insensitive)
+    const existingCommunity = await Community.findOne({
+      name: { $regex: new RegExp("^" + name + "$", "i") },
+    });
+
+    if (existingCommunity) {
+      return res.json({ exists: true });
+    } else {
+      return res.json({ exists: false });
+    }
+  } catch (error) {
+    console.error("Error checking community name:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get User Participation Metrics
 const getUserParticipation = async (req, res) => {
   const { communityId } = req.params;
@@ -609,6 +630,7 @@ module.exports = {
   joinCommunity,
   leaveCommunity,
   getCommunityById,
+  checkCommunityName,
   getAssessmentTasks,
   getUserParticipation,
   createAssessmentTask,

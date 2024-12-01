@@ -37,7 +37,7 @@ const UserAvatar = ({ user, handleSignOut, className }) => {
 UserAvatar.propTypes = {
   user: PropTypes.shape({
     profilePicture: PropTypes.string,
-    name: PropTypes.string.isRequired,
+    name: PropTypes.string,
     username: PropTypes.string,
   }).isRequired,
   handleSignOut: PropTypes.func, // Made optional

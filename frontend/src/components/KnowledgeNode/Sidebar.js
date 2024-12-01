@@ -14,8 +14,10 @@ import {
   selectUserCommunities,
 } from "../../features/communitySlice";
 import CommunityAvatar from "../Community/CommunityAvatar";
+import { Button } from "@mui/material";
+import PlusIcon from "@mui/icons-material/Add";
 
-function Sidebar({ sidebarOpen, setSidebarOpen }) {
+function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
   const user = useSelector(selectUser);
   const userCommunities = useSelector(selectUserCommunities);
   const dispatch = useDispatch();
@@ -118,12 +120,17 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                   className="ml-6 mt-2 flex flex-col space-y-1 transition-all duration-300 ease-in-out"
                 >
                   {(user.role === "admin" || user.role === "professor") && (
-                    <SidebarLink
-                      to="/communities/create"
-                      onClick={closeSidebar}
+                    <Button
+                      onClick={() => {
+                        openCreateCommunityModal(); // Open the modal
+                        closeSidebar(); // Optional: Close the sidebar
+                      }}
+                      variant="text"
+                      className="flex items-center justify-start w-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
+                      startIcon={<PlusIcon className="h-5 w-5 mr-2" />}
                     >
-                      + Create a Community
-                    </SidebarLink>
+                      Create Community
+                    </Button>
                   )}
 
                   {Array.isArray(userCommunities) &&

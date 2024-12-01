@@ -1,43 +1,50 @@
-// /frontend/src/components/Community/CreateCommunity.js
+// frontend/src/components/Community/CreateCommunity.js
 
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { createCommunity } from "../../features/communitySlice"; // Use createCommunity thunk
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  createCommunity,
+  checkCommunityName,
+  resetNameCheck,
+} from "../../features/communitySlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { Button, TextField, Avatar } from "@mui/material";
-import PhotoCamera from "@mui/icons-material/PhotoCamera";
-import { Dialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import { PlusIcon, XIcon } from "@heroicons/react/solid";
+import CustomDialog from "../Modal/CustomDialog";
 
-const CreateCommunity = () => {
-  const [isOpen, setIsOpen] = useState(false); // Modal open state
-  const [currentStep, setCurrentStep] = useState(1); // Step state
+const CreateCommunity = ({ isOpen, onClose }) => {
+  const [currentStep, setCurrentStep] = useState(1);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [avatar, setAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const [rules, setRules] = useState([""]); // Initialize with one empty rule
+  const [rules, setRules] = useState([""]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const openModal = () => {
-    setIsOpen(true);
-    setCurrentStep(1); // Reset to first step
-    setName("");
-    setDescription("");
-    setAvatar(null);
-    setAvatarPreview(null);
-    setRules([""]);
-  };
+  const {
+    nameCheck = {},
+    loading,
+    error,
+  } = useSelector((state) => state.communities);
 
-  const closeModal = () => {
-    setIsOpen(false);
-  };
+  const { checking, exists, error: nameError } = nameCheck;
 
-  // Handle avatar change
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(1);
+      setName("");
+      setDescription("");
+      setAvatar(null);
+      setAvatarPreview(null);
+      setRules([""]);
+      dispatch(resetNameCheck());
+    }
+  }, [isOpen, dispatch]);
+
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -47,7 +54,7 @@ const CreateCommunity = () => {
         "image/png",
         "image/gif",
       ];
-      const maxSize = 4 * 1024 * 1024; // 4MB
+      const maxSize = 4 * 1024 * 1024;
 
       if (!allowedTypes.includes(file.type)) {
         toast.error("Only JPEG, JPG, PNG, and GIF files are allowed!");
@@ -64,34 +71,66 @@ const CreateCommunity = () => {
     }
   };
 
-  // Handle rule change
   const handleRuleChange = (index, value) => {
     const updatedRules = [...rules];
     updatedRules[index] = value;
     setRules(updatedRules);
   };
 
-  // Add a new rule field
   const addRule = () => {
     setRules([...rules, ""]);
   };
 
-  // Remove a rule field
   const removeRule = (index) => {
     const updatedRules = [...rules];
     updatedRules.splice(index, 1);
     setRules(updatedRules);
   };
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) {
-      toast.error("Community name is required.");
-      return;
+  // Updated handleNext function
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      if (!name.trim()) {
+        toast.error("Community name is required.");
+        return;
+      }
+      if (!description.trim()) {
+        toast.error("Community description is required.");
+        return;
+      }
+
+      dispatch(resetNameCheck());
+
+      // Dispatch the checkCommunityName thunk
+      try {
+        const result = await dispatch(checkCommunityName(name.trim())).unwrap();
+        const exists = result.exists; // Access the exists property directly
+
+        if (exists) {
+          toast.error(
+            "Community name already exists. Please choose another name."
+          );
+          return;
+        }
+      } catch (err) {
+        toast.error(err.message || "Error checking community name.");
+        return;
+      }
     }
 
-    // Filter out empty rules
+    // Proceed to the next step
+    setCurrentStep((prev) => prev + 1);
+  };
+
+  const handlePrevious = () => {
+    setCurrentStep((prev) => prev - 1);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (currentStep !== 3) return;
+
     const filteredRules = rules
       .map((rule) => rule.trim())
       .filter((rule) => rule !== "");
@@ -101,25 +140,18 @@ const CreateCommunity = () => {
       formData.append("name", name.trim());
       formData.append("description", description.trim());
       if (avatar) {
-        formData.append("avatar", avatar); // Ensure the field name is 'avatar'
+        formData.append("avatar", avatar);
       }
-      // Append rules as an array
       filteredRules.forEach((rule) => {
         formData.append("rules[]", rule);
       });
 
       await dispatch(createCommunity(formData)).unwrap();
-      setName("");
-      setDescription("");
-      setAvatar(null);
-      setAvatarPreview(null);
-      setRules([""]);
-      toast.success("Community created successfully!");
-      closeModal();
-      navigate("/communities"); // Redirect to community list after creation
+      onClose();
+      navigate("/communities");
     } catch (error) {
       console.error("Error creating community:", error);
-      if (error === "Community name already exists.") {
+      if (error.message === "Community name already exists.") {
         toast.error("Community name already exists.");
       } else {
         toast.error("Error creating community.");
@@ -128,242 +160,213 @@ const CreateCommunity = () => {
   };
 
   return (
-    <>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={openModal}
-        startIcon={<PlusIcon className="h-5 w-5" />}
-      >
-        Create Community
-      </Button>
-
-      {/* Modal */}
-      <Transition appear show={isOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          className="fixed inset-0 z-10 overflow-y-auto"
-          onClose={closeModal}
+    <CustomDialog isOpen={isOpen} onClose={onClose} size="md">
+      {/* Dialog Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Create a New Community
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
         >
-          <div className="min-h-screen px-4 text-center">
-            {/* Overlay */}
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-50"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-50"
-              leaveTo="opacity-0"
-            >
-              <Dialog.Overlay className="fixed inset-0 bg-black" />
-            </Transition.Child>
+          <XIcon className="h-6 w-6" />
+        </button>
+      </div>
 
-            {/* Trick to center the modal contents */}
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
+      {/* Step Indicators */}
+      <div className="flex justify-center mb-6">
+        <div className="flex space-x-2">
+          <div
+            className={`h-2 w-2 rounded-full ${
+              currentStep === 1 ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          ></div>
+          <div
+            className={`h-2 w-2 rounded-full ${
+              currentStep === 2 ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          ></div>
+          <div
+            className={`h-2 w-2 rounded-full ${
+              currentStep === 3 ? "bg-blue-500" : "bg-gray-300"
+            }`}
+          ></div>
+        </div>
+      </div>
 
-            {/* Modal Content */}
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95 translate-y-4"
-              enterTo="opacity-100 scale-100 translate-y-0"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100 translate-y-0"
-              leaveTo="opacity-0 scale-95 translate-y-4"
-            >
-              <div className="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
-                {/* Close Button */}
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    onClick={closeModal}
-                  >
-                    <XIcon className="h-6 w-6" />
-                  </button>
-                </div>
-
-                {/* Step Indicators */}
-                <div className="flex justify-center mb-6">
-                  <div className="flex space-x-2">
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        currentStep === 1 ? "bg-blue-500" : "bg-gray-300"
-                      }`}
-                    ></div>
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        currentStep === 2 ? "bg-blue-500" : "bg-gray-300"
-                      }`}
-                    ></div>
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        currentStep === 3 ? "bg-blue-500" : "bg-gray-300"
-                      }`}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                  {/* Step 1: Name and Description */}
-                  {currentStep === 1 && (
-                    <div className="modal-card-content styled-scrollbar">
-                      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                        Tell us about your Community
-                      </h2>
-                      <div className="mb-4">
-                        <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                          Community Name
-                        </label>
-                        <TextField
-                          type="text"
-                          fullWidth
-                          variant="outlined"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Enter community name"
-                          required
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                          Description
-                        </label>
-                        <textarea
-                          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          value={description}
-                          onChange={(e) => setDescription(e.target.value)}
-                          placeholder="Enter community description"
-                          rows="4"
-                        ></textarea>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 2: Avatar */}
-                  {currentStep === 2 && (
-                    <div className="modal-card-content styled-scrollbar">
-                      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                        Add some visual flair and help establish your
-                        community's culture!
-                      </h2>
-                      <div className="mb-4 flex items-center space-x-4">
-                        <Avatar
-                          src={avatarPreview}
-                          alt="Community Avatar"
-                          className="h-20 w-20"
-                        />
-                        <label htmlFor="avatar-upload">
-                          <input
-                            accept="image/*"
-                            id="avatar-upload"
-                            type="file"
-                            onChange={handleAvatarChange}
-                            className="hidden"
-                          />
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            component="span"
-                            startIcon={<PhotoCamera />}
-                          >
-                            Upload Avatar
-                          </Button>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step 3: Rules */}
-                  {currentStep === 3 && (
-                    <div className="modal-card-content styled-scrollbar">
-                      <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                        Community Rules
-                      </h2>
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        Define the rules that will govern your community.
-                      </p>
-                      {rules.map((rule, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center mb-2 border-b border-gray-300 dark:border-gray-600 pb-2"
-                        >
-                          <span className="mr-2 text-gray-700 dark:text-gray-300">
-                            {index + 1}.
-                          </span>
-                          <TextField
-                            type="text"
-                            variant="outlined"
-                            value={rule}
-                            onChange={(e) =>
-                              handleRuleChange(index, e.target.value)
-                            }
-                            placeholder={`Rule ${index + 1}`}
-                            fullWidth
-                            required
-                          />
-                          {rules.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeRule(index)}
-                              className="ml-2 text-red-500 hover:text-red-700"
-                            >
-                              <XIcon className="h-5 w-5" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={addRule}
-                        className="mt-2 flex items-center text-blue-500 hover:text-blue-700"
-                      >
-                        <PlusIcon className="h-5 w-5 mr-1" />
-                        Add another rule
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="mt-6 flex justify-between">
-                    {currentStep > 1 && (
-                      <Button
-                        variant="outlined"
-                        color="secondary"
-                        onClick={() => setCurrentStep(currentStep - 1)}
-                      >
-                        Previous
-                      </Button>
-                    )}
-                    {currentStep < 3 && (
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => setCurrentStep(currentStep + 1)}
-                      >
-                        Next
-                      </Button>
-                    )}
-                    {currentStep === 3 && (
-                      <Button variant="contained" color="primary" type="submit">
-                        Create Community
-                      </Button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            </Transition.Child>
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        {/* Step 1: Community Name and Description */}
+        {currentStep === 1 && (
+          <div className="modal-card-content styled-scrollbar">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+              Tell us about your Community
+            </h3>
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                Community Name
+              </label>
+              <TextField
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter community name"
+                required
+              />
+              {/* Display name check status */}
+              {checking && (
+                <p className="text-sm text-blue-500 mt-1">Checking name...</p>
+              )}
+              {exists && (
+                <p className="text-sm text-red-500 mt-1">
+                  Community name already exists.
+                </p>
+              )}
+              {nameError && (
+                <p className="text-sm text-red-500 mt-1">
+                  Error checking name: {nameError}
+                </p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 mb-2">
+                Description
+              </label>
+              <TextField
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter community description"
+                required
+                multiline
+                rows={4}
+              />
+            </div>
           </div>
-        </Dialog>
-      </Transition>
-    </>
+        )}
+
+        {/* Step 2: Avatar */}
+        {currentStep === 2 && (
+          <div className="modal-card-content styled-scrollbar">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+              Add Visual Flair
+            </h3>
+            {/* Avatar Section */}
+            <div className="mb-6">
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Upload an avatar to represent your community.
+              </p>
+              <div className="flex items-center space-x-4">
+                <Avatar
+                  src={avatarPreview}
+                  alt="Community Avatar"
+                  className="h-20 w-20"
+                />
+                <label htmlFor="avatar-upload">
+                  <input
+                    accept="image/*"
+                    id="avatar-upload"
+                    type="file"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    component="span"
+                    startIcon={<PhotoCameraIcon />}
+                  >
+                    Upload Avatar
+                  </Button>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Define Rules */}
+        {currentStep === 3 && (
+          <div className="modal-card-content styled-scrollbar">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+              Define Rules
+            </h3>
+            {/* Rules Section */}
+            <div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Define the rules that will govern your community.
+              </p>
+              {rules.map((rule, index) => (
+                <div
+                  key={index}
+                  className="flex items-center mb-2 border-b border-gray-300 dark:border-gray-600 pb-2"
+                >
+                  <span className="mr-2 text-gray-700 dark:text-gray-300">
+                    {index + 1}.
+                  </span>
+                  <TextField
+                    type="text"
+                    variant="outlined"
+                    value={rule}
+                    onChange={(e) => handleRuleChange(index, e.target.value)}
+                    placeholder={`Rule ${index + 1}`}
+                    fullWidth
+                    required
+                  />
+                  {rules.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeRule(index)}
+                      className="ml-2 text-red-500 hover:text-red-700"
+                    >
+                      <XIcon className="h-6 w-6" />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addRule}
+                className="mt-2 flex items-center text-blue-500 hover:text-blue-700">
+                <PlusIcon className="h-5 w-5 mr-1" /> Add another rule
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="mt-6 flex justify-between">
+          {currentStep > 1 && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handlePrevious}
+            >
+              Previous
+            </Button>
+          )}
+          {currentStep < 3 && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleNext}
+              disabled={checking}
+            >
+              {checking ? "Checking..." : "Next"}
+            </Button>
+          )}
+          {currentStep === 3 && (
+            <Button variant="contained" color="primary" type="submit">
+              Create Community
+            </Button>
+          )}
+        </div>
+      </form>
+    </CustomDialog>
   );
 };
 

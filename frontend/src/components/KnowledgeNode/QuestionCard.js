@@ -12,7 +12,6 @@ import UserAvatar from "../../common/UserAvatar";
 import CommunityAvatar from "../Community/CommunityAvatar";
 
 function QuestionCard({ question, updateQuestionVote }) {
-  console.log("QuestionCard Props:", question);
   const {
     _id,
     title,

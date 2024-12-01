@@ -1,4 +1,4 @@
-// /frontend/src/App.js
+// frontend/src/App.js
 
 import React, { useEffect, useState } from "react";
 import {
@@ -40,6 +40,9 @@ function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appLoading, setAppLoading] = useState(true);
 
+  // State for CreateCommunity Modal
+  const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
+
   // Handle dark mode toggle
   useEffect(() => {
     const root = window.document.documentElement;
@@ -76,6 +79,15 @@ function App() {
     );
   }
 
+  // Handlers to open and close the CreateCommunity modal
+  const openCreateCommunityModal = () => {
+    setIsCreateCommunityOpen(true);
+  };
+
+  const closeCreateCommunityModal = () => {
+    setIsCreateCommunityOpen(false);
+  };
+
   // Render the app
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
@@ -86,6 +98,8 @@ function App() {
           setDarkMode={setDarkMode}
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
+
+        {/* Single ToastContainer */}
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -97,12 +111,14 @@ function App() {
           draggable
           pauseOnHover
         />
+
         <div className="flex flex-1 pt-16">
           {/* Sidebar */}
           {user && (
             <Sidebar
               sidebarOpen={sidebarOpen}
               setSidebarOpen={setSidebarOpen}
+              openCreateCommunityModal={openCreateCommunityModal} // Pass the handler
             />
           )}
 
@@ -179,15 +195,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Create New Community - Professors and Admins Only */}
-              <Route
-                path="/communities/create"
-                element={
-                  <ProtectedRoute requiredRoles={["professor", "admin"]}>
-                    <CreateCommunity />
-                  </ProtectedRoute>
-                }
-              />
               {/* View Community Page */}
               <Route
                 path="/communities/:id"
@@ -207,6 +214,14 @@ function App() {
             </Routes>
           </div>
         </div>
+
+        {/* CreateCommunity Modal */}
+        {user && (
+          <CreateCommunity
+            isOpen={isCreateCommunityOpen}
+            onClose={closeCreateCommunityModal}
+          />
+        )}
       </Router>
     </div>
   );

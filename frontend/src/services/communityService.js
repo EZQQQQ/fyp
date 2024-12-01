@@ -43,6 +43,14 @@ const getCommunityById = async (communityId) => {
   return response.data;
 };
 
+// Check if community name exists
+const checkCommunityName = async (communityName) => {
+  const response = await axiosInstance.get(
+    `/communities/check/${communityName}`
+  );
+  return response.data;
+};
+
 export default {
   createCommunity,
   fetchCommunities,
@@ -50,4 +58,5 @@ export default {
   joinCommunity,
   leaveCommunity,
   getCommunityById,
+  checkCommunityName,
 };

@@ -8,16 +8,16 @@ import {
   selectCommunities,
 } from "../../features/communitySlice";
 import { Link } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify"; // Ensure ToastContainer is included
+import { toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css";
-import CommunityCard from "./CommunityCard"; // Ensure you have a CommunityCard component
+import CommunityCard from "./CommunityCard"; 
 
 const CommunityList = ({ isTileView = false }) => {
   const dispatch = useDispatch();
   const communities = useSelector(selectCommunities);
   const loading = useSelector((state) => state.communities.loading);
   const error = useSelector((state) => state.communities.error);
-  const user = useSelector((state) => state.user.user); // Assuming user state
+  const user = useSelector((state) => state.user.user); 
 
   useEffect(() => {
     dispatch(fetchCommunities());
@@ -122,7 +122,6 @@ const CommunityList = ({ isTileView = false }) => {
           })}
         </ul>
       )}
-      <ToastContainer /> {/* Ensure ToastContainer is included */}
     </div>
   );
 };

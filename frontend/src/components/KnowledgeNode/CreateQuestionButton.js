@@ -2,14 +2,14 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
-import { PlusIcon } from "@heroicons/react/solid"; // Ensure you have Heroicons installed or use another icon library
+import { PlusIcon } from "@heroicons/react/solid";
 import PropTypes from "prop-types";
 import { useSelector } from "react-redux";
-import { selectUser } from "../../features/userSlice"; // Import existing selector
+import { selectUser } from "../../features/userSlice";
 
 function CreateQuestionButton({ communityId }) {
   const user = useSelector(selectUser);
-  const defaultCommunityId = user?.currentCommunityId || "defaultCommunityId"; // Replace with actual default
+  const defaultCommunityId = user?.currentCommunityId || "defaultCommunityId";
 
   const effectiveCommunityId = communityId || defaultCommunityId;
 

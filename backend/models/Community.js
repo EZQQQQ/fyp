@@ -14,7 +14,7 @@ const AssessmentTaskSchema = new mongoose.Schema({
 const CommunitySchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Community name is required."],
+    required: true,
     unique: true,
     trim: true,
   },
