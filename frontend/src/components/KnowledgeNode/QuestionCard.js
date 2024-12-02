@@ -10,8 +10,9 @@ import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
 import useVote from "../../hooks/useVote";
 import UserAvatar from "../../common/UserAvatar";
 import CommunityAvatar from "../Community/CommunityAvatar";
+import MediaViewer from "../MediaViewer/MediaViewer"; // Import MediaViewer
 
-function QuestionCard({ question, updateQuestionVote }) {
+function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPosts' }) {
   const {
     _id,
     title,
@@ -25,6 +26,7 @@ function QuestionCard({ question, updateQuestionVote }) {
     community,
     answersCount,
     commentsCount,
+    files, // Assuming 'files' is part of the question object
   } = question;
 
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
@@ -75,6 +77,16 @@ function QuestionCard({ question, updateQuestionVote }) {
           className="line-clamp-3 md:line-clamp-6 break-words"
         />
       </div>
+
+      {/* Files Preview */}
+      {files?.length > 0 && (
+        <div className="my-4 ">
+          {files.map((fileUrl, index) => (
+            // Pass uploadPath
+            <MediaViewer key={index} file={fileUrl} uploadPath={uploadPath} />
+          ))}
+        </div>
+      )}
 
       {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
       <div className="flex md:flex-row justify-between items-center">
@@ -142,8 +154,10 @@ QuestionCard.propTypes = {
     }),
     answersCount: PropTypes.number,
     commentsCount: PropTypes.number,
+    files: PropTypes.arrayOf(PropTypes.string),
   }).isRequired,
   updateQuestionVote: PropTypes.func,
+  uploadPath: PropTypes.string, // New prop
 };
 
 export default QuestionCard;

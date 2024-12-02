@@ -225,7 +225,8 @@ function CommunityPage() {
               <QuestionCard
                 key={question._id}
                 question={question}
-                updateQuestionVote={updateQuestionVote} // Pass the callback
+                updateQuestionVote={updateQuestionVote}
+                uploadPath="communityPosts"
               />
             ))
           )}

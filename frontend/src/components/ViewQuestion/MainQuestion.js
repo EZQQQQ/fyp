@@ -1,4 +1,4 @@
-// /frontend/src/components/ViewQuestion/MainQuestion.js
+// frontend/src/components/ViewQuestion/MainQuestion.js
 
 import React, { useState, useEffect } from "react";
 import { Bookmark, History } from "@mui/icons-material";
@@ -16,6 +16,7 @@ import useVote from "../../hooks/useVote";
 import { toast } from "react-toastify"; // Toastify
 import "react-toastify/dist/ReactToastify.css"; // Toastify CSS
 import UserAvatar from "../../common/UserAvatar";
+import MediaViewer from "../MediaViewer/MediaViewer"; // Import MediaViewer
 
 function MainQuestion() {
   const { questionId } = useParams();
@@ -252,14 +253,9 @@ function MainQuestion() {
 
           {/* Files */}
           {question.files?.length > 0 && (
-            <div className="my-4 flex flex-wrap gap-4">
+            <div className="my-4">
               {question.files.map((fileUrl, index) => (
-                <img
-                  key={index}
-                  src={fileUrl}
-                  alt={`Attachment ${index + 1}`}
-                  className="max-w-xs sm:max-w-sm md:max-w-md rounded-md object-contain"
-                />
+                <MediaViewer key={index} file={fileUrl} />
               ))}
             </div>
           )}
@@ -368,6 +364,15 @@ function MainQuestion() {
               <div className="mb-4">
                 <TextContent content={answer.answer} type="answer" />
               </div>
+
+              {/* Files (Optional) */}
+              {answer.files?.length > 0 && (
+                <div className="my-4 ">
+                  {answer.files.map((fileUrl, index) => (
+                    <MediaViewer key={index} file={fileUrl} />
+                  ))}
+                </div>
+              )}
 
               {/* Voting and Author Info */}
               <div className="flex items-center justify-between">
