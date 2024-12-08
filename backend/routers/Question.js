@@ -12,6 +12,7 @@ const {
 const questionController = require("../controllers/questionController");
 const { param } = require("express-validator");
 const createUploadMiddleware = require("../middlewares/upload");
+const pollController = require("../controllers/pollController");
 
 // Initialize the upload middleware for community posts
 const upload = createUploadMiddleware("communityPosts");

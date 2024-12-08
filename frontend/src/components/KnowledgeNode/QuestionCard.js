@@ -10,7 +10,8 @@ import { BookmarkBorder, ChatBubbleOutline } from "@mui/icons-material";
 import useVote from "../../hooks/useVote";
 import UserAvatar from "../../common/UserAvatar";
 import CommunityAvatar from "../Community/CommunityAvatar";
-import MediaViewer from "../MediaViewer/MediaViewer"; // Import MediaViewer
+import MediaViewer from "../MediaViewer/MediaViewer";
+import PollResults from "../Polls/PollResults";
 
 function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPosts' }) {
   const {
@@ -26,7 +27,8 @@ function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPos
     community,
     answersCount,
     commentsCount,
-    files, // Assuming 'files' is part of the question object
+    files,
+    contentType,
   } = question;
 
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
@@ -88,6 +90,13 @@ function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPos
         </div>
       )}
 
+      {/* If this is a poll, display the PollResults */}
+      {contentType === 2 && (
+        <div className="my-4">
+          <PollResults questionId={_id} />
+        </div>
+      )}
+
       {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
       <div className="flex md:flex-row justify-between items-center">
         {/* Left Side: Vote Buttons and Total Responses */}
@@ -121,7 +130,7 @@ function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPos
           <span className="mr-2">{new Date(createdAt).toLocaleString()}</span>
           <UserAvatar
             user={user}
-            handleSignOut={() => {}}
+            handleSignOut={() => { }}
             className="h-6 w-6 mr-2"
           />
           <p className="text-gray-800 dark:text-gray-100">

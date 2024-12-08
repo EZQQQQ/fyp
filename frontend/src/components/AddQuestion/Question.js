@@ -1,4 +1,4 @@
-// /frontend/src/components/AddQuestion/Question.js
+// frontend/src/components/AddQuestion/Question.js
 
 import React, { useState, useEffect } from "react";
 import {
@@ -182,7 +182,8 @@ function Question() {
       if (tabValue === 2) {
         const pollOptionTexts = pollOptions
           .filter((option) => option.text.trim() !== "")
-          .map((option) => option.text.trim());
+          .map((option) => ({ option: option.text.trim() }));
+
         formData.append("pollOptions", JSON.stringify(pollOptionTexts));
       }
 
@@ -354,29 +355,26 @@ function Question() {
         <Tab
           icon={<NotesIcon />}
           label="Text"
-          className={`flex flex-col items-center transform transition-all duration-200 ${
-            tabValue === 0
-              ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
-          }`}
+          className={`flex flex-col items-center transform transition-all duration-200 ${tabValue === 0
+            ? "text-blue-500"
+            : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
+            }`}
         />
         <Tab
           icon={<ImageIcon />}
           label="Images & Video"
-          className={`flex flex-col items-center transform transition-all duration-200 ${
-            tabValue === 1
-              ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
-          }`}
+          className={`flex flex-col items-center transform transition-all duration-200 ${tabValue === 1
+            ? "text-blue-500"
+            : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
+            }`}
         />
         <Tab
           icon={<PollIcon />}
           label="Poll"
-          className={`flex flex-col items-center transform transition-all duration-200 ${
-            tabValue === 2
-              ? "text-blue-500"
-              : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
-          }`}
+          className={`flex flex-col items-center transform transition-all duration-200 ${tabValue === 2
+            ? "text-blue-500"
+            : "text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:scale-105"
+            }`}
         />
       </Tabs>
 
@@ -453,11 +451,10 @@ function Question() {
                         >
                           {(provided, snapshot) => (
                             <div
-                              className={`flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-full ${
-                                snapshot.isDragging
-                                  ? "bg-gray-200 dark:bg-gray-600"
-                                  : ""
-                              }`}
+                              className={`flex items-center bg-gray-100 dark:bg-gray-700 p-2 rounded-full ${snapshot.isDragging
+                                ? "bg-gray-200 dark:bg-gray-600"
+                                : ""
+                                }`}
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                             >

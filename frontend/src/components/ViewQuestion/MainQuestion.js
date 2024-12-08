@@ -13,10 +13,11 @@ import TextContent from "./TextContent";
 import VoteButtons from "../VoteButtons/VoteButtons";
 import handleVote from "../../services/votingService";
 import useVote from "../../hooks/useVote";
-import { toast } from "react-toastify"; // Toastify
-import "react-toastify/dist/ReactToastify.css"; // Toastify CSS
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import UserAvatar from "../../common/UserAvatar";
-import MediaViewer from "../MediaViewer/MediaViewer"; // Import MediaViewer
+import MediaViewer from "../MediaViewer/MediaViewer";
+import PollResults from "../Polls/PollResults"; // Import PollResults
 
 function MainQuestion() {
   const { questionId } = useParams();
@@ -30,7 +31,7 @@ function MainQuestion() {
   const [commentText, setCommentText] = useState("");
   const [answerText, setAnswerText] = useState("");
   const [showCommentBox, setShowCommentBox] = useState(false);
-  const [answerLoading, setAnswerLoading] = useState({}); // For managing loading states per answer
+  const [answerLoading, setAnswerLoading] = useState({});
 
   // Fetch Question Data on Mount
   useEffect(() => {
@@ -107,10 +108,8 @@ function MainQuestion() {
 
   // Handle voting for answers using existing functions with loading state
   const handleAnswerVote = async (type, answerId) => {
-    // Prevent voting if already loading
     if (answerLoading[answerId]) return;
 
-    // Set loading state for this answer
     setAnswerLoading((prev) => ({ ...prev, [answerId]: true }));
 
     try {
@@ -127,7 +126,6 @@ function MainQuestion() {
             : ans
         )
       );
-      // Update Redux store
       dispatch(
         setVoteData({
           targetId: answerId,
@@ -138,7 +136,6 @@ function MainQuestion() {
           },
         })
       );
-      // Show toast only if it's a new vote, not a retraction
       if (voteResult.action === "voted") {
         toast.success(
           type === "upvote"
@@ -156,7 +153,6 @@ function MainQuestion() {
       console.error("Voting Error:", error.response?.data);
       toast.error(error.response?.data?.message || "Failed to vote.");
     } finally {
-      // Remove loading state for this answer
       setAnswerLoading((prev) => ({ ...prev, [answerId]: false }));
     }
   };
@@ -191,7 +187,6 @@ function MainQuestion() {
       });
       const newAnswer = response.data.data;
 
-      // Add default voting fields
       const answerWithDefaults = {
         ...newAnswer,
         userHasUpvoted: false,
@@ -260,18 +255,9 @@ function MainQuestion() {
             </div>
           )}
 
-          {/* Poll Options */}
-          {question.pollOptions?.length > 0 && (
-            <div className="my-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Poll Options:
-              </h3>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {question.pollOptions.map((option, index) => (
-                  <li key={index}>{option}</li>
-                ))}
-              </ul>
-            </div>
+          {/* Poll Results */}
+          {question.contentType === 2 && (
+            <PollResults questionId={questionId} />
           )}
 
           {/* Author Info and Voting Buttons */}
@@ -283,12 +269,11 @@ function MainQuestion() {
               onDownvote={handleQuestionDownvote}
               userHasUpvoted={question.userHasUpvoted}
               userHasDownvoted={question.userHasDownvoted}
-              loading={questionLoading} // Pass loading prop
+              loading={questionLoading}
             />
 
             {/* Author Info */}
             <div className="flex items-center space-x-2">
-              {/* Use UserAvatar Component */}
               <UserAvatar
                 user={question.user}
                 handleSignOut={() => {}}
@@ -311,7 +296,7 @@ function MainQuestion() {
             {comments.map((comment) => (
               <div
                 className="mb-4 pl-4 border-l border-gray-300 dark:border-gray-600"
-                key={comment._id} // Ensure unique key
+                key={comment._id}
               >
                 <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
                   {comment.comment} -{" "}
@@ -388,7 +373,6 @@ function MainQuestion() {
 
                 {/* Author Info */}
                 <div className="flex items-center space-x-2">
-                  {/* Use UserAvatar Component */}
                   <UserAvatar user={answer.user} handleSignOut={() => {}} />
                   <p className="text-gray-900 dark:text-gray-100 font-medium">
                     {answer.user?.username || answer.user?.name || "Anonymous"}

@@ -55,6 +55,17 @@ const createQuestion = async (req, res) => {
 
     const files = req.files ? req.files.map((file) => file.filename) : [];
 
+    // Transform pollOptions if present
+    let formattedPollOptions = [];
+    if (pollOptions) {
+      const parsedOptions = JSON.parse(pollOptions);
+      if (Array.isArray(parsedOptions)) {
+        formattedPollOptions = parsedOptions.map((option) => ({
+          option: option.option,
+        }));
+      }
+    }
+
     const question = new Question({
       community,
       title,
@@ -120,13 +131,13 @@ const getAllQuestions = async (req, res) => {
       questions.map(async (question) => {
         const userHasUpvoted = question.upvoters
           ? question.upvoters.some(
-              (voterId) => voterId.toString() === userId.toString()
-            )
+            (voterId) => voterId.toString() === userId.toString()
+          )
           : false;
         const userHasDownvoted = question.downvoters
           ? question.downvoters.some(
-              (voterId) => voterId.toString() === userId.toString()
-            )
+            (voterId) => voterId.toString() === userId.toString()
+          )
           : false;
 
         const answersCount = await Answer.countDocuments({
@@ -283,13 +294,13 @@ const getQuestionById = async (req, res) => {
     // Add vote status
     question.userHasUpvoted = question.upvoters
       ? question.upvoters.some(
-          (voterId) => voterId.toString() === userId.toString()
-        )
+        (voterId) => voterId.toString() === userId.toString()
+      )
       : false;
     question.userHasDownvoted = question.downvoters
       ? question.downvoters.some(
-          (voterId) => voterId.toString() === userId.toString()
-        )
+        (voterId) => voterId.toString() === userId.toString()
+      )
       : false;
 
     // For each answer, add vote status
@@ -297,13 +308,13 @@ const getQuestionById = async (req, res) => {
       ...ans,
       userHasUpvoted: ans.upvoters
         ? ans.upvoters.some(
-            (voterId) => voterId.toString() === userId.toString()
-          )
+          (voterId) => voterId.toString() === userId.toString()
+        )
         : false,
       userHasDownvoted: ans.downvoters
         ? ans.downvoters.some(
-            (voterId) => voterId.toString() === userId.toString()
-          )
+          (voterId) => voterId.toString() === userId.toString()
+        )
         : false,
     }));
 
@@ -369,13 +380,13 @@ const getQuestionsByCommunity = async (req, res) => {
       questions.map(async (question) => {
         const userHasUpvoted = question.upvoters
           ? question.upvoters.some(
-              (voterId) => voterId.toString() === userId.toString()
-            )
+            (voterId) => voterId.toString() === userId.toString()
+          )
           : false;
         const userHasDownvoted = question.downvoters
           ? question.downvoters.some(
-              (voterId) => voterId.toString() === userId.toString()
-            )
+            (voterId) => voterId.toString() === userId.toString()
+          )
           : false;
 
         const answersCount = await Answer.countDocuments({

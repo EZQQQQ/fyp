@@ -2,6 +2,17 @@
 
 const mongoose = require("mongoose");
 
+const PollOptionSchema = new mongoose.Schema({
+  option: {
+    type: String,
+    required: true,
+  },
+  votes: {
+    type: Number,
+    default: 0,
+  },
+});
+
 const QuestionSchema = new mongoose.Schema(
   {
     community: {
@@ -20,14 +31,19 @@ const QuestionSchema = new mongoose.Schema(
     content: {
       type: String,
     },
-    pollOptions: [
+    pollOptions: [PollOptionSchema],
+    votedUsers: [
       {
-        type: String,
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        optionIndex: Number,
       },
     ],
     files: [
       {
-        type: String, // Store filenames or URLs
+        type: String,
       },
     ],
     tags: [
@@ -56,11 +72,15 @@ const QuestionSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    isClosed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true }, // Include virtuals when converting to JSON
-    toObject: { virtuals: true }, // Include virtuals when converting to Object
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 

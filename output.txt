@@ -5,6 +5,7 @@
 │   │   ├── commentController.js
 │   │   ├── communityController.js
 │   │   ├── questionController.js
+│   │   ├── pollController.js
 │   │   ├── userController.js
 │   │   ├── voteController.js
 │   ├── db.js
@@ -34,6 +35,7 @@
 │   │   ├── Question.js
 │   │   ├── User.js
 │   │   └── index.js
+│   │   └── Poll.js
 │   │   └── Vote.js
 │   ├── server.js
 │   └── uploads
@@ -111,9 +113,13 @@
 │   │   │   │   ├── QuestionCard.js
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   └── SidebarLink.js
+│   │   │   ├── MediaViewer
+│   │   │   │   └── MediaViewer.js
 │   │   │   ├── Modal
 │   │   │   │   ├── CustomDialog.js
 │   │   │   │   └── CommunitySelectModal.js
+│   │   │   ├── Polls
+│   │   │   │   └── PollResults.js
 │   │   │   ├── Search
 │   │   │   │   ├── Searchbar.js
 │   │   │   │   └── SearchResults.js
@@ -141,6 +147,7 @@
 │   │   ├── services
 │   │   │   ├── assessmentService.js
 │   │   │   ├── communityService.js
+│   │   │   ├── pollService.js
 │   │   │   ├── questionService.js
 │   │   │   ├── userService.js
 │   │   │   └── votingService.js
