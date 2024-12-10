@@ -39,6 +39,7 @@
 │   │   └── Vote.js
 │   ├── server.js
 │   └── uploads
+│       ├── communityPosts
 │       ├── profilePhotos
 │       ├── defaults
 │       └── communityAvatars

@@ -3,15 +3,12 @@
 import React from "react";
 import { Avatar } from "@mui/material";
 import PropTypes from "prop-types";
+import config from "../config";
+
+const DEFAULT_AVATAR_URL = `${config.S3_BASE_URL}/uploads/defaults/default-avatar-user.jpeg`;
 
 const UserAvatar = ({ user, handleSignOut, className }) => {
-  const backendUrl =
-    process.env.REACT_APP_BACKEND_URL ||
-    "https://backend-knowledgenode.onrender.com";
-
-  const avatarSrc = user?.profilePicture
-    ? `${backendUrl}${user.profilePicture}`
-    : "/uploads/defaults/default-avatar-user.jpeg";
+  const avatarSrc = user?.profilePicture || DEFAULT_AVATAR_URL;
 
   const handleAvatarClick = () => {
     if (handleSignOut) {
@@ -27,9 +24,9 @@ const UserAvatar = ({ user, handleSignOut, className }) => {
       onClick={handleSignOut ? handleAvatarClick : undefined}
       onError={(e) => {
         e.target.onerror = null;
-        e.target.src = "/uploads/defaults/default-avatar-user.jpeg";
+        e.target.src = DEFAULT_AVATAR_URL;
       }}
-      loading="lazy" // Optional: improves performance by lazy loading avatars
+      loading="lazy"
     />
   );
 };
@@ -40,7 +37,7 @@ UserAvatar.propTypes = {
     name: PropTypes.string,
     username: PropTypes.string,
   }).isRequired,
-  handleSignOut: PropTypes.func, // Made optional
+  handleSignOut: PropTypes.func,
   className: PropTypes.string,
 };
 

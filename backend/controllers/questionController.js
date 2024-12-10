@@ -26,7 +26,7 @@ const createQuestion = async (req, res) => {
     if (!community || !title || contentType === undefined) {
       return res.status(400).json({
         status: false,
-        message: "Community, title, and contentType are required.",
+        message: 'Community, title, and contentType are required.',
       });
     }
 
@@ -36,7 +36,7 @@ const createQuestion = async (req, res) => {
     ) {
       return res.status(400).json({
         status: false,
-        message: "Content is required for Text and Poll questions.",
+        message: 'Content is required for Text and Poll questions.',
       });
     }
 
@@ -49,11 +49,12 @@ const createQuestion = async (req, res) => {
     if (!isMember) {
       return res.status(403).json({
         status: false,
-        message: "You are not a member of the specified community.",
+        message: 'You are not a member of the specified community.',
       });
     }
 
-    const files = req.files ? req.files.map((file) => file.filename) : [];
+    // Map the uploaded files to get their S3 URLs
+    const files = req.files ? req.files.map((file) => file.location) : [];
 
     // Transform pollOptions if present
     let formattedPollOptions = [];
@@ -71,27 +72,27 @@ const createQuestion = async (req, res) => {
       title,
       contentType,
       content,
-      pollOptions: pollOptions ? JSON.parse(pollOptions) : [],
+      pollOptions: formattedPollOptions,
       files,
       tags: tags ? JSON.parse(tags) : [],
       user: req.user.id,
-      upvoters: [], // Initialize as empty array
-      downvoters: [], // Initialize as empty array
-      voteCount: 0, // Initialize vote count
+      upvoters: [],
+      downvoters: [],
+      voteCount: 0,
     });
 
     await question.save();
 
     res.status(201).json({
       status: true,
-      message: "Question created successfully",
+      message: 'Question created successfully',
       data: question,
     });
   } catch (err) {
-    console.error("Error creating question:", err);
+    console.error('Error creating question:', err);
     res.status(500).json({
       status: false,
-      message: "Error creating question",
+      message: 'Error creating question',
       error: err.message,
     });
   }

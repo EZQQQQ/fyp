@@ -131,8 +131,10 @@ const createUserProfile = async (req, res) => {
     const { username } = req.body;
     let profilePicture = "";
 
-    if (req.file) {
-      profilePicture = `/uploads/profilePhotos/${req.file.filename}`;
+    if (req.file && req.file.location) {
+      // Using the S3 URL provided by multer-s3
+      profilePicture = req.file.location;
+      // Example S3 path: https://knowledgenode.s3.ap-southeast-1.amazonaws.com/uploads/profilePhotos/...
     }
 
     const user = await User.findById(req.user.id);

@@ -1,52 +1,47 @@
 // /backend/middlewares/upload.js
 
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+require('dotenv').config();
+const aws = require('aws-sdk');
+const multer = require('multer');
+const multerS3 = require('multer-s3');
+const path = require('path');
 
-/**
- * Creates a Multer upload middleware with a specified subdirectory.
- * @param {string} subDir - Subdirectory within the uploads folder (e.g., 'communityPosts').
- * @returns {multer.Multer} - Configured Multer instance.
- */
-const createUploadMiddleware = (subDir = "") => {
-  // Define the upload path
-  const uploadPath = path.join(__dirname, `../uploads/${subDir}/`);
+// Configure AWS
+aws.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
-  // Ensure the upload directory exists
-  fs.mkdirSync(uploadPath, { recursive: true });
+const s3 = new aws.S3();
 
-  // Define storage for uploaded files
-  const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, uploadPath);
-    },
-    filename: function (req, file, cb) {
-      // Generate a unique filename using timestamp and original name
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + "-" + file.originalname);
-    },
-  });
+// Allowed file types (images, videos, PDFs)
+const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|pdf/;
 
-  // File filter to accept only images and videos
-  const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|pdf/;
-    const extname = allowedTypes.test(
-      path.extname(file.originalname).toLowerCase()
-    );
-    const mimetype = allowedTypes.test(file.mimetype);
+const fileFilter = (req, file, cb) => {
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
 
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error("Only images, videos and PDFs are allowed!"));
-    }
-  };
+  if (mimetype && extname) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only images, videos, and PDFs are allowed!'));
+  }
+};
 
-  // Initialize multer
+const createUploadMiddleware = () => {
   return multer({
-    storage: storage,
-    limits: { fileSize: 10000000 }, // 10MB limit
+    storage: multerS3({
+      s3,
+      bucket: process.env.S3_BUCKET_NAME,
+      acl: 'public-read',
+      key: function (req, file, cb) {
+        const communityId = req.body.community;
+        const filePath = `uploads/communityPosts/${communityId}/${file.originalname}`;
+        cb(null, filePath);
+      },
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: fileFilter,
   });
 };
