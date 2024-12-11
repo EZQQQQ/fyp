@@ -82,11 +82,28 @@ function QuestionCard({ question, updateQuestionVote, uploadPath = 'communityPos
 
       {/* Files Preview */}
       {files?.length > 0 && (
-        <div className="my-4 ">
-          {files.map((fileUrl, index) => (
-            // Pass uploadPath
-            <MediaViewer key={index} file={fileUrl} uploadPath={uploadPath} />
-          ))}
+        <div className="my-4">
+          {files.map((fileUrl, index) => {
+            // Determine if the file is a PDF
+            const isPDF = fileUrl.toLowerCase().endsWith('.pdf');
+            return (
+              <div key={index}>
+                {/* Pass uploadPath */}
+                <MediaViewer file={fileUrl} uploadPath={uploadPath} />
+                {/* If the file is a PDF, render a link underneath */}
+                {isPDF && (
+                  <a
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    View PDF
+                  </a>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -164,9 +181,10 @@ QuestionCard.propTypes = {
     answersCount: PropTypes.number,
     commentsCount: PropTypes.number,
     files: PropTypes.arrayOf(PropTypes.string),
+    contentType: PropTypes.number,
   }).isRequired,
   updateQuestionVote: PropTypes.func,
-  uploadPath: PropTypes.string, // New prop
+  uploadPath: PropTypes.string,
 };
 
 export default QuestionCard;

@@ -21,6 +21,15 @@ const createQuestion = async (req, res) => {
   try {
     const { community, title, contentType, content, pollOptions, tags } = req.body;
 
+    // Check for existing question with the same title
+    const existingQuestion = await Question.findOne({ title });
+    if (existingQuestion) {
+      return res.status(400).json({
+        status: false,
+        message: "A question with this title already exists.",
+      });
+    }
+
     // Validate required fields
     if (!community || !title || contentType === undefined) {
       console.error('Validation Error: Missing required fields.', { community, title, contentType });
