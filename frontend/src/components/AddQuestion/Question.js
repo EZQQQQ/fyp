@@ -205,9 +205,15 @@ function Question() {
       }
     } catch (err) {
       console.error("Error submitting question:", err);
-      setSubmissionError(
-        err.response?.data?.message || "Failed to submit the question."
-      );
+      // Log the entire response for debugging
+      if (err.response && err.response.data) {
+        console.error("Backend Response:", err.response.data);
+        setSubmissionError(
+          err.response.data.message || "Failed to submit the question."
+        );
+      } else {
+        setSubmissionError("Failed to submit the question.");
+      }
     }
   };
 

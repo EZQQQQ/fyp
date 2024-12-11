@@ -11,11 +11,10 @@ const {
 } = require("../middlewares/validate");
 const questionController = require("../controllers/questionController");
 const { param } = require("express-validator");
-const createUploadMiddleware = require("../middlewares/upload");
 const pollController = require("../controllers/pollController");
 
-// Initialize the upload middleware for community posts
-const upload = createUploadMiddleware("communityPosts");
+// Initialize the upload middleware for community posts without arguments
+const upload = require("../middlewares/upload");
 
 // Error handling middleware for Multer
 const uploadFiles = (req, res, next) => {

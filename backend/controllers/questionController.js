@@ -19,11 +19,11 @@ const escapeRegex = (text) => {
  */
 const createQuestion = async (req, res) => {
   try {
-    const { community, title, contentType, content, pollOptions, tags } =
-      req.body;
+    const { community, title, contentType, content, pollOptions, tags } = req.body;
 
     // Validate required fields
     if (!community || !title || contentType === undefined) {
+      console.error('Validation Error: Missing required fields.', { community, title, contentType });
       return res.status(400).json({
         status: false,
         message: 'Community, title, and contentType are required.',
@@ -34,6 +34,7 @@ const createQuestion = async (req, res) => {
       (parseInt(contentType) === 0 || parseInt(contentType) === 2) &&
       !content
     ) {
+      console.error('Validation Error: Content is required for Text and Poll questions.', { contentType });
       return res.status(400).json({
         status: false,
         message: 'Content is required for Text and Poll questions.',
@@ -47,6 +48,7 @@ const createQuestion = async (req, res) => {
     });
 
     if (!isMember) {
+      console.error('Authorization Error: User is not a member of the community.', { userId: req.user.id, community });
       return res.status(403).json({
         status: false,
         message: 'You are not a member of the specified community.',
@@ -59,11 +61,20 @@ const createQuestion = async (req, res) => {
     // Transform pollOptions if present
     let formattedPollOptions = [];
     if (pollOptions) {
-      const parsedOptions = JSON.parse(pollOptions);
-      if (Array.isArray(parsedOptions)) {
-        formattedPollOptions = parsedOptions.map((option) => ({
-          option: option.option,
-        }));
+      try {
+        const parsedOptions = JSON.parse(pollOptions);
+        if (Array.isArray(parsedOptions)) {
+          formattedPollOptions = parsedOptions.map((option) => ({
+            option: option.option,
+            votes: 0, // Initialize votes
+          }));
+        }
+      } catch (parseError) {
+        console.error('Parsing Error: Invalid format for pollOptions.', { pollOptions });
+        return res.status(400).json({
+          status: false,
+          message: 'Invalid format for pollOptions.',
+        });
       }
     }
 
@@ -78,6 +89,7 @@ const createQuestion = async (req, res) => {
       user: req.user.id,
       upvoters: [],
       downvoters: [],
+      isClosed: false,
       voteCount: 0,
     });
 
