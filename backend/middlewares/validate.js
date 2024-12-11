@@ -76,7 +76,12 @@ const validateQuestionFiles = (req, res, next) => {
     const allowedMimeTypes = [
       "image/jpeg",
       "image/png",
+      "image/heic",
+      "image/heif",
       "video/mp4",
+      "video/quicktime",
+      "video/x-msvideo",
+      "video/hevc",
       "application/pdf",
     ];
     for (let file of req.files) {

@@ -1,10 +1,70 @@
 // frontend/src/components/ViewQuestion/TextContent.js
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import parse, { domToReact } from "html-react-parser";
 import DOMPurify from "dompurify";
 
 function TextContent({ content, type }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageSrc, setModalImageSrc] = useState("");
+  const modalContentRef = useRef(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && isModalOpen) {
+        closeModal();
+      }
+      if (event.key === "Tab" && isModalOpen) {
+        // Trap focus within the modal
+        const focusableElements = modalContentRef.current.querySelectorAll(
+          "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey) {
+          if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    const handleClickOutside = (event) => {
+      if (
+        modalContentRef.current &&
+        !modalContentRef.current.contains(event.target)
+      ) {
+        closeModal();
+      }
+    };
+
+    const closeModal = () => {
+      setIsModalOpen(false);
+    };
+
+    if (isModalOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      window.addEventListener("mousedown", handleClickOutside);
+      // Set focus to the close button when modal opens
+      if (closeButtonRef.current) {
+        closeButtonRef.current.focus();
+      }
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
+
   const sanitizedContent = DOMPurify.sanitize(content);
 
   const options = {
@@ -36,12 +96,20 @@ function TextContent({ content, type }) {
       // Handle images
       if (node.name === "img") {
         return (
-          <img
-            src={node.attribs.src}
-            alt={node.attribs.alt || "Image"}
-            className="max-w-full h-auto rounded-md my-2"
+          <div
             key={node.key}
-          />
+            onClick={() => {
+              setModalImageSrc(node.attribs.src);
+              setIsModalOpen(true);
+            }}
+            className="cursor-pointer inline-block"
+          >
+            <img
+              src={node.attribs.src}
+              alt={node.attribs.alt || "Image"}
+              className="max-w-xs h-auto rounded-md my-2"
+            />
+          </div>
         );
       }
 
@@ -132,8 +200,34 @@ function TextContent({ content, type }) {
   };
 
   return (
-    <div className={`text-gray-800 dark:text-gray-200 break-words`}>
+    <div className="text-gray-800 dark:text-gray-200 break-words">
       {parse(sanitizedContent, options)}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            ref={modalContentRef}
+            className="relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              ref={closeButtonRef}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-2 right-2 text-white text-3xl font-bold focus:outline-none transition transform hover:scale-110"
+              aria-label="Close"
+            >
+              &#x2715;
+            </button>
+            <img
+              src={modalImageSrc}
+              alt="Expanded Media"
+              className="max-w-full max-h-screen rounded-xl shadow-lg transition-transform duration-300 object-contain"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

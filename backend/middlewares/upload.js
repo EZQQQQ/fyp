@@ -17,7 +17,7 @@ aws.config.update({
 const s3 = new aws.S3();
 
 // Allowed file types (images, videos, PDFs)
-const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|pdf/;
+const allowedTypes = /jpeg|jpg|png|gif|mp4|mov|avi|pdf|heic|heif|hevc/;
 
 // File filter to validate file types
 const fileFilter = (req, file, cb) => {

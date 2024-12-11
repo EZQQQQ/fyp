@@ -14,8 +14,11 @@ const MediaViewer = ({ file }) => {
     const triggerRef = useRef(null);
     const closeButtonRef = useRef(null);
 
+    const imageExtensions = ['jpeg', 'jpg', 'png', 'gif', 'heic', 'heif'];
+    const videoExtensions = ['mp4', 'mov', 'avi', 'hevc'];
+
     const openModal = () => {
-        if (['jpeg', 'jpg', 'png', 'gif'].includes(fileExtension)) {
+        if (imageExtensions.includes(fileExtension)) {
             setIsModalOpen(true);
             setIsModalImageLoading(true);
             document.body.style.overflow = 'hidden'; // Disable background scrolling
@@ -90,7 +93,7 @@ const MediaViewer = ({ file }) => {
         </div>
     );
 
-    if (['jpeg', 'jpg', 'png', 'gif'].includes(fileExtension)) {
+    if (imageExtensions.includes(fileExtension)) {
         return (
             <>
                 <div
@@ -140,7 +143,7 @@ const MediaViewer = ({ file }) => {
                                 aria-label="Close"
                                 ref={closeButtonRef}
                             >
-                                &times;
+                                &#x2715;
                             </button>
                             {/* Spinner in Modal */}
                             {isModalImageLoading && <Spinner />}
@@ -157,7 +160,7 @@ const MediaViewer = ({ file }) => {
                 )}
             </>
         );
-    } else if (['mp4', 'mov', 'avi'].includes(fileExtension)) {
+    } else if (videoExtensions.includes(fileExtension)) {
         return (
             <div className="relative w-full max-w-[605px] h-80 md:h-[540px] overflow-hidden rounded-xl bg-black">
                 <video

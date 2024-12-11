@@ -14,7 +14,7 @@ aws.config.update({
 
 const s3 = new aws.S3();
 
-const allowedTypes = /jpeg|jpg|png/;
+const allowedTypes = /jpeg|jpg|png|heic|heif/;
 
 const fileFilter = (req, file, cb) => {
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -23,7 +23,7 @@ const fileFilter = (req, file, cb) => {
   if (mimetype && extname) {
     cb(null, true);
   } else {
-    cb(new Error("Only JPEG, JPG, and PNG images are allowed for profile photos!"));
+    cb(new Error("Only JPEG, JPG, PNG, HEIC, and HEIF images are allowed for profile photos!"));
   }
 };
 
