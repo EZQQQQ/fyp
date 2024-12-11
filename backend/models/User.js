@@ -37,6 +37,11 @@ const UserSchema = new mongoose.Schema(
         ref: "Community",
       },
     ],
+    // field track dashboard popup preference
+    hideDashboard: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

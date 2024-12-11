@@ -194,9 +194,49 @@ const getUserProfile = async (req, res) => {
   }
 };
 
+// Controller to Update hideDashboard Preference
+const updateHideDashboardPreference = async (req, res) => {
+  try {
+    const { hideDashboard } = req.body;
+
+    // Validate the incoming data
+    if (typeof hideDashboard !== "boolean") {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid data: hideDashboard must be a boolean",
+      });
+    }
+
+    // Find the user by ID and update the hideDashboard field
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: false, message: "User not found" });
+    }
+
+    user.hideDashboard = hideDashboard;
+    await user.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Dashboard preference updated successfully",
+      data: { hideDashboard: user.hideDashboard },
+    });
+  } catch (err) {
+    console.error("Update hideDashboard Preference Error:", err);
+    res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   ssoLoginUser,
   loginUser,
   createUserProfile,
   getUserProfile,
+  updateHideDashboardPreference,
 };

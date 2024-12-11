@@ -7,6 +7,7 @@ const {
   loginUser,
   createUserProfile,
   getUserProfile,
+  updateHideDashboardPreference,
 } = require("../controllers/userController");
 const auth = require("../middlewares/auth");
 const uploadProfile = require("../middlewares/uploadProfile");
@@ -27,5 +28,8 @@ router.post(
 
 // Get User Profile Route
 router.get("/profile", auth, getUserProfile);
+
+// Update hideDashboard Preference
+router.put("/profile/hide-dashboard", auth, updateHideDashboardPreference);
 
 module.exports = router;

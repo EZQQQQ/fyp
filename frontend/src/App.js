@@ -134,7 +134,7 @@ function App() {
           )}
 
           {/* Main Content */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto relative">
             <Routes>
               {/* Authentication Routes */}
               <Route path="/auth" element={<Auth />} />
@@ -151,15 +151,7 @@ function App() {
                 }
               />
               <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
-                    <Dashboard />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/"
+                path="/questions"
                 element={
                   <ProtectedRoute>
                     <AllQuestions />
@@ -200,12 +192,25 @@ function App() {
               />
               <Route path="/search" element={<SearchResults />} />
 
+              {/* Root Route */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
+                    <AllQuestions />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Catch-All Route */}
               <Route
                 path="*"
                 element={<Navigate to={user ? "/" : "/auth"} replace />}
               />
             </Routes>
+
+            {/* Dashboard Modal Overlay */}
+            {user && <Dashboard />}
           </div>
         </div>
 

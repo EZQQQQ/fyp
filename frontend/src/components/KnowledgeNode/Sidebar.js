@@ -96,11 +96,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
             <div className="flex flex-col mt-4">
               <button
                 onClick={toggleDropdown}
-                className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w-full focus:outline-none ${
-                  dropdownOpen
+                className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w-full focus:outline-none ${dropdownOpen
                     ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     : "text-gray-700 dark:text-gray-200"
-                }`}
+                  }`}
                 aria-expanded={dropdownOpen}
                 aria-controls="communities-dropdown"
               >
@@ -134,7 +133,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                   )}
 
                   {Array.isArray(userCommunities) &&
-                  userCommunities.length > 0 ? (
+                    userCommunities.length > 0 ? (
                     userCommunities.map((community) => (
                       <SidebarLink
                         key={community._id}

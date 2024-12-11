@@ -50,8 +50,8 @@ export const createUserProfile = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          error.message ||
-          "Profile creation failed"
+        error.message ||
+        "Profile creation failed"
       );
     }
   }
@@ -67,8 +67,23 @@ export const fetchUserData = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch user data"
+        error.message ||
+        "Failed to fetch user data"
+      );
+    }
+  }
+);
+
+// Async Thunk to Update hideDashboard
+export const updateHideDashboardPreference = createAsyncThunk(
+  "user/updateHideDashboard",
+  async (hideDashboard, { rejectWithValue }) => {
+    try {
+      const data = await userService.updateHideDashboard({ hideDashboard });
+      return data.data.hideDashboard; // Assuming the response structure
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Failed to update preference"
       );
     }
   }
@@ -164,6 +179,24 @@ const userSlice = createSlice({
         // Logout the user if fetching data fails
         state.token = null;
         localStorage.removeItem("token");
+      })
+
+      // Handle Update hideDashboard Preference
+      .addCase(updateHideDashboardPreference.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateHideDashboardPreference.fulfilled, (state, action) => {
+        state.loading = false;
+        if (state.user) {
+          state.user.hideDashboard = action.payload;
+        }
+        toast.success("Preference updated successfully!");
+      })
+      .addCase(updateHideDashboardPreference.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload);
       });
   },
 });

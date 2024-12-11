@@ -38,11 +38,18 @@ const fetchUserData = async () => {
   return response.data;
 };
 
+// Update hideDashboard Preference
+const updateHideDashboard = async ({ hideDashboard }) => {
+  const response = await axios.put("/user/profile/hide-dashboard", { hideDashboard });
+  return response.data;
+};
+
 const userService = {
   ssoLogin,
   createProfile,
   adminLogin,
   fetchUserData,
+  updateHideDashboard,
 };
 
 export default userService;
