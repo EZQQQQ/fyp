@@ -443,7 +443,7 @@ const getQuestionsByCommunity = async (req, res) => {
 const searchQuestions = async (req, res) => {
   try {
     const { query, community } = req.query;
-    const userId = req.user.id; // Ensure userId is obtained correctly
+    const userId = req.user.id;
 
     // Validate 'query' parameter
     if (!query || query.trim() === "") {
@@ -452,11 +452,6 @@ const searchQuestions = async (req, res) => {
         message: "Query parameter is required.",
       });
     }
-
-    // Function to escape regex special characters
-    const escapeRegex = (string) => {
-      return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    };
 
     // Initialize aggregation pipeline
     const pipeline = [];
@@ -471,7 +466,7 @@ const searchQuestions = async (req, res) => {
         });
       }
 
-      // Check membership and add match stage
+      // Add match stage for the specified community
       pipeline.push({
         $match: { community: new mongoose.Types.ObjectId(community) },
       });
@@ -503,16 +498,16 @@ const searchQuestions = async (req, res) => {
     const escapedQuery = escapeRegex(query);
 
     // Create regex patterns for case-insensitive partial matching
-    const titleRegex = new RegExp(escapedQuery, "i"); // Case-insensitive
-    const contentRegex = new RegExp(escapedQuery, "i"); // Case-insensitive
+    const titleRegex = new RegExp(escapedQuery, "i");
+    const contentRegex = new RegExp(escapedQuery, "i");
 
-    // Add a match stage for title, content, and exact tag matches
+    // Add match stage for title, content, and exact tag matches
     pipeline.push({
       $match: {
         $or: [
-          { title: { $regex: titleRegex } }, // Partial title match
-          { content: { $regex: contentRegex } }, // Partial content match
-          { tags: query }, // Exact tag match
+          { title: { $regex: titleRegex } },
+          { content: { $regex: contentRegex } },
+          { tags: query },
         ],
       },
     });
@@ -523,22 +518,18 @@ const searchQuestions = async (req, res) => {
         score: {
           $add: [
             {
-              $cond: [
-                { $in: [query, "$tags"] }, // Exact match in tags
-                3,
-                0,
-              ],
+              $cond: [{ $in: [query, "$tags"] }, 3, 0],
             },
             {
               $cond: [
-                { $regexMatch: { input: "$title", regex: titleRegex } }, // Partial title match
+                { $regexMatch: { input: "$title", regex: titleRegex } },
                 2,
                 0,
               ],
             },
             {
               $cond: [
-                { $regexMatch: { input: "$content", regex: contentRegex } }, // Partial content match
+                { $regexMatch: { input: "$content", regex: contentRegex } },
                 1,
                 0,
               ],
@@ -547,11 +538,11 @@ const searchQuestions = async (req, res) => {
         },
         voteCount: {
           $subtract: [{ $size: "$upvoters" }, { $size: "$downvoters" }],
-        }, // Calculate voteCount
+        },
       },
     });
 
-    // Sort results by 'score' in descending order to prioritize relevance
+    // Sort results by 'score' in descending order
     pipeline.push({ $sort: { score: -1 } });
 
     // Populate the 'user' field
@@ -604,20 +595,21 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Project only necessary fields to optimize performance
+    // Project necessary fields
     pipeline.push({
       $project: {
         title: 1,
         content: 1,
         tags: 1,
-        user: { name: 1, profilePicture: 1 },
+        files: 1, // Ensure 'files' field is included as is
+        contentType: 1,
+        user: { username: 1, profilePicture: 1 },
         community: { name: 1, avatar: 1 },
         upvoters: 1,
         downvoters: 1,
         createdAt: 1,
         updatedAt: 1,
-        score: 1, // Optional: Include for debugging or frontend use
-        voteCount: 1, // Include voteCount in the projection
+        voteCount: 1,
         answersCount: 1,
         commentsCount: 1,
       },
