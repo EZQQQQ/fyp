@@ -436,20 +436,169 @@ async function calculateStudentProgress(userId, task, communityId) {
 
   switch (task.type) {
     case "votes":
-      // Handle votes logic as in original code
-      // ...
-      // (Content unchanged; just referencing existing logic)
-      // The logic remains the same since it's not related to file storage.
+      if (task.contentType === "questions") {
+        // Get all questions authored by the user in the community
+        const questions = await Question.find({
+          community: communityId,
+          user: userId,
+        });
+
+        progress = 0;
+
+        for (const question of questions) {
+          // Exclude votes from the author themselves
+          const upvotes = question.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = question.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          progress += netVotes;
+        }
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their questions in community ${communityId}`
+        // );
+      } else if (task.contentType === "answers") {
+        // Get all answers authored by the user
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        // Only include answers where question_id is populated (i.e., the question is in the community)
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        progress = 0;
+
+        for (const answer of filteredAnswers) {
+          // Exclude votes from the author themselves
+          const upvotes = answer.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = answer.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          progress += netVotes;
+        }
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their answers in community ${communityId}`
+        // );
+      } else if (task.contentType === "questions & answers") {
+        // Questions
+        const questions = await Question.find({
+          community: communityId,
+          user: userId,
+        });
+
+        let questionProgress = 0;
+
+        for (const question of questions) {
+          const upvotes = question.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = question.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          questionProgress += netVotes;
+        }
+
+        // Answers
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        let answerProgress = 0;
+
+        for (const answer of filteredAnswers) {
+          const upvotes = answer.upvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const downvotes = answer.downvoters.filter(
+            (voterId) => voterId.toString() !== userId.toString()
+          ).length;
+          const netVotes = upvotes - downvotes;
+          answerProgress += netVotes;
+        }
+
+        progress = questionProgress + answerProgress;
+
+        // console.log(
+        //   `User ${userId} has a net vote total of ${progress} for their questions and answers in community ${communityId}`
+        // );
+      }
       break;
+
     case "postings":
-      // Handle postings logic
+      if (task.contentType === "questions") {
+        progress = await Question.countDocuments({
+          user: userId,
+          community: communityId,
+        });
+      } else if (task.contentType === "answers") {
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        progress = filteredAnswers.length;
+      } else if (task.contentType === "both") {
+        const questionCount = await Question.countDocuments({
+          user: userId,
+          community: communityId,
+        });
+
+        const answers = await Answer.find({
+          user: userId,
+        }).populate({
+          path: "question_id",
+          match: { community: communityId },
+          select: "_id",
+        });
+
+        const filteredAnswers = answers.filter((answer) => answer.question_id);
+
+        const answerCount = filteredAnswers.length;
+
+        progress = questionCount + answerCount;
+      }
       break;
+
     case "quizzes":
-      // Handle quizzes logic
+      // Fetch the latest quiz attempt for the user in this community
+      const quizAttempt = await QuizAttempt.findOne({
+        user: userId,
+        community: communityId,
+      })
+        .sort({ createdAt: -1 })
+        .exec();
+      progress = quizAttempt
+        ? (quizAttempt.score / quizAttempt.totalPossibleScore) * 100
+        : 0;
       break;
+
     default:
       progress = 0;
   }
+  // console.log(`User ${userId} participation for task ${task._id}: ${progress}`);
 
   return progress;
 }
