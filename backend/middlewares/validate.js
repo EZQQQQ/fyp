@@ -121,9 +121,26 @@ const validateGetAnswers = [
 // **Validation for Comments**
 // Validation for adding a comment (POST)
 const validateAddComment = [
+  // Validate questionId if present
   param("questionId")
+    .optional()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid question ID"),
+  // Validate answerId if present
+  param("answerId")
+    .optional()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .withMessage("Invalid answer ID"),
+  // Ensure at least one of questionId or answerId is provided
+  (req, res, next) => {
+    if (!req.params.questionId && !req.params.answerId) {
+      return res.status(400).json({
+        status: false,
+        message: "Either questionId or answerId must be provided.",
+      });
+    }
+    next();
+  },
   body("comment")
     .isString()
     .trim()
@@ -135,8 +152,23 @@ const validateAddComment = [
 // Validation for getting comments (GET)
 const validateGetComments = [
   param("questionId")
+    .optional()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid question ID"),
+  param("answerId")
+    .optional()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .withMessage("Invalid answer ID"),
+  // Ensure at least one of questionId or answerId is provided
+  (req, res, next) => {
+    if (!req.params.questionId && !req.params.answerId) {
+      return res.status(400).json({
+        status: false,
+        message: "Either questionId or answerId must be provided.",
+      });
+    }
+    next();
+  },
   handleValidationResults,
 ];
 

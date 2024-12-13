@@ -125,6 +125,7 @@
 │   │   │   │   ├── Searchbar.js
 │   │   │   │   └── SearchResults.js
 │   │   │   ├── TextEditor
+│   │   │   │   ├── MarkdownEditor.css
 │   │   │   │   └── MarkdownEditor.js
 │   │   │   ├── VoteButtons
 │   │   │   │   └── VoteButtons.js
@@ -132,6 +133,7 @@
 │   │   │   ├── ProfileCreation.js
 │   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
+│   │   │       ├── CommentSection.js
 │   │   │       ├── TextContent.js
 │   │   │       └── MainQuestion.js
 │   │   ├── config

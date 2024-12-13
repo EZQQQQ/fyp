@@ -9,20 +9,36 @@ const {
 } = require("../middlewares/validate");
 const commentController = require("../controllers/commentController");
 
-// POST /api/comment/:questionId - Add a comment to a question
+// POST /api/comment/question/:questionId - Add a comment to a question
 router.post(
-  "/:questionId",
+  "/question/:questionId",
   auth,
   validateAddComment,
-  commentController.addComment
+  commentController.addCommentToQuestion
 );
 
-// GET /api/comment/:questionId - Get all comments for a question
+// GET /api/comment/question/:questionId - Get all comments for a question
 router.get(
-  "/:questionId",
+  "/question/:questionId",
   auth,
   validateGetComments,
   commentController.getCommentsByQuestionId
+);
+
+// POST /api/comment/answer/:answerId - Add a comment to an answer
+router.post(
+  "/answer/:answerId",
+  auth,
+  validateAddComment,
+  commentController.addCommentToAnswer
+);
+
+// GET /api/comment/answer/:answerId - Get all comments for an answer
+router.get(
+  "/answer/:answerId",
+  auth,
+  validateGetComments,
+  commentController.getCommentsByAnswerId
 );
 
 module.exports = router;

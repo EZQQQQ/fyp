@@ -7,7 +7,16 @@ const CommentSchema = new mongoose.Schema(
     question_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Question",
-      required: true,
+      required: function () {
+        return !this.answer_id;
+      },
+    },
+    answer_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Answer",
+      required: function () {
+        return !this.question_id;
+      },
     },
     comment: {
       type: String,
@@ -16,9 +25,12 @@ const CommentSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("Comment", CommentSchema);

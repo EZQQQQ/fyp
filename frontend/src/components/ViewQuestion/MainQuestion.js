@@ -1,13 +1,10 @@
 // frontend/src/components/ViewQuestion/MainQuestion.js
 
 import React, { useState, useEffect } from "react";
-import { Bookmark, History } from "@mui/icons-material";
-import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
 import axiosInstance from "../../utils/axiosConfig";
 import { useSelector, useDispatch } from "react-redux";
-import { selectUser } from "../../features/userSlice";
 import { setVoteData, selectVoteData } from "../../features/voteSlice";
 import TextContent from "./TextContent";
 import VoteButtons from "../VoteButtons/VoteButtons";
@@ -17,21 +14,21 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserAvatar from "../../common/UserAvatar";
 import MediaViewer from "../MediaViewer/MediaViewer";
-import PollResults from "../Polls/PollResults"; // Import PollResults
+import PollResults from "../Polls/PollResults";
+import CommentSection from "./CommentSection";
 
 function MainQuestion() {
   const { questionId } = useParams();
-  const user = useSelector(selectUser);
   const voteData = useSelector(selectVoteData);
   const dispatch = useDispatch();
 
   const [question, setQuestion] = useState(null);
   const [comments, setComments] = useState([]);
   const [answers, setAnswers] = useState([]);
-  const [commentText, setCommentText] = useState("");
   const [answerText, setAnswerText] = useState("");
-  const [showCommentBox, setShowCommentBox] = useState(false);
   const [answerLoading, setAnswerLoading] = useState({});
+  const [answerComments, setAnswerComments] = useState({}); // State to manage comments for each answer
+  const [loadingAnswerComments, setLoadingAnswerComments] = useState(false); // Loading state for answer comments
 
   // Fetch Question Data on Mount
   useEffect(() => {
@@ -52,6 +49,32 @@ function MainQuestion() {
             },
           })
         );
+
+        // Fetch comments for each answer
+        const fetchAllAnswerComments = async () => {
+          setLoadingAnswerComments(true);
+          try {
+            const commentsPromises = response.data.data.answers.map((ans) =>
+              axiosInstance.get(`/comment/answer/${ans._id}`)
+            );
+            const commentsResponses = await Promise.all(commentsPromises);
+            const initialAnswerComments = {};
+            commentsResponses.forEach((res, index) => {
+              initialAnswerComments[response.data.data.answers[index]._id] =
+                res.data.data || [];
+            });
+            setAnswerComments(initialAnswerComments);
+          } catch (error) {
+            console.error("Error fetching answer comments:", error.response?.data);
+            toast.error(
+              error.response?.data?.message || "Failed to fetch answer comments."
+            );
+          } finally {
+            setLoadingAnswerComments(false);
+          }
+        };
+
+        await fetchAllAnswerComments();
       } catch (error) {
         console.error("Error fetching question:", error.response?.data);
         toast.error(
@@ -118,11 +141,11 @@ function MainQuestion() {
         prevAnswers.map((ans) =>
           ans._id === answerId
             ? {
-                ...ans,
-                voteCount: voteResult.voteCount,
-                userHasUpvoted: voteResult.userHasUpvoted,
-                userHasDownvoted: voteResult.userHasDownvoted,
-              }
+              ...ans,
+              voteCount: voteResult.voteCount,
+              userHasUpvoted: voteResult.userHasUpvoted,
+              userHasDownvoted: voteResult.userHasDownvoted,
+            }
             : ans
         )
       );
@@ -157,20 +180,28 @@ function MainQuestion() {
     }
   };
 
-  const handleToggleCommentBox = () => {
-    setShowCommentBox(!showCommentBox);
-  };
-
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (commentText.trim() === "") return;
+  const handleAddQuestionComment = async (parentId, comment) => {
     try {
-      const response = await axiosInstance.post(`/comment/${questionId}`, {
-        comment: commentText,
+      const response = await axiosInstance.post(`/comment/question/${parentId}`, {
+        comment,
       });
       setComments([...comments, response.data.data]);
-      setCommentText("");
-      setShowCommentBox(false);
+      toast.success("Comment added successfully!");
+    } catch (error) {
+      console.error("Error adding comment:", error.response?.data);
+      toast.error(error.response?.data?.message || "Failed to add comment.");
+    }
+  };
+
+  const handleAddAnswerComment = async (answerId, comment) => {
+    try {
+      const response = await axiosInstance.post(`/comment/answer/${answerId}`, {
+        comment,
+      });
+      setAnswerComments((prev) => ({
+        ...prev,
+        [answerId]: [...prev[answerId], response.data.data],
+      }));
       toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error adding comment:", error.response?.data);
@@ -191,9 +222,15 @@ function MainQuestion() {
         ...newAnswer,
         userHasUpvoted: false,
         userHasDownvoted: false,
+        comments: [], // Initialize comments array for the new answer
       };
 
       setAnswers((prevAnswers) => [...prevAnswers, answerWithDefaults]);
+
+      setAnswerComments((prev) => ({
+        ...prev,
+        [newAnswer._id]: [],
+      }));
 
       setAnswerText("");
       toast.success("Answer posted successfully!");
@@ -256,9 +293,7 @@ function MainQuestion() {
           )}
 
           {/* Poll Results */}
-          {question.contentType === 2 && (
-            <PollResults questionId={questionId} />
-          )}
+          {question.contentType === 2 && <PollResults questionId={questionId} />}
 
           {/* Author Info and Voting Buttons */}
           <div className="flex items-center justify-between mt-6">
@@ -276,7 +311,7 @@ function MainQuestion() {
             <div className="flex items-center space-x-2">
               <UserAvatar
                 user={question.user}
-                handleSignOut={() => {}}
+                handleSignOut={() => { }}
                 className=""
               />
               <p className="text-gray-900 dark:text-gray-100 font-medium">
@@ -289,102 +324,17 @@ function MainQuestion() {
           </div>
 
           {/* Comments */}
-          <div className="mt-6">
-            <h3 className="text-sm text-gray-700 dark:text-gray-400 mb-2">
-              Comments
-            </h3>
-            {comments.map((comment) => (
-              <div
-                className="mb-4 pl-4 border-l border-gray-300 dark:border-gray-600"
-                key={comment._id}
-              >
-                <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
-                  {comment.comment} -{" "}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-medium">
-                    {comment.user?.username || comment.user?.name || "Anonymous"}
-                  </span>{" "}
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </span>
-                </p>
-              </div>
-            ))}
-            <button
-              className="text-sm text-blue-500 hover:underline"
-              onClick={handleToggleCommentBox}
-            >
-              Add a comment
-            </button>
-            {showCommentBox && (
-              <div className="mt-4 pl-4 border-l border-gray-300 dark:border-gray-600">
-                <textarea
-                  placeholder="Add your comment..."
-                  rows={3}
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
-                ></textarea>
-                <button
-                  onClick={handleCommentSubmit}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-2"
-                >
-                  Add Comment
-                </button>
-              </div>
-            )}
-          </div>
+          <CommentSection
+            comments={comments}
+            onAddComment={handleAddQuestionComment}
+            loading={false}
+            parentId={questionId}
+            commentType="question"
+          />
         </div>
 
-        {/* Answers Section */}
-        <div className="mb-8">
-          <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-            {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
-          </h3>
-          {answers.map((answer) => (
-            <div
-              className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col"
-              key={answer._id}
-            >
-              {/* Content */}
-              <div className="mb-4">
-                <TextContent content={answer.answer} type="answer" />
-              </div>
-
-              {/* Files (Optional) */}
-              {answer.files?.length > 0 && (
-                <div className="my-4 ">
-                  {answer.files.map((fileUrl, index) => (
-                    <MediaViewer key={index} file={fileUrl} />
-                  ))}
-                </div>
-              )}
-
-              {/* Voting and Author Info */}
-              <div className="flex items-center justify-between">
-                {/* Voting Buttons */}
-                <VoteButtons
-                  voteCount={answer.voteCount}
-                  onUpvote={() => handleAnswerVote("upvote", answer._id)}
-                  onDownvote={() => handleAnswerVote("downvote", answer._id)}
-                  userHasUpvoted={answer.userHasUpvoted}
-                  userHasDownvoted={answer.userHasDownvoted}
-                  loading={answerLoading[answer._id] || false}
-                />
-
-                {/* Author Info */}
-                <div className="flex items-center space-x-2">
-                  <UserAvatar user={answer.user} handleSignOut={() => {}} />
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">
-                    {answer.user?.username || answer.user?.name || "Anonymous"}
-                  </p>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(answer.createdAt).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Separator between Question and Answers */}
+        <hr className="border-t border-gray-300 dark:border-gray-700 mb-8" />
 
         {/* Answer Form */}
         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm">
@@ -405,6 +355,77 @@ function MainQuestion() {
             Post Your Answer
           </button>
         </div>
+
+        {/* Answers Section */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+            {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
+          </h3>
+          {answers.map((answer, index) => (
+            <div key={answer._id}>
+              <div
+                className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col"
+              >
+                {/* Content */}
+                <div className="mb-4">
+                  <TextContent content={answer.answer} type="answer" />
+                </div>
+
+                {/* Files (Optional) */}
+                {answer.files?.length > 0 && (
+                  <div className="my-4">
+                    {answer.files.map((fileUrl, idx) => (
+                      <MediaViewer key={idx} file={fileUrl} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Author Info and Voting Buttons */}
+                <div className="flex items-center justify-between mt-6">
+                  {/* Voting Buttons */}
+                  <VoteButtons
+                    voteCount={answer.voteCount}
+                    onUpvote={() => handleAnswerVote("upvote", answer._id)}
+                    onDownvote={() => handleAnswerVote("downvote", answer._id)}
+                    userHasUpvoted={answer.userHasUpvoted}
+                    userHasDownvoted={answer.userHasDownvoted}
+                    loading={answerLoading[answer._id] || false}
+                  />
+
+                  {/* Author Info */}
+                  <div className="flex items-center space-x-2">
+                    <UserAvatar
+                      user={answer.user}
+                      handleSignOut={() => { }}
+                      className=""
+                    />
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">
+                      {answer.user?.username || answer.user?.name || "Anonymous"}
+                    </p>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(answer.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Comments for Answer */}
+                <CommentSection
+                  comments={answerComments[answer._id] || []}
+                  onAddComment={handleAddAnswerComment}
+                  loading={loadingAnswerComments}
+                  parentId={answer._id}
+                  commentType="answer"
+                />
+              </div>
+              {/* Separator between answers */}
+              {index !== answers.length - 1 && (
+                <hr className="border-t border-gray-300 dark:border-gray-700 mb-6" />
+              )}
+            </div>
+          ))}
+        </div>
+
+
       </div>
     </div>
   );
