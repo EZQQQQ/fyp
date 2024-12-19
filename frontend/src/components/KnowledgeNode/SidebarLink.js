@@ -1,20 +1,19 @@
-// /frontend/src/components/KnowledgeNode/SidebarLink.js
-
+// frontend/src/components/KnowledgeNode/SidebarLink.js
 import React from "react";
 import { NavLink } from "react-router-dom";
+
+const getNavLinkClasses = (isActive) =>
+  `group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${isActive
+    ? "bg-graydark dark:bg-meta-4 active"
+    : "false"
+  }`;
 
 function SidebarLink({ to, icon: Icon, children, onClick }) {
   return (
     <NavLink
       to={to}
       onClick={onClick}
-      className={({ isActive }) =>
-        `flex items-center p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 ${
-          isActive
-            ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            : "text-gray-700 dark:text-gray-200"
-        }`
-      }
+      className={({ isActive }) => getNavLinkClasses(isActive)}
     >
       {Icon && <Icon className="mr-2" />}
       <span className="font-medium">{children}</span>

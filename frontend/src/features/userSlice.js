@@ -89,6 +89,36 @@ export const updateHideDashboardPreference = createAsyncThunk(
   }
 );
 
+// Async thunk for updating user profile
+export const updateProfile = createAsyncThunk(
+  "user/updateProfile",
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const data = await userService.updateProfile(profileData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Profile update failed"
+      );
+    }
+  }
+);
+
+// Async thunk for updating user settings
+export const updateSettings = createAsyncThunk(
+  "user/updateSettings",
+  async (settingsData, { rejectWithValue }) => {
+    try {
+      const data = await userService.updateSettings(settingsData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Settings update failed"
+      );
+    }
+  }
+);
+
 const initialState = {
   user: null,
   token: null,
@@ -176,8 +206,6 @@ const userSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
         toast.error(action.payload);
-        // Logout the user if fetching data fails
-        state.token = null;
         localStorage.removeItem("token");
       })
 
@@ -194,6 +222,36 @@ const userSlice = createSlice({
         toast.success("Preference updated successfully!");
       })
       .addCase(updateHideDashboardPreference.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload);
+      })
+
+      // Handle Update Profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.data.user;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload);
+      })
+
+      // Handle Update Settings
+      .addCase(updateSettings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateSettings.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.data.user;
+      })
+      .addCase(updateSettings.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         toast.error(action.payload);

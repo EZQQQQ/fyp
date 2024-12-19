@@ -87,6 +87,7 @@
 │   │   │   ├── logo-downsized.png
 │   │   │   └── logo.png
 │   │   ├── common
+│   │   │   ├── UserBanner.png
 │   │   │   └── UserAvatar.js
 │   │   ├── components
 │   │   │   ├── AddQuestion
@@ -106,7 +107,11 @@
 │   │   │   │   ├── CommunityPage.js
 │   │   │   │   └── CreateCommunity.js
 │   │   │   ├── Header
-│   │   │   │   ├── Header.js
+│   │   │   │   ├── ClickOutside.js
+│   │   │   │   ├── DarkModeSwitcher.js
+│   │   │   │   ├── DropdownNotification.js
+│   │   │   │   ├── DropdownUser.js
+│   │   │   │   └── Header.js
 │   │   │   ├── KnowledgeNode
 │   │   │   │   ├── AllQuestions.js
 │   │   │   │   ├── CreateQuestionButton.js
@@ -130,7 +135,10 @@
 │   │   │   ├── VoteButtons
 │   │   │   │   └── VoteButtons.js
 │   │   │   ├── Dashboard.js
-│   │   │   ├── ProfileCreation.js
+│   │   │   ├── Profile
+│   │   │   │   ├── ProfileCreation.js
+│   │   │   │   ├── ProfilePage.js
+│   │   │   │   └── ProfileSettings.js
 │   │   │   ├── ProtectedRoute.js
 │   │   │   └── ViewQuestion
 │   │   │       ├── CommentSection.js
@@ -144,9 +152,13 @@
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
 │   │   ├── hooks
+│   │   │   ├── useColorMode.js
+│   │   │   ├── useLocalStorage.js
 │   │   │   ├── useSearchQuestions.js
 │   │   │   ├── useUserCommunities.js
 │   │   │   └── useVote.js
+│   │   ├── layout
+│   │   │   └── DefaultLayout.js
 │   │   ├── services
 │   │   │   ├── assessmentService.js
 │   │   │   ├── communityService.js

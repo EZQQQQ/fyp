@@ -1,136 +1,112 @@
 // frontend/src/components/Header/Header.js
 
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import MenuIcon from "@mui/icons-material/Menu";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import { IconButton } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import { selectUser, logout } from "../../features/userSlice";
-import { signOut } from "firebase/auth";
-import { auth } from "../../config/firebase-config";
-import SearchBar from "../Search/Searchbar";
-import UserAvatar from "../../common/UserAvatar";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
-// Importing Images
-import LogoLight from "../../assets/logo.png"; // Web light mode
-import LogoMobileLight from "../../assets/logo-downsized.png"; // Mobile light mode
-import LogoDark from "../../assets/logo-dark.png"; // Web dark mode
-import LogoMobileDark from "../../assets/logo-downsized-dark.png"; // Mobile dark mode
+import SearchBar from '../Search/Searchbar';
+import DropdownNotification from './DropdownNotification';
+import DropdownUser from './DropdownUser';
+import DarkModeSwitcher from './DarkModeSwitcher';
 
-function Header({ darkMode, setDarkMode, toggleSidebar }) {
+import LogoLight from '../../assets/logo-downsized.png';
+import LogoDark from '../../assets/logo-downsized-dark.png';
+
+import { selectUser } from '../../features/userSlice';
+
+const Header = (props) => {
+  const { sidebarOpen, setSidebarOpen } = props;
   const user = useSelector(selectUser);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const [theme, setTheme] = useState('light');
 
-  // Handle user sign-out
-  const handleSignOut = () => {
-    if (user) {
-      signOut(auth)
-        .then(() => {
-          dispatch(logout());
-          navigate("/auth");
-        })
-        .catch((error) => {
-          console.error("Sign-out Error:", error);
-        });
-    } else {
-      navigate("/auth");
-    }
-  };
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark');
+    setTheme(isDark ? 'dark' : 'light');
 
-  // Determine the appropriate logo based on dark mode
-  const getLogo = () => {
-    if (darkMode) {
-      return {
-        desktop: LogoDark,
-        mobile: LogoMobileDark,
-      };
-    }
-    return {
-      desktop: LogoLight,
-      mobile: LogoMobileLight,
-    };
-  };
+    const observer = new MutationObserver(() => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setTheme(isDarkMode ? 'dark' : 'light');
+    });
 
-  const { desktop: LogoDesktop, mobile: LogoMobileImg } = getLogo();
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          {/* Menu Icon (Visible on mobile) */}
-          <div className="flex md:hidden">
-            <button
-              className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl mr-4"
-              onClick={toggleSidebar}
-              aria-label="Toggle Sidebar Menu"
-            >
-              <MenuIcon />
-            </button>
-          </div>
+    <header className="flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
+      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+        {/* Left side: Hamburger + Mobile Logo */}
+        <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
+          {/* Hamburger Toggle Button */}
+          <button
+            aria-controls="sidebar"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSidebarOpen(!sidebarOpen);
+            }}
+            className="z-99999 block rounded-sm border border-stroke bg-white p-1.5 shadow-sm
+                       dark:border-strokedark dark:bg-boxdark lg:hidden"
+          >
+            <span className="relative block h-5.5 w-5.5 cursor-pointer">
+              <span className="du-block absolute right-0 h-full w-full">
+                <span
+                  className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-black delay-[0] duration-200 ease-in-out dark:bg-white ${!sidebarOpen && '!w-full delay-300'
+                    }`}
+                ></span>
+                <span
+                  className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-black delay-150 duration-200 ease-in-out dark:bg-white ${!sidebarOpen && 'delay-400 !w-full'
+                    }`}
+                ></span>
+                <span
+                  className={`relative left-0 top-0 my-1 block h-0.5 w-0 rounded-sm bg-black delay-200 duration-200 ease-in-out dark:bg-white ${!sidebarOpen && '!w-full delay-500'
+                    }`}
+                ></span>
+              </span>
+              <span className="absolute right-0 h-full w-full rotate-45">
+                <span
+                  className={`absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-black delay-300 duration-200 ease-in-out dark:bg-white ${!sidebarOpen && '!h-0 !delay-[0]'
+                    }`}
+                ></span>
+                <span
+                  className={`delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-black duration-200 ease-in-out dark:bg-white ${!sidebarOpen && '!h-0 !delay-200'
+                    }`}
+                ></span>
+              </span>
+            </span>
+          </button>
 
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            {/* Desktop Logo */}
-            <Link to="/" className="hidden md:block">
-              <img
-                src={LogoDesktop}
-                alt="KnowledgeNode Logo"
-                className="h-8 w-auto"
-              />
-            </Link>
-            {/* Mobile Logo */}
-            <Link to="/" className="block md:hidden">
-              <img
-                src={LogoMobileImg}
-                alt="KnowledgeNode Logo"
-                className="h-6 w-auto"
-              />
-            </Link>
-          </div>
-
-          {/* Conditionally Render Search Bar and Right Side Only If User is Authenticated */}
-          {user && (
-            <>
-              {/* Search Bar */}
-              <SearchBar />
-
-              {/* Right Side */}
-              <div className="flex items-center space-x-4">
-                {/* Dark Mode Toggle */}
-                <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className="text-gray-800 dark:text-gray-200 focus:outline-none text-2xl"
-                  aria-label="Toggle Dark Mode"
-                >
-                  {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-                </button>
-                {/* Notification Icon */}
-                <IconButton
-                  aria-label="View Notifications"
-                  className="text-gray-800 dark:text-gray-200"
-                  size="large"
-                >
-                  <NotificationsIcon fontSize="medium" />
-                </IconButton>
-                {/* User Avatar */}
-                <div className="relative">
-                  <UserAvatar
-                    user={user}
-                    handleSignOut={handleSignOut}
-                    className="h-8 w-8"
-                  />
-                </div>
-              </div>
-            </>
-          )}
+          {/* Mobile Logo */}
+          <Link className="block flex-shrink-0 lg:hidden" to="/">
+            <img src={theme === 'dark' ? LogoDark : LogoLight} alt="Logo" className="h-8 w-auto" />
+          </Link>
         </div>
+
+        {/* Center: Search Bar */}
+        {user && (
+          <div>
+            <SearchBar />
+          </div>
+        )}
+
+        {/* Right side: Dark Mode Switch, Notification, User Menu */}
+        {user && (
+          <div className="flex items-center gap-3 2xsm:gap-7">
+            <ul className="flex items-center gap-2 2xsm:gap-4">
+              {/* Dark Mode Toggle */}
+              <DarkModeSwitcher />
+
+              {/* Notification Dropdown */}
+              <DropdownNotification />
+            </ul>
+
+            {/* User Avatar / Dropdown */}
+            <DropdownUser user={user} />
+          </div>
+        )}
       </div>
     </header>
   );
-}
+};
 
 export default Header;

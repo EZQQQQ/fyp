@@ -1,166 +1,230 @@
 // frontend/src/components/KnowledgeNode/Sidebar.js
 
-import React, { useState, useEffect } from "react";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
-import HomeIcon from "@mui/icons-material/Home";
-import ExploreIcon from "@mui/icons-material/Explore";
-import PeopleIcon from "@mui/icons-material/People";
-import SidebarLink from "./SidebarLink";
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import {
+  Home as HomeIcon,
+  Explore as ExploreIcon,
+  People as PeopleIcon,
+  Add as PlusIcon,
+} from "@mui/icons-material";
+import { Button } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
+
 import { selectUser } from "../../features/userSlice";
 import {
   fetchUserCommunities,
   selectUserCommunities,
 } from "../../features/communitySlice";
+
+import SidebarLink from "./SidebarLink";
 import CommunityAvatar from "../Community/CommunityAvatar";
-import { Button } from "@mui/material";
-import PlusIcon from "@mui/icons-material/Add";
+import LogoDark from "../../assets/logo-dark.png"; // or your chosen logo
+
+
+// A small helper component, if not already defined
+const CommunityLinks = ({ communities, closeSidebar }) => (
+  <>
+    {communities.map((community) => (
+      <SidebarLink
+        key={community._id}
+        to={`/communities/${community._id}`}
+        onClick={closeSidebar}
+      >
+        <div className="flex items-center space-x-2">
+          <CommunityAvatar avatarUrl={community.avatar} name={community.name} />
+          <span>{community.name}</span>
+        </div>
+      </SidebarLink>
+    ))}
+  </>
+);
 
 function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
   const user = useSelector(selectUser);
   const userCommunities = useSelector(selectUserCommunities);
   const dispatch = useDispatch();
 
+  // For outside click close (like TailAdmin reference)
+  const sidebarRef = useRef(null);
+  const triggerRef = useRef(null);
+
+  // Expand/collapse ‘My Communities’ dropdown
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // When user logs in, fetch communities
   useEffect(() => {
     if (user) {
       dispatch(fetchUserCommunities());
     }
   }, [dispatch, user]);
 
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
+  // Close sidebar on outside click (if desired)
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target) &&
+        !triggerRef.current?.contains(e.target) &&
+        sidebarOpen
+      ) {
+        setSidebarOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [sidebarOpen, setSidebarOpen]);
 
+  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
   const closeSidebar = () => {
     setSidebarOpen(false);
     setDropdownOpen(false);
   };
 
-  if (!user) {
-    return null;
-  }
+  // If no user, don't render sidebar
+  if (!user) return null;
 
   return (
-    <div
-      className={`
-        fixed top-16 inset-y-0 left-0 z-40 w-64 overflow-y-auto bg-gray-100 dark:bg-gray-800 transform 
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-        transition-transform duration-200 ease-in-out 
-        md:translate-x-0 md:static md:inset-auto
-      `}
+    <aside
+      ref={sidebarRef}
+      className={`no-scrollbar absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-auto bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
     >
-      <div className="flex flex-col h-full p-4">
-        {/* Close button for mobile */}
-        <div className="flex justify-end md:hidden">
-          <button
-            onClick={closeSidebar}
-            className="text-gray-700 dark:text-gray-200 focus:outline-none"
+      {/* SIDEBAR HEADER */}
+      <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+        <Link to="/" onClick={closeSidebar}>
+          <img src={LogoDark} alt="Logo" className="h-10 w-auto" />
+        </Link>
+
+        {/* Close button for Mobile */}
+        <button
+          ref={triggerRef}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-controls="sidebar"
+          aria-expanded={sidebarOpen}
+          className="block lg:hidden text-bodydark1 dark:text-bodydark2"
+        >
+          <svg
+            className="fill-current"
+            width="20"
+            height="18"
+            viewBox="0 0 20 18"
           >
-            {/* Close Icon */}
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
+            <path d="M19 8.175H2.98748L9.36248 1.6875C9.69998 1.35 9.69998 0.825 9.36248 0.4875C9.02498 0.15 8.49998 0.15 8.16248 0.4875L0.399976 8.3625C0.0624756 8.7 0.0624756 9.225 0.399976 9.5625L8.16248 17.4375C8.31248 17.5875 8.53748 17.7 8.76248 17.7C8.98748 17.7 9.17498 17.625 9.36248 17.475C9.69998 17.1375 9.69998 16.6125 9.36248 16.275L3.02498 9.8625H19C19.45 9.8625 19.825 9.4875 19.825 9.0375C19.825 8.55 19.45 8.175 19 8.175Z" />
+          </svg>
+        </button>
+      </div>
 
-        <div className="flex-1 mt-4">
-          <div className="flex flex-col space-y-2">
-            {/* Home */}
-            <SidebarLink to="/" icon={HomeIcon} onClick={closeSidebar}>
-              Home
-            </SidebarLink>
+      {/* SIDEBAR MENU */}
+      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+        <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
+          {/* MENU Group */}
+          <div>
+            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+              MENU
+            </h3>
+            <ul className="mb-6 flex flex-col gap-1.5">
+              {/* Home */}
+              <li>
+                <SidebarLink to="/" icon={HomeIcon} onClick={closeSidebar}>
+                  Home
+                </SidebarLink>
+              </li>
+              {/* Explore */}
+              <li>
+                <SidebarLink to="/explore" icon={ExploreIcon} onClick={closeSidebar}>
+                  Explore
+                </SidebarLink>
+              </li>
+            </ul>
+          </div>
 
-            {/* Explore */}
-            <SidebarLink
-              to="/explore"
-              icon={ExploreIcon}
-              onClick={closeSidebar}
-            >
-              Explore
-            </SidebarLink>
+          {/* COMMUNITIES Group */}
+          <div>
+            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
+              COMMUNITIES
+            </h3>
+            <ul className="mb-6 flex flex-col gap-1.5">
+              <li>
+                <button
+                  onClick={toggleDropdown}
+                  className={`flex w-full items-center justify-between rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${dropdownOpen && "bg-graydark dark:bg-meta-4"
+                    }`}
+                  aria-expanded={dropdownOpen}
+                  aria-controls="communities-dropdown"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <PeopleIcon />
+                    <span>My Communities</span>
+                  </div>
+                  {/* Up/Down arrow icons */}
+                  {dropdownOpen ? (
+                    <svg
+                      className="fill-current rotate-180"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M4.41076 6.91073C4.7362 6.5853 5.26384 6.5853 5.58928 6.91073L10 11.3215L14.4108 6.91073C14.7362 6.5853 15.2638 6.5853 15.5893 6.91073C15.9147 7.23617 15.9147 7.76381 15.5893 8.08924L10.5893 13.0892C10.2638 13.4147 9.7362 13.4147 9.41076 13.0892L4.41076 8.08924C4.08532 7.76381 4.08532 7.23617 4.41076 6.91073Z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="fill-current"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M4.41076 6.91073C4.7362 6.5853 5.26384 6.5853 5.58928 6.91073L10 11.3215L14.4108 6.91073C14.7362 6.5853 15.2638 6.5853 15.5893 6.91073C15.9147 7.23617 15.9147 7.76381 15.5893 8.08924L10.5893 13.0892C10.2638 13.4147 9.7362 13.4147 9.41076 13.0892L4.41076 8.08924C4.08532 7.76381 4.08532 7.23617 4.41076 6.91073Z"
+                      />
+                    </svg>
+                  )}
+                </button>
+              </li>
 
-            {/* Communities */}
-            <div className="flex flex-col mt-4">
-              <button
-                onClick={toggleDropdown}
-                className={`flex items-center justify-between p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 w-full focus:outline-none ${dropdownOpen
-                    ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    : "text-gray-700 dark:text-gray-200"
-                  }`}
-                aria-expanded={dropdownOpen}
-                aria-controls="communities-dropdown"
-              >
-                <div className="flex items-center">
-                  <PeopleIcon className="mr-2" />
-                  <span className="font-medium">My Communities</span>
-                </div>
-                {dropdownOpen ? (
-                  <ArrowDropUpIcon className="text-gray-700 dark:text-gray-200" />
-                ) : (
-                  <ArrowDropDownIcon className="text-gray-700 dark:text-gray-200" />
-                )}
-              </button>
+              {/* Dropdown Content */}
               {dropdownOpen && (
                 <div
                   id="communities-dropdown"
-                  className="ml-6 mt-2 flex flex-col space-y-1 transition-all duration-300 ease-in-out"
+                  className="ml-6 mt-2 flex flex-col space-y-2 transition-all duration-300 ease-in-out"
                 >
+                  {/* Only show 'Create Community' if admin/professor */}
                   {(user.role === "admin" || user.role === "professor") && (
                     <Button
                       onClick={() => {
-                        openCreateCommunityModal(); // Open the modal
-                        closeSidebar(); // Optional: Close the sidebar
+                        openCreateCommunityModal();
+                        closeSidebar();
                       }}
                       variant="text"
-                      className="flex items-center justify-start w-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      startIcon={<PlusIcon className="h-5 w-5 mr-2" />}
+                      className="flex items-center justify-start w-full text-bodydark1 dark:text-bodydark2 hover:bg-graydark dark:hover:bg-meta-4 gap-2"
+                      startIcon={<PlusIcon />}
                     >
                       Create Community
                     </Button>
                   )}
-
-                  {Array.isArray(userCommunities) &&
-                    userCommunities.length > 0 ? (
-                    userCommunities.map((community) => (
-                      <SidebarLink
-                        key={community._id}
-                        to={`/communities/${community._id}`}
-                        onClick={closeSidebar}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <CommunityAvatar
-                            avatarUrl={community.avatar}
-                            name={community.name}
-                          />
-                          <span>{community.name}</span>
-                        </div>
-                      </SidebarLink>
-                    ))
+                  {Array.isArray(userCommunities) && userCommunities.length > 0 ? (
+                    <CommunityLinks
+                      communities={userCommunities}
+                      closeSidebar={closeSidebar}
+                    />
                   ) : (
-                    <span className="text-gray-500 dark:text-gray-400 text-sm">
+                    <span className="text-bodydark2 text-sm">
                       You are not part of any communities.
                     </span>
                   )}
                 </div>
               )}
-            </div>
+            </ul>
           </div>
-        </div>
+        </nav>
       </div>
-    </div>
+    </aside>
   );
 }
 

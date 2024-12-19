@@ -31,6 +31,9 @@ const addAnswer = async (req, res) => {
 
     const savedAnswer = await newAnswer.save();
 
+    // Increment the user's answersCount
+    await User.findByIdAndUpdate(req.user.id, { $inc: { answersCount: 1 } });
+
     // Re-query the answer to ensure 'user' is populated
     const populatedAnswer = await Answer.findById(savedAnswer._id).populate(
       "user",

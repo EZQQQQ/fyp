@@ -18,11 +18,7 @@ const createProfile = async ({ username, profilePicture }) => {
     formData.append("profilePicture", profilePicture);
   }
 
-  const response = await axios.post("/user/profile", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await axios.post("/user/create-profile", formData);
   return response.data;
 };
 
@@ -44,12 +40,35 @@ const updateHideDashboard = async ({ hideDashboard }) => {
   return response.data;
 };
 
+// Update Settings
+const updateSettings = async ({ username, profilePicture, profileBio }) => {
+  const formData = new FormData();
+  if (username) formData.append("username", username);
+  if (profileBio) formData.append("profileBio", profileBio);
+  if (profilePicture) formData.append("profilePicture", profilePicture);
+
+  const response = await axios.post("/user/settings", formData);
+  return response.data;
+};
+
+// Update Profile
+const updateProfile = async ({ profilePicture, profileBanner }) => {
+  const formData = new FormData();
+  if (profilePicture) formData.append("profilePicture", profilePicture);
+  if (profileBanner) formData.append("profileBanner", profileBanner);
+
+  const response = await axios.post("/user/profile", formData);
+  return response.data;
+};
+
 const userService = {
   ssoLogin,
   createProfile,
   adminLogin,
   fetchUserData,
   updateHideDashboard,
+  updateSettings,
+  updateProfile,
 };
 
 export default userService;

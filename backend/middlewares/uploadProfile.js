@@ -27,16 +27,29 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const uploadProfile = multer({
-  storage: multerS3({
-    s3,
-    bucket: process.env.S3_BUCKET_NAME,
-    acl: 'public-read',
-    key: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, `profilePhotos/${uniqueSuffix}-${file.originalname}`);
+// Multer S3 storage configuration
+const storage = multerS3({
+  s3,
+  bucket: process.env.S3_BUCKET_NAME,
+  acl: undefined, // **Remove ACL to comply with bucket settings**
+  key: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    let folder = '';
+
+    // Determine folder based on field name
+    if (file.fieldname === 'profilePicture') {
+      folder = 'uploads/profilePhotos/';
+    } else if (file.fieldname === 'profileBanner') {
+      folder = 'uploads/profileBanner/';
     }
-  }),
+
+    cb(null, `${folder}${uniqueSuffix}-${file.originalname}`);
+  }
+});
+
+// Multer upload configuration
+const uploadProfile = multer({
+  storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: fileFilter,
 });

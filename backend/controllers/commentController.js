@@ -26,6 +26,9 @@ const addCommentToQuestion = async (req, res) => {
 
     const savedComment = await newComment.save();
 
+    // Increment the user's commentsCount
+    await User.findByIdAndUpdate(req.user.id, { $inc: { commentsCount: 1 } });
+
     // Populate user info
     await savedComment.populate('user', 'username name');
 
@@ -97,6 +100,9 @@ const addCommentToAnswer = async (req, res) => {
     });
 
     const savedComment = await newComment.save();
+
+    // Increment the user's commentsCount
+    await User.findByIdAndUpdate(req.user.id, { $inc: { commentsCount: 1 } });
 
     // Populate user info
     await savedComment.populate('user', 'username name');

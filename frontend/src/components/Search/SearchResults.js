@@ -27,7 +27,7 @@ function SearchResults() {
   const [questions, setQuestions] = useState([]);
 
   useEffect(() => {
-    console.log("Fetched Questions:", fetchedQuestions);
+    // console.log("Fetched Questions:", fetchedQuestions);
     setQuestions(fetchedQuestions || []);
 
     fetchedQuestions.forEach((question) => {
@@ -49,11 +49,11 @@ function SearchResults() {
       prevQuestions.map((q) =>
         q._id === questionId
           ? {
-              ...q,
-              voteCount: voteData.voteCount,
-              userHasUpvoted: voteData.userHasUpvoted,
-              userHasDownvoted: voteData.userHasDownvoted,
-            }
+            ...q,
+            voteCount: voteData.voteCount,
+            userHasUpvoted: voteData.userHasUpvoted,
+            userHasDownvoted: voteData.userHasDownvoted,
+          }
           : q
       )
     );

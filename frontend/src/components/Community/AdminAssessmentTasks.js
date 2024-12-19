@@ -208,11 +208,11 @@ function AdminAssessmentTasks({ communityId }) {
                 >
                   {task.adminLabel}
                 </Typography>
-                <Typography variant="small" color="gray" className="block">
+                <Typography variant="small" color="gray" className="block text-gray-800 dark:text-gray-200">
                   Type: {task.type}{" "}
                   {task.contentType && `(${task.contentType})`}
                 </Typography>
-                <Typography variant="small" color="gray" className="block">
+                <Typography variant="small" color="gray" className="block text-gray-800 dark:text-gray-200">
                   Total Required: {task.total} | Weight: {task.weight}%
                 </Typography>
               </div>
@@ -221,7 +221,7 @@ function AdminAssessmentTasks({ communityId }) {
                   size="sm"
                   color="blue"
                   onClick={() => openDialog(task)}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Edit
                 </Button>
@@ -353,39 +353,39 @@ function AdminAssessmentTasks({ communityId }) {
           {(formData.type === "votes" ||
             formData.type === "postings" ||
             formData.type === "quizzes") && (
-            <div className="flex flex-col">
-              <label
-                htmlFor="total"
-                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-              >
-                {formData.type === "quizzes"
-                  ? "Quiz Details"
-                  : "Total Required"}
-              </label>
-              <input
-                id="total"
-                name="total"
-                type="number"
-                value={formData.total}
-                onChange={(e) => handleChange(e.target.value, "total")}
-                required={formData.type !== "quizzes"}
-                min="1"
-                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+              <div className="flex flex-col">
+                <label
+                  htmlFor="total"
+                  className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+                >
+                  {formData.type === "quizzes"
+                    ? "Quiz Details"
+                    : "Total Required"}
+                </label>
+                <input
+                  id="total"
+                  name="total"
+                  type="number"
+                  value={formData.total}
+                  onChange={(e) => handleChange(e.target.value, "total")}
+                  required={formData.type !== "quizzes"}
+                  min="1"
+                  className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
                            block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
                            dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder={
-                  formData.type === "quizzes"
-                    ? "Leave blank if not applicable"
-                    : "Enter count"
-                }
-              />
-              {formData.type === "quizzes" && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  For quizzes, only specify the weight percentage.
-                </p>
-              )}
-            </div>
-          )}
+                  placeholder={
+                    formData.type === "quizzes"
+                      ? "Leave blank if not applicable"
+                      : "Enter count"
+                  }
+                />
+                {formData.type === "quizzes" && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    For quizzes, only specify the weight percentage.
+                  </p>
+                )}
+              </div>
+            )}
 
           {/* Weight */}
           <div className="flex flex-col">

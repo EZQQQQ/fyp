@@ -134,7 +134,6 @@ const createUserProfile = async (req, res) => {
     if (req.file && req.file.location) {
       // Using the S3 URL provided by multer-s3
       profilePicture = req.file.location;
-      // Example S3 path: https://knowledgenode.s3.ap-southeast-1.amazonaws.com/uploads/profilePhotos/...
     }
 
     const user = await User.findById(req.user.id);
@@ -233,10 +232,96 @@ const updateHideDashboardPreference = async (req, res) => {
   }
 };
 
+// Update Settings - username, profileBio, profilePicture
+const updateSettings = async (req, res) => {
+  try {
+    const { username, profileBio } = req.body;
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    // If username is provided and changed, check uniqueness
+    if (username && username.trim() !== user.username) {
+      const existingUser = await User.findOne({ username: username.trim() });
+      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        return res
+          .status(400)
+          .json({ status: false, message: "Username already taken" });
+      }
+      user.username = username.trim();
+    }
+
+    // Update profileBio if provided
+    if (typeof profileBio === "string") {
+      user.profileBio = profileBio.trim();
+    }
+
+    // If a new profile photo is uploaded
+    if (req.files && req.files.profilePicture && req.files.profilePicture.length > 0) {
+      const newProfilePhoto = req.files.profilePicture[0].location;
+      user.profilePicture = newProfilePhoto;
+    }
+
+    await user.save();
+    res.status(200).json({
+      status: true,
+      message: "Settings updated successfully",
+      data: user,
+    });
+  } catch (err) {
+    console.error("Update Settings Error:", err);
+    res.status(500).json({
+      status: false,
+      message: "Failed to update settings",
+      error: err.message,
+    });
+  }
+};
+
+// Update Profile - profilePicture and profileBanner
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    // If a new profile photo is uploaded
+    if (req.files && req.files.profilePicture && req.files.profilePicture.length > 0) {
+      const newProfilePhoto = req.files.profilePicture[0].location;
+      user.profilePicture = newProfilePhoto;
+    }
+
+    // If a new profile banner is uploaded
+    if (req.files && req.files.profileBanner && req.files.profileBanner.length > 0) {
+      const newProfileBanner = req.files.profileBanner[0].location;
+      user.profileBanner = newProfileBanner;
+    }
+
+    await user.save();
+    res.status(200).json({
+      status: true,
+      message: "Profile updated successfully",
+      data: user,
+    });
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+    res.status(500).json({
+      status: false,
+      message: "Failed to update profile",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   ssoLoginUser,
   loginUser,
   createUserProfile,
   getUserProfile,
   updateHideDashboardPreference,
+  updateSettings,
+  updateProfile,
 };

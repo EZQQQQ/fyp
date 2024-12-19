@@ -3,16 +3,18 @@
 import React, { useState } from "react";
 import { Button, TextField } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { createUserProfile } from "../features/userSlice";
+import { createUserProfile } from "../../features/userSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 function ProfileCreation() {
   const [username, setUsername] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
+  const [profileBanner, setProfileBanner] = useState(null);
+  const [profileBio, setProfileBio] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, user } = useSelector((state) => state.user);
+  const { loading, error } = useSelector((state) => state.user);
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
@@ -22,11 +24,12 @@ function ProfileCreation() {
     }
 
     try {
-      await dispatch(createUserProfile({ username, profilePicture })).unwrap();
+      await dispatch(
+        createUserProfile({ username, profilePicture, profileBanner, profileBio })
+      ).unwrap();
       navigate("/"); // Redirect to home page after profile creation
     } catch (err) {
       console.error("Profile Creation Error:", err);
-      // Error handling is already managed in the slice
     }
   };
 
@@ -74,9 +77,50 @@ function ProfileCreation() {
             </label>
             {profilePicture && (
               <p className="mt-2 text-center text-gray-700 dark:text-gray-300">
-                Selected: {profilePicture.name}
+                Selected Picture: {profilePicture.name}
               </p>
             )}
+          </div>
+
+          {/* Profile Banner Upload */}
+          <div>
+            <input
+              accept="image/*"
+              style={{ display: "none" }}
+              id="profile-banner-upload"
+              type="file"
+              onChange={(e) => setProfileBanner(e.target.files[0])}
+            />
+            <label htmlFor="profile-banner-upload">
+              <Button
+                variant="contained"
+                color="secondary"
+                component="span"
+                fullWidth
+              >
+                Upload Profile Banner
+              </Button>
+            </label>
+            {profileBanner && (
+              <p className="mt-2 text-center text-gray-700 dark:text-gray-300">
+                Selected Banner: {profileBanner.name}
+              </p>
+            )}
+          </div>
+
+          {/* Profile Bio */}
+          <div>
+            <label className="block text-gray-700 dark:text-gray-100 mb-2" htmlFor="profileBio">
+              Profile Bio
+            </label>
+            <textarea
+              id="profileBio"
+              rows="4"
+              className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-2"
+              placeholder="Tell us about yourself..."
+              value={profileBio}
+              onChange={(e) => setProfileBio(e.target.value)}
+            ></textarea>
           </div>
 
           {/* Submit Button */}

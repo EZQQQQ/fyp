@@ -31,12 +31,40 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profileBanner: {
+      type: String,
+      default: "",
+    },
+    profileBio: {
+      type: String,
+      default: "",
+    },
     communities: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Community",
       },
     ],
+    // Number of communities user belongs to
+    communitiesCount: {
+      type: Number,
+      default: 0,
+    },
+    // Number of questions user posts
+    questionsCount: {
+      type: Number,
+      default: 0,
+    },
+    // Number of answers user gives
+    answersCount: {
+      type: Number,
+      default: 0,
+    },
+    // Number of comments user gives
+    commentsCount: {
+      type: Number,
+      default: 0,
+    },
     // field track dashboard popup preference
     hideDashboard: {
       type: Boolean,

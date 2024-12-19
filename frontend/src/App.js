@@ -9,22 +9,25 @@ import {
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-// Components
-import Header from "./components/Header/Header";
-import Sidebar from "./components/KnowledgeNode/Sidebar";
-import CreateCommunity from "./components/Community/CreateCommunity";
-import CommunityList from "./components/Community/CommunityList";
-import CommunityPage from "./components/Community/CommunityPage";
+// Layout
+import DefaultLayout from "./layout/DefaultLayout";
+
+// Components & Pages
+import Auth from "./components/Auth";
+import AdminAuth from "./components/Auth/AdminAuth";
+import Unauthorized from "./components/Auth/Unauthorized";
+import ProfileCreation from "./components/Profile/ProfileCreation";
 import AllQuestions from "./components/KnowledgeNode/AllQuestions";
 import MainQuestion from "./components/ViewQuestion/MainQuestion";
 import AddQuestion from "./components/AddQuestion/Question";
-import Auth from "./components/Auth";
-import AdminAuth from "./components/Auth/AdminAuth";
-import ProfileCreation from "./components/ProfileCreation";
-import Dashboard from "./components/Dashboard";
-import Unauthorized from "./components/Auth/Unauthorized";
+import CommunityList from "./components/Community/CommunityList";
+import CommunityPage from "./components/Community/CommunityPage";
+import CreateCommunity from "./components/Community/CreateCommunity";
 import SearchResults from "./components/Search/SearchResults";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./components/Dashboard";
+import ProfilePage from "./components/Profile/ProfilePage";
+import ProfileSettings from "./components/Profile/ProfileSettings";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -38,19 +41,20 @@ function App() {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
-  // State Management
+  // Dark Mode State
   const [darkMode, setDarkMode] = useState(() => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode === "true" || false;
   });
 
+  // Sidebar State
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [appLoading, setAppLoading] = useState(true);
 
-  // State for CreateCommunity Modal
+  // CreateCommunity Modal State
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
 
-  // Handle dark mode toggle and persist preference
+  // Toggle Dark Mode
   useEffect(() => {
     const root = window.document.documentElement;
     if (darkMode) {
@@ -87,20 +91,20 @@ function App() {
     );
   }
 
-  // Handlers to open and close the CreateCommunity modal
+  // Handlers to open/close CreateCommunity modal
   const openCreateCommunityModal = () => setIsCreateCommunityOpen(true);
   const closeCreateCommunityModal = () => setIsCreateCommunityOpen(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-x-hidden">
-      <Router>
-        {/* Header */}
-        <Header
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        />
-
+    <Router>
+      <DefaultLayout
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        user={user}
+        openCreateCommunityModal={openCreateCommunityModal}
+      >
         {/* Toast Notifications */}
         <ToastContainer
           position="top-right"
@@ -114,105 +118,103 @@ function App() {
           pauseOnHover
         />
 
-        <div className="flex flex-1 pt-16">
-          {/* Sidebar */}
-          {user && (
-            <Sidebar
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-              openCreateCommunityModal={openCreateCommunityModal}
-            />
-          )}
+        <Routes>
+          {/* Authentication Routes */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/admin/login" element={<AdminAuth />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Overlay for Mobile Sidebar */}
-          {sidebarOpen && (
-            <div
-              className="fixed inset-0 bg-black opacity-50 z-30 md:hidden"
-              onClick={() => setSidebarOpen(false)}
-              aria-label="Close Sidebar"
-            ></div>
-          )}
+          {/* Profile Creation - only used once for new users */}
+          <Route
+            path="/create-profile"
+            element={
+              <ProtectedRoute>
+                <ProfileCreation />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Main Content */}
-          <div className="flex-1 overflow-auto relative">
-            <Routes>
-              {/* Authentication Routes */}
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin/login" element={<AdminAuth />} />
-              <Route path="/unauthorized" element={<Unauthorized />} />
+          {/* Profile Page (subsequent visits) */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-              {/* Protected Routes */}
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfileCreation />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/questions"
-                element={
-                  <ProtectedRoute>
-                    <AllQuestions />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/question/:questionId"
-                element={
-                  <ProtectedRoute>
-                    <MainQuestion />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/add-question"
-                element={
-                  <ProtectedRoute>
-                    <AddQuestion />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/explore"
-                element={
-                  <ProtectedRoute>
-                    <CommunityList isTileView={true} />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/communities/:id"
-                element={
-                  <ProtectedRoute>
-                    <CommunityPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/search" element={<SearchResults />} />
+          {/* Profile Settings */}
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <ProfileSettings />
+              </ProtectedRoute>
+            }
+          />
 
-              {/* Root Route */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
-                    <AllQuestions />
-                  </ProtectedRoute>
-                }
-              />
+          <Route
+            path="/questions"
+            element={
+              <ProtectedRoute>
+                <AllQuestions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/question/:questionId"
+            element={
+              <ProtectedRoute>
+                <MainQuestion />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-question"
+            element={
+              <ProtectedRoute>
+                <AddQuestion />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <ProtectedRoute>
+                <CommunityList isTileView={true} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/communities/:id"
+            element={
+              <ProtectedRoute>
+                <CommunityPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/search" element={<SearchResults />} />
 
-              {/* Catch-All Route */}
-              <Route
-                path="*"
-                element={<Navigate to={user ? "/" : "/auth"} replace />}
-              />
-            </Routes>
+          {/* Root (Home) */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
+                <AllQuestions />
+              </ProtectedRoute>
+            }
+          />
 
-            {/* Dashboard Modal Overlay */}
-            {user && <Dashboard />}
-          </div>
-        </div>
+          {/* Catch-All */}
+          <Route
+            path="*"
+            element={<Navigate to={user ? "/" : "/auth"} replace />}
+          />
+        </Routes>
+
+        {/* Dashboard */}
+        {user && <Dashboard />}
 
         {/* CreateCommunity Modal */}
         {user && (
@@ -221,8 +223,8 @@ function App() {
             onClose={closeCreateCommunityModal}
           />
         )}
-      </Router>
-    </div>
+      </DefaultLayout>
+    </Router>
   );
 }
 
