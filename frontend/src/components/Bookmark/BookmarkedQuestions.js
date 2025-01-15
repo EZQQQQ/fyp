@@ -1,17 +1,16 @@
-// frontend/src/components/KnowledgeNode/AllQuestions.js
+// frontend/src/components/Bookmark/BookmarkedQuestions.js
 
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../../utils/axiosConfig";
-import QuestionCard from "./QuestionCard";
-import FilterButton from "./FilterButton";
+import bookmarkService from "../../services/bookmarkService";
+import QuestionCard from "../KnowledgeNode/QuestionCard";
+import FilterButton from "../KnowledgeNode/FilterButton";
 import { useDispatch, useSelector } from "react-redux";
 import { setVoteData } from "../../features/voteSlice";
 import { selectUser } from "../../features/userSlice";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CreateQuestionButton from "./CreateQuestionButton";
 
-function AllQuestions() {
+function BookmarkedQuestions() {
   const [filter, setFilter] = useState("newest");
   const [questions, setQuestions] = useState([]);
   const dispatch = useDispatch();
@@ -37,12 +36,12 @@ function AllQuestions() {
   };
 
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const fetchBookmarkedQuestions = async () => {
       try {
-        const response = await axiosInstance.get("/question/user-questions");
-        setQuestions(response.data.data || []);
+        const response = await bookmarkService.fetchUserBookmarks();
+        setQuestions(response.data || []);
 
-        response.data.data.forEach((question) => {
+        response.data.forEach((question) => {
           dispatch(
             setVoteData({
               targetId: question._id,
@@ -63,7 +62,7 @@ function AllQuestions() {
     };
 
     if (user) {
-      fetchQuestions();
+      fetchBookmarkedQuestions();
     }
   }, [dispatch, user]);
 
@@ -79,15 +78,13 @@ function AllQuestions() {
   const communityId = user?.currentCommunityId || null;
 
   return (
-    <div className="p-2 overflow-x-hidden">
+    <div className="p-4 md:p-6 overflow-x-hidden">
       {/* Header Section */}
       <div className="flex md:flex-row justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-          All Questions
+          Bookmarked Questions
         </h1>
         <div className="flex flex-row items-center gap-4 w-full sm:w-auto mt-4 sm:mt-0 justify-between">
-          {/* CreateQuestionButton on the left */}
-          <CreateQuestionButton communityId={communityId} />
 
           {/* Filter Buttons on the right */}
           <div className="inline-flex rounded-md shadow-sm">
@@ -121,8 +118,7 @@ function AllQuestions() {
           </div>
         ) : (
           <p className="text-center text-gray-600 dark:text-gray-300">
-            No questions available from your communities. Join some communities
-            to see questions!
+            No bookmarked questions yet.
           </p>
         )}
       </div>
@@ -130,4 +126,4 @@ function AllQuestions() {
   );
 }
 
-export default AllQuestions;
+export default BookmarkedQuestions;

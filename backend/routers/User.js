@@ -55,5 +55,4 @@ router.post(
   updateProfile
 );
 
-
 module.exports = router;

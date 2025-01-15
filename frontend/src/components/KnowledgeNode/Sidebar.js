@@ -1,5 +1,3 @@
-// frontend/src/components/KnowledgeNode/Sidebar.js
-
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -7,22 +5,19 @@ import {
   Explore as ExploreIcon,
   People as PeopleIcon,
   Add as PlusIcon,
+  Bookmark as BookmarkIcon,
 } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
-
 import { selectUser } from "../../features/userSlice";
 import {
   fetchUserCommunities,
   selectUserCommunities,
 } from "../../features/communitySlice";
-
 import SidebarLink from "./SidebarLink";
 import CommunityAvatar from "../Community/CommunityAvatar";
-import LogoDark from "../../assets/logo-dark.png"; // or your chosen logo
+import LogoDark from "../../assets/logo-dark.png";
 
-
-// A small helper component, if not already defined
 const CommunityLinks = ({ communities, closeSidebar }) => (
   <>
     {communities.map((community) => (
@@ -44,24 +39,18 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
   const user = useSelector(selectUser);
   const userCommunities = useSelector(selectUserCommunities);
   const dispatch = useDispatch();
-
-  // For outside click close (like TailAdmin reference)
   const sidebarRef = useRef(null);
   const triggerRef = useRef(null);
-
-  // Expand/collapse ‘My Communities’ dropdown
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  // When user logs in, fetch communities
   useEffect(() => {
     if (user) {
       dispatch(fetchUserCommunities());
     }
   }, [dispatch, user]);
 
-  // Close sidebar on outside click (if desired)
   useEffect(() => {
-    function handleClickOutside(e) {
+    const handleClickOutside = (e) => {
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(e.target) &&
@@ -70,7 +59,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
       ) {
         setSidebarOpen(false);
       }
-    }
+    };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [sidebarOpen, setSidebarOpen]);
@@ -81,22 +70,19 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
     setDropdownOpen(false);
   };
 
-  // If no user, don't render sidebar
   if (!user) return null;
 
   return (
     <aside
       ref={sidebarRef}
-      className={`no-scrollbar absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-auto bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+      className={`fixed left-0 top-0 z-9999 flex h-screen w-72 flex-col overflow-y-auto bg-black dark:bg-boxdark transition-transform duration-300 ease-linear 
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+        lg:translate-x-0`}
     >
-      {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
         <Link to="/" onClick={closeSidebar}>
           <img src={LogoDark} alt="Logo" className="h-10 w-auto" />
         </Link>
-
-        {/* Close button for Mobile */}
         <button
           ref={triggerRef}
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -114,32 +100,39 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
           </svg>
         </button>
       </div>
-
-      {/* SIDEBAR MENU */}
-      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+      <div className="flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
-          {/* MENU Group */}
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               MENU
             </h3>
             <ul className="mb-6 flex flex-col gap-1.5">
-              {/* Home */}
               <li>
                 <SidebarLink to="/" icon={HomeIcon} onClick={closeSidebar}>
                   Home
                 </SidebarLink>
               </li>
-              {/* Explore */}
               <li>
-                <SidebarLink to="/explore" icon={ExploreIcon} onClick={closeSidebar}>
+                <SidebarLink
+                  to="/explore"
+                  icon={ExploreIcon}
+                  onClick={closeSidebar}
+                >
                   Explore
+                </SidebarLink>
+              </li>
+              <li>
+                <SidebarLink
+                  to="/bookmark"
+                  icon={BookmarkIcon}
+                  onClick={closeSidebar}
+                >
+                  Bookmarks
                 </SidebarLink>
               </li>
             </ul>
           </div>
 
-          {/* COMMUNITIES Group */}
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               COMMUNITIES
@@ -157,7 +150,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                     <PeopleIcon />
                     <span>My Communities</span>
                   </div>
-                  {/* Up/Down arrow icons */}
                   {dropdownOpen ? (
                     <svg
                       className="fill-current rotate-180"
@@ -187,14 +179,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                   )}
                 </button>
               </li>
-
-              {/* Dropdown Content */}
               {dropdownOpen && (
                 <div
                   id="communities-dropdown"
                   className="ml-6 mt-2 flex flex-col space-y-2 transition-all duration-300 ease-in-out"
                 >
-                  {/* Only show 'Create Community' if admin/professor */}
                   {(user.role === "admin" || user.role === "professor") && (
                     <Button
                       onClick={() => {

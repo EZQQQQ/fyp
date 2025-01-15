@@ -15,6 +15,7 @@ const UserAvatar = ({ user, className }) => {
       src={avatarSrc}
       alt={user?.username || user?.name || "Default Avatar"}
       className={`cursor-pointer border border-gray-300 ${className}`}
+      sx={{ width: 30, height: 30 }}
       onError={(e) => {
         e.target.onerror = null;
         e.target.src = DEFAULT_AVATAR_URL;

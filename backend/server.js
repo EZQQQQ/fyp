@@ -12,6 +12,7 @@ const questionRoutes = require("./routers/Question");
 const answerRoutes = require("./routers/Answer");
 const commentRoutes = require("./routers/Comment");
 const voteRoutes = require("./routers/Vote");
+const bookmarkRoutes = require("./routers/Bookmark");
 const pollRoutes = require("./routers/Poll");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
@@ -58,6 +59,7 @@ app.use("/api/comment", commentRoutes);
 app.use("/api/communities", communityRoutes);
 app.use("/api/question", questionRoutes);
 app.use("/api", voteRoutes);
+app.use("/api", bookmarkRoutes);
 app.use("/api/poll", pollRoutes);
 
 // Removed the local file serving line

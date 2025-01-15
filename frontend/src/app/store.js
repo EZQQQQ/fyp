@@ -5,8 +5,10 @@ import userReducer from "../features/userSlice";
 import communityReducer from "../features/communitySlice";
 import voteReducer from "../features/voteSlice";
 import assessmentReducer from "../features/assessmentSlice";
+import bookmarkReducer from "../features/bookmarkSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import { BookmarkAddOutlined } from "@mui/icons-material";
 
 // Combine all reducers into an app reducer
 const appReducer = combineReducers({
@@ -14,6 +16,7 @@ const appReducer = combineReducers({
   communities: communityReducer,
   vote: voteReducer,
   assessment: assessmentReducer,
+  bookmark: bookmarkReducer,
 });
 
 // Root reducer that resets state on 'user/logout' action
@@ -32,7 +35,7 @@ const rootReducer = (state, action) => {
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user", "communities", "vote", "assessment"],
+  whitelist: ["user", "communities", "vote", "assessment", "bookmark"],
 };
 
 // Create a persisted reducer

@@ -14,7 +14,7 @@ function VoteButtons({
   loading,
 }) {
   return (
-    <div className="flex items-center space-x-2 border border-gray-300 dark:border-gray-600 rounded-full p-2">
+    <div className="flex items-center space-x-2 border border-gray-300 dark:border-gray-600 rounded-full h-8">
       {/* Upvote Button */}
       <IconButton
         onClick={onUpvote}
@@ -26,11 +26,10 @@ function VoteButtons({
         aria-label={userHasUpvoted ? "Remove upvote" : "Upvote"}
       >
         <ArrowUpward
-          className={`${
-            userHasUpvoted
-              ? "text-blue-500 dark:text-blue-400"
-              : "text-gray-800 dark:text-white"
-          }`}
+          className={`${userHasUpvoted
+            ? "text-blue-500 dark:text-blue-400"
+            : "text-gray-800 dark:text-white"
+            }`}
           fontSize="small"
         />
       </IconButton>
@@ -51,11 +50,10 @@ function VoteButtons({
         aria-label={userHasDownvoted ? "Remove downvote" : "Downvote"}
       >
         <ArrowDownward
-          className={`${
-            userHasDownvoted
-              ? "text-red-500 dark:text-red-400"
-              : "text-gray-800 dark:text-white"
-          }`}
+          className={`${userHasDownvoted
+            ? "text-red-500 dark:text-red-400"
+            : "text-gray-800 dark:text-white"
+            }`}
           fontSize="small"
         />
       </IconButton>

@@ -28,6 +28,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Dashboard from "./components/Dashboard";
 import ProfilePage from "./components/Profile/ProfilePage";
 import ProfileSettings from "./components/Profile/ProfileSettings";
+import BookmarkedQuestions from "./components/Bookmark/BookmarkedQuestions";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -47,8 +48,7 @@ function App() {
     return savedMode === "true" || false;
   });
 
-  // Sidebar State
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // App Loading State
   const [appLoading, setAppLoading] = useState(true);
 
   // CreateCommunity Modal State
@@ -97,36 +97,40 @@ function App() {
 
   return (
     <Router>
-      <DefaultLayout
-        darkMode={darkMode}
-        setDarkMode={setDarkMode}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        user={user}
-        openCreateCommunityModal={openCreateCommunityModal}
-      >
-        {/* Toast Notifications */}
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
+      {/* Toast Notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
 
-        <Routes>
-          {/* Authentication Routes */}
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin/login" element={<AdminAuth />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
+      <Routes>
+        {/* ===== Standalone Routes (No Layout) ===== */}
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin/login" element={<AdminAuth />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
+        {/* ===== Routes with DefaultLayout ===== */}
+        <Route
+          path="/*"
+          element={
+            <DefaultLayout
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
+              user={user}
+              openCreateCommunityModal={openCreateCommunityModal}
+            />
+          }
+        >
           {/* Profile Creation - only used once for new users */}
           <Route
-            path="/create-profile"
+            path="create-profile"
             element={
               <ProtectedRoute>
                 <ProfileCreation />
@@ -136,7 +140,7 @@ function App() {
 
           {/* Profile Page (subsequent visits) */}
           <Route
-            path="/profile"
+            path="profile"
             element={
               <ProtectedRoute>
                 <ProfilePage />
@@ -146,7 +150,7 @@ function App() {
 
           {/* Profile Settings */}
           <Route
-            path="/settings"
+            path="settings"
             element={
               <ProtectedRoute>
                 <ProfileSettings />
@@ -154,51 +158,72 @@ function App() {
             }
           />
 
+          {/* All Questions */}
           <Route
-            path="/questions"
+            path="questions"
             element={
               <ProtectedRoute>
                 <AllQuestions />
               </ProtectedRoute>
             }
           />
+
+          {/* Main Question View */}
           <Route
-            path="/question/:questionId"
+            path="question/:questionId"
             element={
               <ProtectedRoute>
                 <MainQuestion />
               </ProtectedRoute>
             }
           />
+
+          {/* Add Question */}
           <Route
-            path="/add-question"
+            path="add-question"
             element={
               <ProtectedRoute>
                 <AddQuestion />
               </ProtectedRoute>
             }
           />
+
+          {/* Explore Communities */}
           <Route
-            path="/explore"
+            path="explore"
             element={
               <ProtectedRoute>
                 <CommunityList isTileView={true} />
               </ProtectedRoute>
             }
           />
+
+          {/* Community Page */}
           <Route
-            path="/communities/:id"
+            path="communities/:id"
             element={
               <ProtectedRoute>
                 <CommunityPage />
               </ProtectedRoute>
             }
           />
-          <Route path="/search" element={<SearchResults />} />
 
-          {/* Root (Home) */}
+          {/* Search Results */}
+          <Route path="search" element={<SearchResults />} />
+
+          {/* Bookmarked Questions */}
           <Route
-            path="/"
+            path="bookmark"
+            element={
+              <ProtectedRoute>
+                <BookmarkedQuestions />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Root (Home) - Use index instead of path="/" */}
+          <Route
+            index
             element={
               <ProtectedRoute requiredRoles={["student", "professor", "admin"]}>
                 <AllQuestions />
@@ -206,24 +231,21 @@ function App() {
             }
           />
 
-          {/* Catch-All */}
-          <Route
-            path="*"
-            element={<Navigate to={user ? "/" : "/auth"} replace />}
-          />
-        </Routes>
+          {/* Catch-All Route within Layout */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
 
-        {/* Dashboard */}
-        {user && <Dashboard />}
+      {/* Dashboard */}
+      {user && <Dashboard />}
 
-        {/* CreateCommunity Modal */}
-        {user && (
-          <CreateCommunity
-            isOpen={isCreateCommunityOpen}
-            onClose={closeCreateCommunityModal}
-          />
-        )}
-      </DefaultLayout>
+      {/* CreateCommunity Modal */}
+      {user && (
+        <CreateCommunity
+          isOpen={isCreateCommunityOpen}
+          onClose={closeCreateCommunityModal}
+        />
+      )}
     </Router>
   );
 }

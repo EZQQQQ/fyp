@@ -14,7 +14,7 @@ function CommunityAvatar({ avatarUrl, name }) {
     <Avatar
       src={src}
       alt={name || "Community Avatar"}
-      className="h-6 w-6"
+      sx={{ width: 30, height: 30 }}
       onError={(e) => {
         e.target.onerror = null;
         e.target.src = DEFAULT_AVATAR_URL;

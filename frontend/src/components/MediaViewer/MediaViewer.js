@@ -21,15 +21,15 @@ const MediaViewer = ({ file }) => {
     if (imageExtensions.includes(fileExtension)) {
       setIsModalOpen(true);
       setIsModalImageLoading(true);
-      document.body.style.overflow = 'hidden'; // Disable background scrolling
+      document.body.style.overflow = 'hidden';
     }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    document.body.style.overflow = 'auto'; // Enable background scrolling
+    document.body.style.overflow = 'auto';
     if (triggerRef.current) {
-      triggerRef.current.focus(); // Return focus to the trigger element
+      triggerRef.current.focus();
     }
   };
 
@@ -39,7 +39,6 @@ const MediaViewer = ({ file }) => {
         closeModal();
       }
       if (event.key === 'Tab' && isModalOpen) {
-        // Trap focus within the modal
         const focusableElements = modalContentRef.current.querySelectorAll(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         );
@@ -72,7 +71,6 @@ const MediaViewer = ({ file }) => {
     if (isModalOpen) {
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('mousedown', handleClickOutside);
-      // Set focus to the close button when modal opens
       if (closeButtonRef.current) {
         closeButtonRef.current.focus();
       }
@@ -97,7 +95,7 @@ const MediaViewer = ({ file }) => {
     return (
       <>
         <div
-          className="relative w-full max-w-[605px] h-80 md:h-[540px] overflow-hidden rounded-xl cursor-pointer"
+          className="relative w-full max-w-[605px] h-80 md:h-[540px] overflow-hidden rounded-xl cursor-pointer flex items-center justify-center"
           onClick={openModal}
           ref={triggerRef}
           tabIndex={0}
@@ -106,37 +104,28 @@ const MediaViewer = ({ file }) => {
           }}
           aria-label="Open image in full screen"
         >
-          {/* Blurred Background - Visible on md and above */}
           <div
             className="absolute inset-0 bg-cover bg-center filter blur-2xl hidden md:block transition-opacity duration-300"
             style={{ backgroundImage: `url(${filePath})` }}
           ></div>
-          {/* Dark Overlay */}
           <div className="absolute inset-0 bg-black opacity-25"></div>
-          {/* Spinner */}
           {isImageLoading && <Spinner />}
-          {/* Foreground Image */}
           <img
             src={filePath}
             alt="Uploaded Media"
-            className="relative w-full h-full object-cover object-center"
+            className="relative z-10 max-h-full max-w-full object-contain"
             loading="lazy"
             onLoad={() => setIsImageLoading(false)}
           />
         </div>
 
-        {/* Modal */}
         {isModalOpen && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300"
             aria-modal="true"
             role="dialog"
           >
-            <div
-              className="relative p-4 bg-transparent"
-              ref={modalContentRef}
-            >
-              {/* Close Button */}
+            <div className="relative p-4 bg-transparent" ref={modalContentRef}>
               <button
                 onClick={closeModal}
                 className="absolute top-2 right-2 text-white text-3xl font-bold focus:outline-none transition transform hover:scale-110"
@@ -145,9 +134,7 @@ const MediaViewer = ({ file }) => {
               >
                 &#x2715;
               </button>
-              {/* Spinner in Modal */}
               {isModalImageLoading && <Spinner />}
-              {/* Expanded Image */}
               <img
                 src={filePath}
                 alt="Expanded Media"

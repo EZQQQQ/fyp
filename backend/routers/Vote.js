@@ -2,7 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
-const auth = require("../middlewares/auth"); // Ensure you have an auth middleware
+const auth = require("../middlewares/auth");
 
 const voteController = require("../controllers/voteController");
 

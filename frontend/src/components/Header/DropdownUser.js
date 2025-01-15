@@ -51,8 +51,8 @@ const DropdownUser = ({ user }) => {
           <span className="block text-xs">{user.role}</span>
         </span>
 
-        <span className="h-12 w-12 rounded-full">
-          <UserAvatar user={user} className="h-12 w-12 rounded-full" />
+        <span className="rounded-full">
+          <UserAvatar user={user} className="rounded-full" />
         </span>
 
         <svg

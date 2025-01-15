@@ -2,6 +2,7 @@
 ├── backend
 │   ├── controllers
 │   │   ├── answerController.js
+│   │   ├── bookmarkController.js
 │   │   ├── commentController.js
 │   │   ├── communityController.js
 │   │   ├── questionController.js
@@ -30,6 +31,7 @@
 │   ├── package.json
 │   ├── routers
 │   │   ├── Answer.js
+│   │   ├── Bookmark.js
 │   │   ├── Comment.js
 │   │   ├── Community.js
 │   │   ├── Question.js
@@ -97,6 +99,8 @@
 │   │   │   │   ├── MicrosoftLogin.js
 │   │   │   │   ├── Unauthorized.js
 │   │   │   │   └── index.js
+│   │   │   ├── BookmarkButtons
+│   │   │   │   └── BookmarkButtons.js
 │   │   │   ├── Community
 │   │   │   │   ├── AdminAssessmentTasks.js
 │   │   │   │   ├── AssessmentTasks.js
@@ -148,6 +152,7 @@
 │   │   │   └── firebase-config.js
 │   │   ├── features
 │   │   │   ├── assessmentSlice.js
+│   │   │   ├── bookmarkSlice.js
 │   │   │   ├── communitySlice.js
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
@@ -156,11 +161,13 @@
 │   │   │   ├── useLocalStorage.js
 │   │   │   ├── useSearchQuestions.js
 │   │   │   ├── useUserCommunities.js
+│   │   │   ├── useBookmark.js
 │   │   │   └── useVote.js
 │   │   ├── layout
 │   │   │   └── DefaultLayout.js
 │   │   ├── services
 │   │   │   ├── assessmentService.js
+│   │   │   ├── bookmarkService.js
 │   │   │   ├── communityService.js
 │   │   │   ├── pollService.js
 │   │   │   ├── questionService.js

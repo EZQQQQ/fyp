@@ -73,7 +73,7 @@ const upvoteQuestion = async (req, res) => {
         action === "voted"
           ? "Question upvoted successfully"
           : "Upvote retracted successfully",
-      data: { voteCount, userHasUpvoted, userHasDownvoted },
+      data: { voteCount, userHasUpvoted, userHasDownvoted, action },
     });
   } catch (error) {
     console.error("Error upvoting question:", error.message);
@@ -96,7 +96,7 @@ const downvoteQuestion = async (req, res) => {
         action === "voted"
           ? "Question downvoted successfully"
           : "Downvote retracted successfully",
-      data: { voteCount, userHasUpvoted, userHasDownvoted },
+      data: { voteCount, userHasUpvoted, userHasDownvoted, action },
     });
   } catch (error) {
     console.error("Error downvoting question:", error.message);
@@ -119,7 +119,7 @@ const upvoteAnswer = async (req, res) => {
         action === "voted"
           ? "Answer upvoted successfully"
           : "Upvote retracted successfully",
-      data: { voteCount, userHasUpvoted, userHasDownvoted },
+      data: { voteCount, userHasUpvoted, userHasDownvoted, action },
     });
   } catch (error) {
     console.error("Error upvoting answer:", error.message);
@@ -142,7 +142,7 @@ const downvoteAnswer = async (req, res) => {
         action === "voted"
           ? "Answer downvoted successfully"
           : "Downvote retracted successfully",
-      data: { voteCount, userHasUpvoted, userHasDownvoted },
+      data: { voteCount, userHasUpvoted, userHasDownvoted, action },
     });
   } catch (error) {
     console.error("Error downvoting answer:", error.message);
