@@ -7,6 +7,7 @@
 │   │   ├── communityController.js
 │   │   ├── questionController.js
 │   │   ├── pollController.js
+│   │   ├── quizController.js
 │   │   ├── userController.js
 │   │   ├── voteController.js
 │   ├── db.js
@@ -35,6 +36,7 @@
 │   │   ├── Comment.js
 │   │   ├── Community.js
 │   │   ├── Question.js
+│   │   ├── Quiz.js
 │   │   ├── User.js
 │   │   └── index.js
 │   │   └── Poll.js
@@ -130,6 +132,12 @@
 │   │   │   │   └── CommunitySelectModal.js
 │   │   │   ├── Polls
 │   │   │   │   └── PollResults.js
+│   │   │   ├── Quiz/
+│   │   │   │   ├── AttemptQuizPage.js
+│   │   │   │   ├── CreateQuizPage.js
+│   │   │   │   ├── EditQuizPage.js
+│   │   │   │   ├── QuizInstructionsPage.js
+│   │   │   │   └── QuizResultsPage.js
 │   │   │   ├── Search
 │   │   │   │   ├── Searchbar.js
 │   │   │   │   └── SearchResults.js
@@ -171,6 +179,7 @@
 │   │   │   ├── communityService.js
 │   │   │   ├── pollService.js
 │   │   │   ├── questionService.js
+│   │   │   ├── quizService.js
 │   │   │   ├── userService.js
 │   │   │   └── votingService.js
 │   │   └── utils

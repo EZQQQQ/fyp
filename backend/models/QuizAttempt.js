@@ -21,6 +21,7 @@ const QuizAttemptSchema = new mongoose.Schema({
   score: {
     type: Number,
     required: true,
+    default: 0,
   },
   totalPossibleScore: {
     type: Number,
@@ -28,13 +29,31 @@ const QuizAttemptSchema = new mongoose.Schema({
   },
   answers: [
     {
-      questionId: mongoose.Schema.Types.ObjectId,
-      selectedOptionId: mongoose.Schema.Types.ObjectId,
+      questionId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+      },
+      selectedOptionId: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+        },
+      ],
+      isCorrect: {
+        type: Boolean,
+        default: false,
+      },
     },
   ],
-  createdAt: {
+  startedAt: {
     type: Date,
     default: Date.now,
+  },
+  submittedAt: {
+    type: Date,
+  },
+  endedAt: {
+    type: Date,
   },
 });
 

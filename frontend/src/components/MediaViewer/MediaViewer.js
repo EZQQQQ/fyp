@@ -95,7 +95,7 @@ const MediaViewer = ({ file }) => {
     return (
       <>
         <div
-          className="relative w-full max-w-[605px] h-80 md:h-[540px] overflow-hidden rounded-xl cursor-pointer flex items-center justify-center"
+          className="relative w-full max-w-[605px] h-80 md:h-[540px] overflow-hidden rounded-xl cursor-pointer flex items-center justify-center border border-gray-300 dark:border-gray-700"
           onClick={openModal}
           ref={triggerRef}
           tabIndex={0}
@@ -105,7 +105,7 @@ const MediaViewer = ({ file }) => {
           aria-label="Open image in full screen"
         >
           <div
-            className="absolute inset-0 bg-cover bg-center filter blur-2xl hidden md:block transition-opacity duration-300"
+            className="absolute inset-0 bg-cover bg-center filter blur-2xl transition-opacity duration-300"
             style={{ backgroundImage: `url(${filePath})` }}
           ></div>
           <div className="absolute inset-0 bg-black opacity-25"></div>

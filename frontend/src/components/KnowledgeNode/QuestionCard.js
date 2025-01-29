@@ -81,17 +81,16 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
       {/* Question Title */}
       <Link
         to={`/question/${_id}`}
-        className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline block break-words"
+        className="text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline block break-words whitespace-normal"
       >
         {title}
       </Link>
 
       {/* Question Description */}
-      <div className="mb-2">
+      <div className="mb-2 line-clamp-3 md:line-clamp-6 break-all whitespace-pre-wrap">
         <TextContent
           content={content || textcontent}
           type="question"
-          className="line-clamp-3 md:line-clamp-6 break-words"
         />
       </div>
 

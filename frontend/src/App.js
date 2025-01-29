@@ -1,4 +1,4 @@
-// frontend/src/App.js
+// /frontend/src/App.js
 
 import React, { useEffect, useState } from "react";
 import {
@@ -29,6 +29,11 @@ import Dashboard from "./components/Dashboard";
 import ProfilePage from "./components/Profile/ProfilePage";
 import ProfileSettings from "./components/Profile/ProfileSettings";
 import BookmarkedQuestions from "./components/Bookmark/BookmarkedQuestions";
+import CreateQuizPage from "./components/Quiz/CreateQuizPage";
+import AttemptQuizPage from "./components/Quiz/AttemptQuizPage";
+import EditQuizPage from "./components/Quiz/EditQuizPage";
+import QuizInstructionsPage from "./components/Quiz/QuizInstructionsPage";
+import QuizResultsPage from "./components/Quiz/QuizResultsPage";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -208,6 +213,56 @@ function App() {
             }
           />
 
+          {/* Quiz Instructions Page */}
+          <Route
+            path="quiz/:quizId/instructions"
+            element={
+              <ProtectedRoute>
+                <QuizInstructionsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Create Quiz Page for a specific community */}
+          <Route
+            path="communities/:communityId/create-quiz"
+            element={
+              <ProtectedRoute>
+                <CreateQuizPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Attempt a Quiz */}
+          <Route
+            path="quiz/:quizId/attempt/:attemptId"
+            element={
+              <ProtectedRoute>
+                <AttemptQuizPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Quiz Results Page */}
+          <Route
+            path="quiz/:quizId/attempt/:attemptId/results"
+            element={
+              <ProtectedRoute>
+                <QuizResultsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Edit Quiz Page */}
+          <Route
+            path="quiz/:quizId/edit"
+            element={
+              <ProtectedRoute>
+                <EditQuizPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Search Results */}
           <Route path="search" element={<SearchResults />} />
 
@@ -236,7 +291,7 @@ function App() {
         </Route>
       </Routes>
 
-      {/* Dashboard */}
+      {/* Dashboard (often a side overlay or hidden for certain roles) */}
       {user && <Dashboard />}
 
       {/* CreateCommunity Modal */}

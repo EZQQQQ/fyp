@@ -1,9 +1,11 @@
-// frontend/src/components/Community/CommunityPage.js
+// /frontend/src/components/Community/CommunityPage.js
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import communityService from "../../services/communityService";
 import questionService from "../../services/questionService";
+import quizService from "../../services/quizService";
+
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { selectUser } from "../../features/userSlice";
@@ -12,38 +14,43 @@ import {
   fetchAssessmentTasks,
   fetchUserParticipation,
 } from "../../features/assessmentSlice";
+
+import { Typography, Button } from "@material-tailwind/react";
 import QuestionCard from "../KnowledgeNode/QuestionCard";
 import CreateQuestionButton from "../KnowledgeNode/CreateQuestionButton";
 import CommunityAvatar from "./CommunityAvatar";
 import AssessmentTasks from "./AssessmentTasks";
 import AdminAssessmentTasks from "./AdminAssessmentTasks";
 import UserAvatar from "../../common/UserAvatar";
+
 import "react-toastify/dist/ReactToastify.css";
 
 function CommunityPage() {
-  const { id } = useParams();
+  const { id } = useParams();          // community ID from the URL
+  const navigate = useNavigate();      // for programmatic navigation
   const user = useSelector(selectUser);
-  const dispatch = useDispatch(); // Initialize dispatch
+  const dispatch = useDispatch();
 
   const [community, setCommunity] = useState(null);
   const [questions, setQuestions] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);   // Store community quizzes with hasAttempted
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const assessment = useSelector((state) => state.assessment);
 
-  // Function to update a specific question's vote data
+  // Update a specific question's vote data
   const updateQuestionVote = (questionId, voteData) => {
     setQuestions((prevQuestions) =>
       prevQuestions.map((q) =>
         q._id === questionId
           ? {
-              ...q,
-              voteCount: voteData.voteCount,
-              userHasUpvoted: voteData.userHasUpvoted,
-              userHasDownvoted: voteData.userHasDownvoted,
-            }
+            ...q,
+            voteCount: voteData.voteCount,
+            userHasUpvoted: voteData.userHasUpvoted,
+            userHasDownvoted: voteData.userHasDownvoted,
+          }
           : q
       )
     );
@@ -59,7 +66,9 @@ function CommunityPage() {
         // Check if the user is a member
         if (user) {
           setIsMember(
-            response.data.members.some((member) => member._id === user._id)
+            response.data.members.some(
+              (member) => member._id === user._id
+            )
           );
         }
       } catch (error) {
@@ -85,6 +94,7 @@ function CommunityPage() {
       try {
         const response = await questionService.getQuestionsByCommunity(id);
         setQuestions(response.data.data || []);
+
         // Initialize vote data in Redux
         response.data.data.forEach((question) => {
           dispatch(
@@ -114,6 +124,30 @@ function CommunityPage() {
     }
   }, [community, id, dispatch]);
 
+  // Fetch Quizzes for this Community
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      try {
+        // GET /api/quizzes/:communityId/quizzes
+        const res = await quizService.getQuizzesByCommunity(id);
+        if (res.success) {
+          setQuizzes(res.quizzes);
+        } else {
+          throw new Error(res.message || "Failed to fetch quizzes.");
+        }
+      } catch (error) {
+        console.error("Error fetching quizzes:", error);
+        toast.error(
+          error.response?.data?.message || "Failed to fetch community quizzes."
+        );
+      }
+    };
+
+    if (community) {
+      fetchQuizzes();
+    }
+  }, [community, id]);
+
   // Fetch Assessment Tasks and User Participation
   useEffect(() => {
     if (community) {
@@ -133,7 +167,9 @@ function CommunityPage() {
         "Error joining community:",
         error.response?.data?.message || error.message
       );
-      toast.error(error.response?.data?.message || "Failed to join community.");
+      toast.error(
+        error.response?.data?.message || "Failed to join community."
+      );
     }
   };
 
@@ -154,6 +190,15 @@ function CommunityPage() {
     }
   };
 
+  // Navigate to Create Quiz Page
+  const handleCreateQuiz = () => {
+    // e.g. /communities/:communityId/create-quiz
+    navigate(`/communities/${id}/create-quiz`);
+  };
+
+  // Check user role
+  const isAdmin = user && (user.role === "professor" || user.role === "admin");
+
   if (loading) {
     return (
       <div className="text-center mt-10">
@@ -172,20 +217,32 @@ function CommunityPage() {
     );
   }
 
-  // Determine if the user is an admin or professor
-  const isAdmin = user && (user.role === "professor" || user.role === "admin");
+  // Navigate to Delete Quiz
+  const handleDeleteQuiz = async (quizId) => {
+    try {
+      // Call your quiz service
+      await quizService.deleteQuiz(quizId);
+      toast.success("Quiz deleted successfully.");
+
+      // Remove from local state
+      setQuizzes((prev) => prev.filter((q) => q._id !== quizId));
+    } catch (err) {
+      console.error("Error deleting quiz:", err);
+      toast.error("Failed to delete quiz.");
+    }
+  };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-6">
+    <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 shrink-0 min-w-[36rem]">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <CommunityAvatar
               avatarUrl={community.avatar}
               name={community.name}
-              className="h-12 w-12" // Adjusted size via className
+              className="h-12 w-12"
             />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {community.name}
@@ -234,7 +291,7 @@ function CommunityPage() {
       </div>
 
       {/* Sidebar */}
-      <div className="w-full md:w-1/3 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-6">
+      <div className="w-80 flex-none bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-4">
         {/* Community Description */}
         <div>
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
@@ -260,6 +317,107 @@ function CommunityPage() {
               <li>No specific rules set for this community.</li>
             )}
           </ul>
+        </div>
+
+        <hr className="border-gray-300 dark:border-gray-600" />
+
+        {/* Quizzes Section */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              Quizzes
+            </h2>
+            {isAdmin && (
+              <Button
+                onClick={handleCreateQuiz}
+                size="sm"
+                className="mt-2 sm:mt-0 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Create Quiz
+              </Button>
+            )}
+          </div>
+
+          {quizzes.length > 0 ? (
+            <ul className="text-gray-700 dark:text-gray-300">
+              {quizzes.map((quiz) => (
+                <li key={quiz._id} className="mb-2">
+                  {/* Child flex container */}
+                  <div className="flex justify-between items-baseline">
+                    {/* Left side (quiz title) can wrap */}
+                    <div className="pr-2 break-words">{quiz.title}</div>
+
+                    {/* Right side (buttons) stays on the same row */}
+                    <div className="flex-shrink-0 space-x-2 mt-1">
+                      {isAdmin ? (
+                        <>
+                          <Button
+                            size="sm"
+                            color="blue"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={() => navigate(`/quiz/${quiz._id}/edit`)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            color="red"
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                            onClick={() => handleDeleteQuiz(quiz._id)}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      ) : (
+                        // Conditional Rendering of "Take" or "View" Button
+                        !quiz.hasAttempted ? (
+                          <Button
+                            onClick={() =>
+                              navigate(`/quiz/${quiz._id}/instructions`)
+                            }
+                            size="sm"
+                            variant="outlined"
+                            className="
+                              text-black dark:text-white
+                              border-gray-300 dark:border-gray-600
+                              hover:bg-gray-300 dark:hover:bg-gray-700
+                              hover:text-black dark:hover:text-white
+                              transition-colors duration-200
+                              rounded-md
+                            "
+                          >
+                            Take
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() =>
+                              navigate(`/quiz/${quiz._id}/attempt/${quiz.attemptId}/results`)
+                            }
+                            size="sm"
+                            variant="outlined"
+                            className="
+                              text-blue-600 dark:text-blue-400
+                              border-blue-600 dark:border-blue-400
+                              hover:bg-blue-600 dark:hover:bg-blue-400
+                              hover:text-white dark:hover:text-white
+                              transition-colors duration-200
+                              rounded-md
+                            "
+                          >
+                            View
+                          </Button>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 dark:text-gray-400">
+              No Quizzes currently.
+            </p>
+          )}
         </div>
 
         <hr className="border-gray-300 dark:border-gray-600" />
@@ -292,7 +450,7 @@ function CommunityPage() {
                 <li key={member._id} className="flex items-center">
                   <UserAvatar
                     user={member}
-                    handleSignOut={() => {}}
+                    handleSignOut={() => { }}
                     className="h-8 w-8 mr-2"
                   />
                   <span className="text-gray-700 dark:text-gray-300">

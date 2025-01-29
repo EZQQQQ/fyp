@@ -1,0 +1,344 @@
+// /backend/controllers/quizController.js
+
+const Quiz = require("../models/Quiz");
+const QuizAttempt = require("../models/QuizAttempt");
+const Community = require("../models/Community");
+
+/**
+ * CREATE a new quiz for a specific community
+ */
+async function createQuizForCommunity(req, res) {
+  try {
+    const { communityId } = req.params;
+    const { title, questions } = req.body;
+    const createdBy = req.user._id;
+
+    // Validate input
+    if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
+      res.status(400);
+      throw new Error("Invalid input: Title and questions are required.");
+    }
+
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ success: false, message: "Community not found." });
+    }
+
+    const quiz = new Quiz({
+      community: community._id,
+      title,
+      createdBy,
+      questions,
+    });
+
+    await quiz.save();
+    return res.status(201).json({ success: true, quiz });
+  } catch (error) {
+    console.error("Error creating quiz for community:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * READ: Get all quizzes in a given community with attempt status
+ */
+async function getQuizzesByCommunity(req, res) {
+  try {
+    const { communityId } = req.params;
+    const userId = req.user._id; // Ensure authentication middleware populates req.user
+
+    const quizzes = await Quiz.find({ community: communityId })
+      .populate("createdBy", "username email")
+      .sort({ createdAt: -1 });
+
+    // Fetch all attempts by the user for quizzes in this community
+    const attempts = await QuizAttempt.find({
+      quiz: { $in: quizzes.map((q) => q._id) },
+      user: userId,
+    }).sort({ createdAt: -1 });
+
+    // Create a map from quizId to attemptId (latest only)
+    const attemptMap = {};
+    attempts.forEach((attempt) => {
+      const quizId = attempt.quiz.toString();
+      // If multiple attempts exist, retain only the latest attemptId
+      if (!attemptMap[quizId]) {
+        attemptMap[quizId] = attempt._id.toString();
+      }
+    });
+
+    // Map quizzes to include hasAttempted and attemptId
+    const quizzesWithAttemptStatus = quizzes.map((quiz) => ({
+      ...quiz.toObject(),
+      hasAttempted: !!attemptMap[quiz._id.toString()],
+      attemptId: attemptMap[quiz._id.toString()] || null,
+    }));
+
+    return res.json({ success: true, quizzes: quizzesWithAttemptStatus });
+  } catch (error) {
+    console.error("Error fetching quizzes by community:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * READ: Get a single quiz by quizId
+ */
+async function getQuizById(req, res) {
+  try {
+    const { quizId } = req.params;
+    const quiz = await Quiz.findById(quizId);
+
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found." });
+    }
+
+    return res.json({ success: true, quiz });
+  } catch (error) {
+    console.error("Error fetching quiz by ID:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * UPDATE a quiz by quizId
+ */
+async function updateQuiz(req, res) {
+  try {
+    const { quizId } = req.params;
+    const { title, questions } = req.body;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found." });
+    }
+
+    if (title !== undefined) quiz.title = title;
+    if (questions !== undefined) quiz.questions = questions;
+
+    await quiz.save();
+    return res.json({ success: true, quiz });
+  } catch (error) {
+    console.error("Error updating quiz:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * DELETE a quiz by quizId
+ */
+async function deleteQuiz(req, res) {
+  try {
+    const { quizId } = req.params;
+    const quiz = await Quiz.findByIdAndDelete(quizId);
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found." });
+    }
+    return res.json({ success: true, message: "Quiz deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting quiz:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * START a quiz attempt session
+ */
+async function startQuizAttempt(req, res) {
+  try {
+    const { quizId } = req.params;
+    const userId = req.user._id;
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found." });
+    }
+
+    const totalPossibleScore = quiz.questions.length;
+
+    // Initialize answers array with default values
+    const initAnswers = quiz.questions.map((q) => ({
+      questionId: q._id,
+      selectedOptionId: [],
+      isCorrect: false, // default, will be updated upon submission
+    }));
+
+    // Create a new QuizAttempt
+    const quizAttempt = await QuizAttempt.create({
+      user: userId,
+      quiz: quizId,
+      community: quiz.community,
+      totalPossibleScore,
+      answers: initAnswers,
+    });
+
+    return res.status(201).json({
+      success: true,
+      attemptId: quizAttempt._id,
+    });
+  } catch (error) {
+    console.error("Error starting quiz attempt:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * END a quiz attempt session
+ */
+async function endQuizAttempt(req, res) {
+  try {
+    const { quizId, attemptId } = req.params;
+    const userId = req.user._id;
+
+    const quizAttempt = await QuizAttempt.findOne({
+      _id: attemptId,
+      quiz: quizId,
+      user: userId,
+    });
+
+    if (!quizAttempt) {
+      return res.status(404).json({ success: false, message: "Quiz attempt not found." });
+    }
+
+    quizAttempt.endedAt = Date.now();
+    await quizAttempt.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Quiz attempt ended successfully.",
+    });
+  } catch (error) {
+    console.error("Error ending quiz attempt:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * SUBMIT quiz answers
+ */
+async function submitQuizAttempt(req, res) {
+  try {
+    const { quizId, attemptId } = req.params;
+    const userId = req.user._id;
+    const { answers } = req.body;
+
+    const quizAttempt = await QuizAttempt.findOne({
+      _id: attemptId,
+      quiz: quizId,
+      user: userId,
+    }).populate("quiz");
+
+    if (!quizAttempt) {
+      return res.status(404).json({ success: false, message: "Quiz attempt not found." });
+    }
+
+    if (quizAttempt.submittedAt) {
+      return res.status(400).json({ success: false, message: "Quiz attempt has already been submitted." });
+    }
+
+    const quiz = quizAttempt.quiz;
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: "Quiz not found." });
+    }
+
+    let score = 0;
+
+    const evaluatedAnswers = quiz.questions.map((question) => {
+      const userAnswer = answers.find(
+        (a) => a.questionId.toString() === question._id.toString()
+      );
+
+      if (!userAnswer) {
+        return {
+          questionId: question._id,
+          selectedOptionId: [],
+          isCorrect: false,
+        };
+      }
+
+      const correctOptionIds = question.options
+        .filter((opt) => opt.isCorrect)
+        .map((opt) => opt._id.toString());
+
+      const userOptionIds = Array.isArray(userAnswer.selectedOptionId)
+        ? userAnswer.selectedOptionId.map((id) => id.toString())
+        : [userAnswer.selectedOptionId.toString()];
+
+      const isCorrect =
+        correctOptionIds.length === userOptionIds.length &&
+        correctOptionIds.every((id) => userOptionIds.includes(id));
+
+      if (isCorrect) score += 1;
+
+      return {
+        questionId: question._id,
+        selectedOptionId: userOptionIds,
+        isCorrect,
+      };
+    });
+
+    quizAttempt.answers = evaluatedAnswers;
+    quizAttempt.score = score;
+    quizAttempt.submittedAt = Date.now();
+    quizAttempt.endedAt = Date.now();
+
+    await quizAttempt.save();
+
+    return res.status(200).json({
+      success: true,
+      quizAttempt,
+      message: `Quiz submitted! You scored ${score} out of ${quiz.totalPossibleScore}.`,
+    });
+  } catch (error) {
+    console.error("Error submitting quiz attempt:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * GET quiz attempt details
+ */
+async function getQuizAttempt(req, res) {
+  try {
+    const { quizId, attemptId } = req.params;
+    const userId = req.user._id;
+
+    const quizAttempt = await QuizAttempt.findOne({
+      _id: attemptId,
+      quiz: quizId,
+      user: userId,
+    })
+      .populate({
+        path: "quiz",
+        populate: {
+          path: "questions.options",
+          model: "Option",
+        },
+      })
+      .populate("community", "name");
+
+    if (!quizAttempt) {
+      return res.status(404).json({ success: false, message: "Quiz attempt not found." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      quizAttempt,
+    });
+  } catch (error) {
+    console.error("Error getting quiz attempt:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+module.exports = {
+  createQuizForCommunity,
+  getQuizzesByCommunity,
+  getQuizById,
+  updateQuiz,
+  deleteQuiz,
+  startQuizAttempt,
+  endQuizAttempt,
+  submitQuizAttempt,
+  getQuizAttempt,
+};

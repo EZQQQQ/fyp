@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 function AssessmentTasks({ tasks }) {
-  console.log("tasks:", tasks);
+  // console.log("tasks:", tasks);
   if (!Array.isArray(tasks) || tasks.length === 0) {
     return (
       <p className="text-gray-500 dark:text-gray-400">
