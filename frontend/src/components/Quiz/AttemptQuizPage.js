@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import TextContent from "../ViewQuestion/TextContent"; // Import TextContent
 
 function AttemptQuizPage() {
   const { quizId, attemptId } = useParams();
@@ -174,9 +175,11 @@ function AttemptQuizPage() {
     <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-md shadow-md">
       <h2 className="text-2xl font-semibold mb-4">{quiz.title}</h2>
       <div className="mb-6">
-        <p className="font-medium text-lg mb-2">
-          {currentQuestionIndex + 1}. {currentQuestion.questionText}
-        </p>
+        {/* Render the question text using TextContent */}
+        <div className="font-medium text-lg mb-2">
+          <span>{currentQuestionIndex + 1}. </span>
+          <TextContent content={currentQuestion.questionText} type="html" />
+        </div>
         <div className="space-y-2">
           {currentQuestion.options.map((opt) => {
             const selected = currentQuestion.allowMultipleCorrect
@@ -190,7 +193,8 @@ function AttemptQuizPage() {
                   checked={!!selected}
                   onChange={() => handleOptionChange(currentQuestionIndex, opt._id)}
                 />
-                <span className="text-gray-700 dark:text-gray-300">{opt.optionText}</span>
+                {/* Render the option text using TextContent */}
+                <TextContent content={opt.optionText} type="html" />
               </label>
             );
           })}
@@ -204,8 +208,8 @@ function AttemptQuizPage() {
             onClick={handlePrevious}
             disabled={currentQuestionIndex === 0}
             className={`px-3 py-2 rounded-full ${currentQuestionIndex === 0
-              ? "bg-blue-100 text-blue-400 cursor-not-allowed"
-              : "bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring focus:ring-blue-400"
+                ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                : "bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring focus:ring-blue-400"
               }`}
           >
             <ArrowBackIosNewIcon fontSize="small" />
@@ -214,8 +218,8 @@ function AttemptQuizPage() {
             onClick={handleNext}
             disabled={currentQuestionIndex === quiz.questions.length - 1}
             className={`px-3 py-2 rounded-full ${currentQuestionIndex === quiz.questions.length - 1
-              ? "bg-blue-100 text-blue-400 cursor-not-allowed"
-              : "bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring focus:ring-blue-400"
+                ? "bg-blue-100 text-blue-400 cursor-not-allowed"
+                : "bg-blue-200 text-blue-800 hover:bg-blue-300 focus:outline-none focus:ring focus:ring-blue-400"
               }`}
           >
             <ArrowForwardIosIcon fontSize="small" />

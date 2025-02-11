@@ -1,5 +1,4 @@
 // /frontend/src/components/Quiz/CreateQuizPage.js
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -8,6 +7,8 @@ import { Button } from "@material-tailwind/react";
 
 import quizService from "../../services/quizService";
 import { createAssessmentTask } from "../../features/assessmentSlice";
+import MarkdownEditor from "../TextEditor/MarkdownEditor";
+import TextContent from "../ViewQuestion/TextContent"; // Import TextContent for preview
 
 function CreateQuizPage() {
   const { communityId } = useParams();
@@ -33,27 +34,32 @@ Force Completion: Once started, this test must be completed in one sitting. Do n
 Due Date: This Test is due on {time set by professor}. Test submitted past this date will not be recorded.`
   );
 
-  // Add an empty question including an explanation field
+  // Add an empty question including an explanation field.
   const handleAddQuestion = () => {
     setQuestions((prev) => [
       ...prev,
       {
-        questionText: "",
-        explanation: "", // new field for explanation
+        questionText: "", // Markdown content for the question text.
+        explanation: "",  // Plain text explanation (optional)
         allowMultipleCorrect: false,
         options: [{ optionText: "", isCorrect: false }],
       },
     ]);
   };
 
-  // Add an empty option to a specific question
+  // Remove a question at a given index.
+  const handleRemoveQuestion = (qIdx) => {
+    setQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
+  };
+
+  // Add an empty option to a specific question.
   const handleAddOption = (qIdx) => {
     const updated = [...questions];
     updated[qIdx].options.push({ optionText: "", isCorrect: false });
     setQuestions(updated);
   };
 
-  // Validate that each question has at least one correct answer and that text is provided.
+  // Validate that each question has at least one correct answer and that required fields are filled.
   const validateQuiz = () => {
     if (!title.trim()) {
       toast.error("Quiz title cannot be empty.");
@@ -78,16 +84,16 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
     return true;
   };
 
-  // Handle form submission
+  // Handle form submission.
   const handleSubmit = async () => {
     if (!validateQuiz()) {
       return;
     }
 
     try {
-      // Include instructions in the quiz data
+      // Package quiz data including rich text instructions and questions.
       const quizData = { title, instructions, questions };
-      console.log("Quiz Data:", { title, instructions, questions });
+      console.log("Quiz Data:", quizData);
 
       const res = await quizService.createQuiz(communityId, quizData);
 
@@ -104,12 +110,11 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
           quizId: res.quiz._id,
         };
 
-        // Dispatch the assessment task creation
         await dispatch(createAssessmentTask({ communityId, taskData })).unwrap();
         toast.success("Assessment task for quiz created!");
       }
 
-      // Navigate back to the community page
+      // Navigate back to the community page.
       navigate(`/communities/${communityId}`);
     } catch (err) {
       console.error("Error creating quiz:", err);
@@ -136,37 +141,52 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
       {/* Quiz Instructions */}
       <div className="mb-4">
         <label className="block font-medium mb-1">Quiz Instructions/Notes</label>
-        <textarea
-          className="border p-2 w-full h-40"
-          placeholder="Enter quiz instructions"
+        <MarkdownEditor
           value={instructions}
-          onChange={(e) => setInstructions(e.target.value)}
-        ></textarea>
+          onChange={setInstructions}
+          placeholder="Enter quiz instructions"
+        />
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           You can modify these instructions if needed.
         </p>
+
+        {/* Preview the rendered instructions using TextContent */}
+        <div className="mt-4 p-4 border rounded bg-gray-50">
+          <h3 className="font-semibold mb-2">Instructions Preview:</h3>
+          <TextContent content={instructions} type="html" />
+        </div>
       </div>
 
       {/* Questions */}
       <div className="mb-4">
         <label className="block font-medium mb-1">Questions</label>
         {questions.map((question, qIdx) => (
-          <div key={qIdx} className="border rounded p-2 mb-2">
-            {/* Question Text */}
-            <input
-              type="text"
-              className="border p-1 w-full mb-2"
-              placeholder="Enter question text"
+          <div key={qIdx} className="relative border rounded p-2 mb-2">
+            {/* Remove Question Button */}
+            <button
+              onClick={() => handleRemoveQuestion(qIdx)}
+              className="absolute top-2 right-2 text-sm text-red-500 hover:text-red-700 focus:outline-none"
+              title="Remove Question"
+            >
+              &#x2715;
+            </button>
+
+            {/* Question Text using MarkdownEditor */}
+            <label className="block font-medium mb-1">Question Text</label>
+            <MarkdownEditor
               value={question.questionText}
-              onChange={(e) => {
+              onChange={(value) => {
                 const updated = [...questions];
-                updated[qIdx].questionText = e.target.value;
+                updated[qIdx].questionText = value;
                 setQuestions(updated);
               }}
+              placeholder="Enter question text"
             />
-            {/* Explanation (optional) */}
+
+            {/* Explanation field using a simple textarea */}
+            <label className="block font-medium mb-1 mt-2">Explanation (optional)</label>
             <textarea
-              className="border p-1 w-full mb-2"
+              className="border p-2 w-full h-24"
               placeholder="Enter explanation for this question (optional)"
               value={question.explanation}
               onChange={(e) => {
@@ -175,22 +195,26 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                 setQuestions(updated);
               }}
             ></textarea>
+
             {/* Allow Multiple Correct */}
-            <label className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={question.allowMultipleCorrect}
-                onChange={(e) => {
-                  const updated = [...questions];
-                  updated[qIdx].allowMultipleCorrect = e.target.checked;
-                  setQuestions(updated);
-                }}
-              />
-              Allow multiple correct answers?
-            </label>
+            <div className="mt-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={question.allowMultipleCorrect}
+                  onChange={(e) => {
+                    const updated = [...questions];
+                    updated[qIdx].allowMultipleCorrect = e.target.checked;
+                    setQuestions(updated);
+                  }}
+                />
+                Allow multiple correct answers?
+              </label>
+            </div>
+
             {/* Options */}
-            <div className="ml-4">
+            <div className="ml-4 mt-2">
               {question.options.map((opt, optIdx) => (
                 <div key={optIdx} className="flex items-center mb-2">
                   <input

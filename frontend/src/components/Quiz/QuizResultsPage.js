@@ -1,10 +1,10 @@
 // /frontend/src/components/Quiz/QuizResultsPage.js
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
+import TextContent from "../ViewQuestion/TextContent"; // Import TextContent
 
 function QuizResultsPage() {
   const { quizId, attemptId } = useParams();
@@ -60,7 +60,9 @@ function QuizResultsPage() {
 
       {quiz.questions.map((q, qIdx) => {
         const userAnswer = answers[qIdx];
-        const correctOptions = q.options.filter((opt) => opt.isCorrect).map((opt) => opt._id);
+        const correctOptions = q.options
+          .filter((opt) => opt.isCorrect)
+          .map((opt) => opt._id);
         const isQuestionCorrect =
           userAnswer.selectedOptionId.length === correctOptions.length &&
           userAnswer.selectedOptionId.every((id) =>
@@ -69,16 +71,19 @@ function QuizResultsPage() {
 
         return (
           <div key={q._id} className="mb-6 border-b pb-4">
-            <p className="font-medium text-lg">
-              {qIdx + 1}. {q.questionText}
-            </p>
+            {/* Render question text with TextContent */}
+            <div className="font-medium text-lg mb-2">
+              <span>{qIdx + 1}. </span>
+              <TextContent content={q.questionText} type="html" />
+            </div>
             <ul className="ml-4">
               {q.options.map((option) => {
                 const wasSelected = userAnswer.selectedOptionId.some(
                   (id) => id.toString() === option._id.toString()
                 );
                 const isCorrectOption = option.isCorrect;
-                let optionClasses = "p-2 border rounded mb-2 flex items-center justify-between";
+                let optionClasses =
+                  "p-2 border rounded mb-2 flex items-center justify-between";
                 let icon = null;
 
                 if (wasSelected && isCorrectOption) {
@@ -114,7 +119,8 @@ function QuizResultsPage() {
             {q.explanation && (
               <div className="mt-2 p-2 border-l-4 border-gray-400">
                 <p className="italic text-sm text-gray-600 dark:text-gray-400">
-                  Explanation: {q.explanation}
+                  Explanation:{" "}
+                  <TextContent content={q.explanation} type="html" />
                 </p>
               </div>
             )}

@@ -5,6 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
+import TextContent from "../ViewQuestion/TextContent";
 
 function QuizInstructionsPage() {
   const { quizId } = useParams();
@@ -68,9 +69,7 @@ function QuizInstructionsPage() {
   }
 
   // Format the quiz title to display a quiz number.
-  const extractQuizNumber = (title) => {
-    return title.replace(/quiz\s*/i, "");
-  };
+  const extractQuizNumber = (title) => title.replace(/quiz\s*/i, "");
   const quizNumber = extractQuizNumber(quizData.title);
 
   return (
@@ -78,9 +77,9 @@ function QuizInstructionsPage() {
       <h2 className="text-2xl font-semibold mb-4">
         Quiz {quizNumber} Instructions
       </h2>
-      {/* Render the instructions set by the professor */}
+      {/* Use TextContent component to parse and display HTML instructions */}
       <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
-        {quizData.instructions}
+        <TextContent content={quizData.instructions} type="html" />
       </div>
       <div className="mt-6 flex justify-end space-x-4">
         <Button
@@ -101,3 +100,4 @@ function QuizInstructionsPage() {
 }
 
 export default QuizInstructionsPage;
+

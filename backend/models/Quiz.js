@@ -24,6 +24,7 @@ const quizSchema = new mongoose.Schema({
         type: String,
         required: true
       },
+      questionImage: { type: String, default: "" },
       explanation: {
         type: String,
         default: "",
