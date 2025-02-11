@@ -6,6 +6,8 @@ import CommunityAvatar from "./CommunityAvatar";
 import UserAvatar from "../../common/UserAvatar"; // Import UserAvatar
 
 const CommunityCard = ({ community, isMember, handleJoin }) => {
+  const creatorName = community.createdBy?.name || "Unknown";
+  const creatorAvatar = community.createdBy?.profilePicture || "";
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden flex flex-col">
@@ -13,7 +15,10 @@ const CommunityCard = ({ community, isMember, handleJoin }) => {
       <div className="p-4 flex flex-col flex-grow">
         {/* Community Name and Avatar */}
         <div className="flex items-center mb-2">
-          <CommunityAvatar avatarUrl={community.avatar} name={community.name || "Unnamed Community"} />
+          <CommunityAvatar
+            avatarUrl={community.avatar}
+            name={community.name || "Unnamed Community"}
+          />
           <Link
             to={`/communities/${community._id}`}
             className="ml-2 text-lg sm:text-base font-semibold text-blue-600 dark:text-blue-400 hover:underline"
@@ -32,10 +37,11 @@ const CommunityCard = ({ community, isMember, handleJoin }) => {
           <div className="flex items-center mb-4">
             <UserAvatar
               user={community.createdBy}
+              avatarUrl={creatorAvatar}
               className="h-6 w-6"
             />
             <span className="ml-2 text-sm sm:text-xs text-gray-700 dark:text-gray-300">
-              Created by {community.createdBy?.name || "Unknown"}
+              Created by {creatorName}
             </span>
           </div>
         )}

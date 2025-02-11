@@ -1,7 +1,7 @@
 // /frontend/src/components/Quiz/QuizInstructionsPage.js
 
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
@@ -9,19 +9,35 @@ import { Button } from "@material-tailwind/react";
 function QuizInstructionsPage() {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const [quizData, setQuizData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Handle the Begin action
+  useEffect(() => {
+    const fetchQuizDetails = async () => {
+      try {
+        const res = await quizService.getQuizById(quizId);
+        if (!res.success) {
+          throw new Error(res.message || "Failed to fetch quiz details");
+        }
+        setQuizData(res.quiz);
+      } catch (error) {
+        console.error("Error fetching quiz details:", error);
+        toast.error(error.message || "Failed to fetch quiz details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuizDetails();
+  }, [quizId]);
+
   const handleBegin = async () => {
     try {
-      // Register the quiz attempt session
       const res = await quizService.startQuizAttempt(quizId);
       if (!res.success) {
         throw new Error(res.message || "Failed to start quiz attempt");
       }
-
       const { attemptId } = res;
-
-      // Navigate to the Attempt Quiz Page with the attemptId
       navigate(`/quiz/${quizId}/attempt/${attemptId}`);
     } catch (error) {
       console.error("Error starting quiz attempt:", error);
@@ -29,39 +45,54 @@ function QuizInstructionsPage() {
     }
   };
 
-  // Handle the Cancel action
   const handleCancel = () => {
-    navigate(-1); // Go back to the previous page (Community Page)
+    navigate(-1);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <p className="text-xl text-gray-700 dark:text-gray-300">
+          Loading instructions...
+        </p>
+      </div>
+    );
+  }
+
+  if (!quizData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <p className="text-xl text-red-500">No quiz found.</p>
+      </div>
+    );
+  }
+
+  // Format the quiz title to display a quiz number.
+  const extractQuizNumber = (title) => {
+    return title.replace(/quiz\s*/i, "");
+  };
+  const quizNumber = extractQuizNumber(quizData.title);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-md shadow-md">
-      <h2 className="text-2xl font-semibold mb-4">Instructions</h2>
-      <div className="space-y-4">
-        <div>
-          <h3 className="font-medium">Description</h3>
-          <p>This MCQ is based on the content for this module.</p>
-        </div>
-        <div>
-          <h3 className="font-medium">Instructions</h3>
-          <ul className="list-disc list-inside">
-            <li>Complete all 5 questions.</li>
-            <li>
-              Force Completion: Once started, this test must be completed in one sitting.
-              Do not leave the test before clicking Save and Submit.
-            </li>
-            <li>
-              Due Date: This Test is due on February 14, 2025 11:59:00 PM SGT.
-              Test cannot be started past this date.
-            </li>
-          </ul>
-        </div>
+      <h2 className="text-2xl font-semibold mb-4">
+        Quiz {quizNumber} Instructions
+      </h2>
+      {/* Render the instructions set by the professor */}
+      <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
+        {quizData.instructions}
       </div>
       <div className="mt-6 flex justify-end space-x-4">
-        <Button color="red" onClick={handleCancel}>
+        <Button
+          onClick={handleCancel}
+          className="bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring focus:ring-gray-400"
+        >
           Cancel
         </Button>
-        <Button color="green" onClick={handleBegin}>
+        <Button
+          onClick={handleBegin}
+          className="bg-gray-800 text-gray-100 hover:bg-gray-900 focus:outline-none focus:ring focus:ring-gray-600 dark:bg-gray-500 dark:text-gray-900 dark:hover:bg-gray-300"
+        >
           Begin
         </Button>
       </div>

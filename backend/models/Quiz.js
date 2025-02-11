@@ -17,11 +17,16 @@ const quizSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  instructions: { type: String, required: true, default: "" },
   questions: [
     {
       questionText: {
         type: String,
         required: true
+      },
+      explanation: {
+        type: String,
+        default: "",
       },
       allowMultipleCorrect: {
         type: Boolean,

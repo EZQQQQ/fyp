@@ -33,7 +33,7 @@ function CommunityPage() {
 
   const [community, setCommunity] = useState(null);
   const [questions, setQuestions] = useState([]);
-  const [quizzes, setQuizzes] = useState([]);   // Store community quizzes with hasAttempted
+  const [quizzes, setQuizzes] = useState([]); // Store community quizzes with hasAttempted
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -66,9 +66,7 @@ function CommunityPage() {
         // Check if the user is a member
         if (user) {
           setIsMember(
-            response.data.members.some(
-              (member) => member._id === user._id
-            )
+            response.data.members.some((member) => member._id === user._id)
           );
         }
       } catch (error) {
@@ -193,6 +191,8 @@ function CommunityPage() {
   // Navigate to Create Quiz Page
   const handleCreateQuiz = () => {
     // e.g. /communities/:communityId/create-quiz
+    // Note: In your quiz creation component, ensure that after creating a quiz,
+    // an assessment task is also created (e.g., by calling createAssessmentTask).
     navigate(`/communities/${id}/create-quiz`);
   };
 
@@ -220,10 +220,8 @@ function CommunityPage() {
   // Navigate to Delete Quiz
   const handleDeleteQuiz = async (quizId) => {
     try {
-      // Call your quiz service
       await quizService.deleteQuiz(quizId);
       toast.success("Quiz deleted successfully.");
-
       // Remove from local state
       setQuizzes((prev) => prev.filter((q) => q._id !== quizId));
     } catch (err) {
@@ -340,14 +338,14 @@ function CommunityPage() {
 
           {quizzes.length > 0 ? (
             <ul className="text-gray-700 dark:text-gray-300">
-              {quizzes.map((quiz) => (
+              {quizzes.map((quiz, index) => (
                 <li key={quiz._id} className="mb-2">
-                  {/* Child flex container */}
                   <div className="flex justify-between items-baseline">
-                    {/* Left side (quiz title) can wrap */}
-                    <div className="pr-2 break-words">{quiz.title}</div>
-
-                    {/* Right side (buttons) stays on the same row */}
+                    <div className="pr-2 break-words">
+                      {quiz.title.toLowerCase().includes("quiz")
+                        ? quiz.title
+                        : `Quiz ${index + 1}: ${quiz.title}`}
+                    </div>
                     <div className="flex-shrink-0 space-x-2 mt-1">
                       {isAdmin ? (
                         <>
@@ -368,16 +366,14 @@ function CommunityPage() {
                             Delete
                           </Button>
                         </>
-                      ) : (
-                        // Conditional Rendering of "Take" or "View" Button
-                        !quiz.hasAttempted ? (
-                          <Button
-                            onClick={() =>
-                              navigate(`/quiz/${quiz._id}/instructions`)
-                            }
-                            size="sm"
-                            variant="outlined"
-                            className="
+                      ) : !quiz.hasAttempted ? (
+                        <Button
+                          onClick={() =>
+                            navigate(`/quiz/${quiz._id}/instructions`)
+                          }
+                          size="sm"
+                          variant="outlined"
+                          className="
                               text-black dark:text-white
                               border-gray-300 dark:border-gray-600
                               hover:bg-gray-300 dark:hover:bg-gray-700
@@ -385,17 +381,19 @@ function CommunityPage() {
                               transition-colors duration-200
                               rounded-md
                             "
-                          >
-                            Take
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() =>
-                              navigate(`/quiz/${quiz._id}/attempt/${quiz.attemptId}/results`)
-                            }
-                            size="sm"
-                            variant="outlined"
-                            className="
+                        >
+                          Take
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() =>
+                            navigate(
+                              `/quiz/${quiz._id}/attempt/${quiz.attemptId}/results`
+                            )
+                          }
+                          size="sm"
+                          variant="outlined"
+                          className="
                               text-blue-600 dark:text-blue-400
                               border-blue-600 dark:border-blue-400
                               hover:bg-blue-600 dark:hover:bg-blue-400
@@ -403,10 +401,9 @@ function CommunityPage() {
                               transition-colors duration-200
                               rounded-md
                             "
-                          >
-                            View
-                          </Button>
-                        )
+                        >
+                          View
+                        </Button>
                       )}
                     </div>
                   </div>

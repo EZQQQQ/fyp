@@ -2,7 +2,6 @@ import React from "react";
 import PropTypes from "prop-types";
 
 function AssessmentTasks({ tasks }) {
-  // console.log("tasks:", tasks);
   if (!Array.isArray(tasks) || tasks.length === 0) {
     return (
       <p className="text-gray-500 dark:text-gray-400">
@@ -20,15 +19,18 @@ function AssessmentTasks({ tasks }) {
 
       {/* List of tasks */}
       {tasks.map((task) => {
-        const { _id, label, total, studentProgress } = task;
+        const { _id, label, total, studentProgress, type } = task;
 
-        // Calculate the completion percentage
-        const percentage = total
-          ? Math.min((studentProgress / total) * 100, 100)
-          : 0;
+        const percentage =
+          type === "quizzes"
+            ? studentProgress
+            : total
+              ? Math.min((studentProgress / total) * 100, 100)
+              : 0;
 
-        // Remove weight percentage from label if present
         const labelWithoutWeight = label.replace(/\(\d+%\)/g, "").trim();
+
+        // console.log(`Task ${_id} of type ${type}: studentProgress=${studentProgress}, total=${total}`);
 
         return (
           <div key={_id} className="mb-6">
@@ -62,8 +64,10 @@ AssessmentTasks.propTypes = {
       label: PropTypes.string.isRequired,
       total: PropTypes.number.isRequired,
       studentProgress: PropTypes.number.isRequired,
+      type: PropTypes.string.isRequired,
     })
   ).isRequired,
 };
 
 export default AssessmentTasks;
+

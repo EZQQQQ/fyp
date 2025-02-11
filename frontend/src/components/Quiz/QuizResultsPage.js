@@ -18,7 +18,6 @@ function QuizResultsPage() {
         if (!attemptId) {
           throw new Error("Attempt ID is missing.");
         }
-
         const res = await quizService.getQuizAttempt(quizId, attemptId);
         if (!res.success) {
           throw new Error(res.message || "Failed to fetch quiz results");
@@ -31,7 +30,6 @@ function QuizResultsPage() {
         setLoading(false);
       }
     };
-
     fetchResults();
   }, [quizId, attemptId]);
 
@@ -63,48 +61,63 @@ function QuizResultsPage() {
       {quiz.questions.map((q, qIdx) => {
         const userAnswer = answers[qIdx];
         const correctOptions = q.options.filter((opt) => opt.isCorrect).map((opt) => opt._id);
-        const isCorrect = userAnswer.selectedOptionId.length === correctOptions.length &&
-          userAnswer.selectedOptionId.every((id) => correctOptions.includes(id));
+        const isQuestionCorrect =
+          userAnswer.selectedOptionId.length === correctOptions.length &&
+          userAnswer.selectedOptionId.every((id) =>
+            correctOptions.some((correctId) => correctId.toString() === id.toString())
+          );
 
         return (
-          <div key={q._id} className="mb-6">
+          <div key={q._id} className="mb-6 border-b pb-4">
             <p className="font-medium text-lg">
               {qIdx + 1}. {q.questionText}
             </p>
-            <div className="ml-4">
-              <p>
-                <span className="font-semibold">Your Answer:</span>{" "}
-                {q.allowMultipleCorrect
-                  ? userAnswer.selectedOptionId.map((id) => {
-                    const option = q.options.find((opt) => opt._id === id);
-                    return option ? option.optionText : "Unknown Option";
-                  }).join(", ")
-                  : (() => {
-                    const option = q.options.find((opt) => opt._id === userAnswer.selectedOptionId);
-                    return option ? option.optionText : "No Answer";
-                  })()}
-              </p>
-              <p>
-                <span className="font-semibold">Correct Answer:</span>{" "}
-                {q.allowMultipleCorrect
-                  ? correctOptions.map((id) => {
-                    const option = q.options.find((opt) => opt._id === id);
-                    return option ? option.optionText : "Unknown Option";
-                  }).join(", ")
-                  : (() => {
-                    const option = q.options.find((opt) => opt._id === correctOptions[0]);
-                    return option ? option.optionText : "No Correct Answer";
-                  })()}
-              </p>
-              <p>
-                <span className="font-semibold">Result:</span>{" "}
-                {isCorrect ? (
-                  <span className="text-green-600">Correct</span>
-                ) : (
-                  <span className="text-red-600">Incorrect</span>
-                )}
-              </p>
-            </div>
+            <ul className="ml-4">
+              {q.options.map((option) => {
+                const wasSelected = userAnswer.selectedOptionId.some(
+                  (id) => id.toString() === option._id.toString()
+                );
+                const isCorrectOption = option.isCorrect;
+                let optionClasses = "p-2 border rounded mb-2 flex items-center justify-between";
+                let icon = null;
+
+                if (wasSelected && isCorrectOption) {
+                  optionClasses += " bg-green-100 border-green-500 text-green-700";
+                  icon = <span className="ml-2">&#10003;</span>; // tick
+                } else if (wasSelected && !isCorrectOption) {
+                  optionClasses += " bg-red-100 border-red-500 text-red-700";
+                  icon = <span className="ml-2">&#10007;</span>; // cross
+                } else if (!wasSelected && isCorrectOption) {
+                  // Show correct answer even if not selected
+                  optionClasses += " bg-green-50 border-green-300 text-green-700";
+                  icon = <span className="ml-2">&#10003;</span>;
+                } else {
+                  optionClasses += " bg-gray-50 border-gray-300 text-gray-700";
+                }
+
+                return (
+                  <li key={option._id} className={optionClasses}>
+                    <span>{option.optionText}</span>
+                    {(wasSelected || isCorrectOption) && icon}
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2">
+              <span className="font-semibold">Result: </span>
+              {isQuestionCorrect ? (
+                <span className="text-green-600">Correct</span>
+              ) : (
+                <span className="text-red-600">Incorrect</span>
+              )}
+            </p>
+            {q.explanation && (
+              <div className="mt-2 p-2 border-l-4 border-gray-400">
+                <p className="italic text-sm text-gray-600 dark:text-gray-400">
+                  Explanation: {q.explanation}
+                </p>
+              </div>
+            )}
           </div>
         );
       })}

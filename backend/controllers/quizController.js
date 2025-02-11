@@ -10,11 +10,11 @@ const Community = require("../models/Community");
 async function createQuizForCommunity(req, res) {
   try {
     const { communityId } = req.params;
-    const { title, questions } = req.body;
+    const { title, instructions, questions } = req.body;
     const createdBy = req.user._id;
 
     // Validate input
-    if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
+    if (!title || !instructions || !questions || !Array.isArray(questions) || questions.length === 0) {
       res.status(400);
       throw new Error("Invalid input: Title and questions are required.");
     }
@@ -27,6 +27,7 @@ async function createQuizForCommunity(req, res) {
     const quiz = new Quiz({
       community: community._id,
       title,
+      instructions,
       createdBy,
       questions,
     });
@@ -243,28 +244,32 @@ async function submitQuizAttempt(req, res) {
 
     let score = 0;
 
+    // Evaluate each question
     const evaluatedAnswers = quiz.questions.map((question) => {
+      // Find the user's answer for this question
       const userAnswer = answers.find(
         (a) => a.questionId.toString() === question._id.toString()
       );
 
-      if (!userAnswer) {
-        return {
-          questionId: question._id,
-          selectedOptionId: [],
-          isCorrect: false,
-        };
+      // If the user did not provide an answer, default to an empty array
+      let userOptionIds = [];
+      if (userAnswer && userAnswer.selectedOptionId) {
+        if (Array.isArray(userAnswer.selectedOptionId)) {
+          userOptionIds = userAnswer.selectedOptionId.map((id) => id.toString());
+        } else {
+          userOptionIds = [userAnswer.selectedOptionId.toString()];
+        }
       }
 
+      // Get correct option IDs for the question
       const correctOptionIds = question.options
         .filter((opt) => opt.isCorrect)
         .map((opt) => opt._id.toString());
 
-      const userOptionIds = Array.isArray(userAnswer.selectedOptionId)
-        ? userAnswer.selectedOptionId.map((id) => id.toString())
-        : [userAnswer.selectedOptionId.toString()];
-
+      // Determine correctness: if the question was answered (i.e. userOptionIds is not empty)
+      // and the user options exactly match the correct options, mark as correct.
       const isCorrect =
+        userOptionIds.length > 0 &&
         correctOptionIds.length === userOptionIds.length &&
         correctOptionIds.every((id) => userOptionIds.includes(id));
 

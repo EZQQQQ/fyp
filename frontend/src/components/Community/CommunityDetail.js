@@ -65,7 +65,6 @@ const CommunityDetail = () => {
           </li>
         ))}
       </ul>
-      {/* Add more details like discussions, resources, etc. */}
     </div>
   );
 };

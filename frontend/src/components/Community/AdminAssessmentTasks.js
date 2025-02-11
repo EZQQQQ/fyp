@@ -27,13 +27,14 @@ function AdminAssessmentTasks({ communityId }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState(null);
 
-  // Updated formData to include adminLabel
+  // Updated formData to include adminLabel and quizNumber for quiz tasks
   const [formData, setFormData] = useState({
     adminLabel: "",
     type: "",
     contentType: "",
     total: "",
     weight: "",
+    quizNumber: "",
   });
 
   const openDialog = (task = null) => {
@@ -45,6 +46,7 @@ function AdminAssessmentTasks({ communityId }) {
         contentType: task.contentType || "",
         total: task.total,
         weight: task.weight,
+        quizNumber: task.quizNumber || "",
       });
     } else {
       setFormData({
@@ -53,6 +55,7 @@ function AdminAssessmentTasks({ communityId }) {
         contentType: "",
         total: "",
         weight: "",
+        quizNumber: "",
       });
     }
     setIsDialogOpen(true);
@@ -67,6 +70,7 @@ function AdminAssessmentTasks({ communityId }) {
       contentType: "",
       total: "",
       weight: "",
+      quizNumber: "",
     });
   };
 
@@ -75,9 +79,9 @@ function AdminAssessmentTasks({ communityId }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Generate student-facing label
+  // Generate student-facing label. For quizzes, show quiz number.
   const generateStudentLabel = () => {
-    const { type, contentType, total } = formData;
+    const { type, contentType, total, quizNumber } = formData;
     if (!type) return "";
 
     let label = "";
@@ -102,7 +106,8 @@ function AdminAssessmentTasks({ communityId }) {
         }
         break;
       case "quizzes":
-        label = `Complete quizzes`;
+        // Use quizNumber to create a label such as "Complete quiz 1"
+        label = `Complete quiz ${quizNumber || 1}`;
         break;
       default:
         label = `Assessment Task`;
@@ -130,6 +135,7 @@ function AdminAssessmentTasks({ communityId }) {
       contentType: formData.contentType,
       total: formData.total ? Number(formData.total) : 0,
       weight: formData.weight ? Number(formData.weight) : 0,
+      quizNumber: formData.type === "quizzes" ? formData.quizNumber : undefined,
     };
 
     try {
@@ -208,13 +214,30 @@ function AdminAssessmentTasks({ communityId }) {
                 >
                   {task.adminLabel}
                 </Typography>
-                <Typography variant="small" color="gray" className="block text-gray-800 dark:text-gray-200">
+                <Typography
+                  variant="small"
+                  color="gray"
+                  className="block text-gray-800 dark:text-gray-200"
+                >
                   Type: {task.type}{" "}
                   {task.contentType && `(${task.contentType})`}
                 </Typography>
-                <Typography variant="small" color="gray" className="block text-gray-800 dark:text-gray-200">
+                <Typography
+                  variant="small"
+                  color="gray"
+                  className="block text-gray-800 dark:text-gray-200"
+                >
                   Total Required: {task.total} | Weight: {task.weight}%
                 </Typography>
+                {task.type === "quizzes" && task.quizNumber && (
+                  <Typography
+                    variant="small"
+                    color="gray"
+                    className="block text-gray-800 dark:text-gray-200"
+                  >
+                    Quiz Number: {task.quizNumber}
+                  </Typography>
+                )}
               </div>
               <div className="flex justify-end space-x-2 mt-4">
                 <Button
@@ -349,6 +372,31 @@ function AdminAssessmentTasks({ communityId }) {
             </div>
           )}
 
+          {/* Quiz Number Input (Conditional for quizzes) */}
+          {formData.type === "quizzes" && (
+            <div className="flex flex-col">
+              <label
+                htmlFor="quizNumber"
+                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Quiz Number
+              </label>
+              <input
+                id="quizNumber"
+                name="quizNumber"
+                type="number"
+                value={formData.quizNumber}
+                onChange={(e) => handleChange(e.target.value, "quizNumber")}
+                required
+                min="1"
+                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Enter quiz number (e.g., 1)"
+              />
+            </div>
+          )}
+
           {/* Total Required */}
           {(formData.type === "votes" ||
             formData.type === "postings" ||
@@ -359,7 +407,7 @@ function AdminAssessmentTasks({ communityId }) {
                   className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
                 >
                   {formData.type === "quizzes"
-                    ? "Quiz Details"
+                    ? "Total Possible Score (for quiz)"
                     : "Total Required"}
                 </label>
                 <input
@@ -375,13 +423,13 @@ function AdminAssessmentTasks({ communityId }) {
                            dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder={
                     formData.type === "quizzes"
-                      ? "Leave blank if not applicable"
+                      ? "Enter total possible score"
                       : "Enter count"
                   }
                 />
                 {formData.type === "quizzes" && (
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    For quizzes, only specify the weight percentage.
+                    For quizzes, specify the total possible score.
                   </p>
                 )}
               </div>
@@ -434,3 +482,4 @@ function AdminAssessmentTasks({ communityId }) {
 }
 
 export default AdminAssessmentTasks;
+

@@ -9,6 +9,11 @@ const AssessmentTaskSchema = new mongoose.Schema({
   contentType: { type: String }, // e.g., 'questions', 'answers' (if applicable)
   total: { type: Number, required: true }, // Total required for 100%
   weight: { type: Number, required: true }, // Weight towards total score
+  quizId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Quiz",
+    required: false
+  },
 });
 
 const CommunitySchema = new mongoose.Schema({

@@ -74,7 +74,7 @@ const createCommunity = async (req, res) => {
 const getAllCommunities = async (req, res) => {
   try {
     const communities = await Community.find()
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name email profilePicture")
       .populate("members", "name email profilePicture");
 
     res.status(200).json({
@@ -212,7 +212,7 @@ const getCommunityById = async (req, res) => {
     }
 
     const community = await Community.findById(communityId)
-      .populate("createdBy", "name email")
+      .populate("createdBy", "name email profilePicture")
       .populate("members", "username email profilePicture")
       .exec();
 
@@ -284,6 +284,8 @@ const getUserParticipation = async (req, res) => {
           label: task.label,
           total: task.total,
           studentProgress: value,
+          type: task.type,
+          adminLabel: task.adminLabel
         };
       })
     );
@@ -298,7 +300,7 @@ const getUserParticipation = async (req, res) => {
 // Create a new assessment task
 const createAssessmentTask = async (req, res) => {
   const { communityId } = req.params;
-  const { label, adminLabel, type, contentType, total, weight } = req.body;
+  const { label, adminLabel, type, contentType, total, weight, quizId } = req.body;
 
   try {
     const community = await Community.findById(communityId);
@@ -313,6 +315,7 @@ const createAssessmentTask = async (req, res) => {
       contentType,
       total,
       weight,
+      ...(type === "quizzes" && { quizId }),
     };
 
     community.assessmentTasks.push(newTask);
@@ -320,6 +323,10 @@ const createAssessmentTask = async (req, res) => {
 
     const createdTask =
       community.assessmentTasks[community.assessmentTasks.length - 1];
+
+    // console.log("Received assessment task payload:", req.body);
+    // console.log("Creating newTask:", newTask);
+
 
     res.status(201).json({
       message: "Assessment task created successfully.",
@@ -334,7 +341,7 @@ const createAssessmentTask = async (req, res) => {
 // Update an existing assessment task
 const updateAssessmentTask = async (req, res) => {
   const { communityId, taskId } = req.params;
-  const { label, adminLabel, type, contentType, total, weight } = req.body;
+  const { label, adminLabel, type, contentType, total, weight, quizId } = req.body;
 
   try {
     const community = await Community.findById(communityId);
@@ -432,6 +439,8 @@ const getAssessmentTasksWithProgress = async (req, res) => {
 };
 
 async function calculateStudentProgress(userId, task, communityId) {
+  // console.log(`Calculating progress for task ${task._id}:`, task);
+
   let progress = 0;
 
   switch (task.type) {
@@ -583,18 +592,25 @@ async function calculateStudentProgress(userId, task, communityId) {
       break;
 
     case "quizzes":
-      // Fetch the latest quiz attempt for the user in this community
-      const quizAttempt = await QuizAttempt.findOne({
-        user: userId,
-        community: communityId,
-      })
-        .sort({ createdAt: -1 })
-        .exec();
-      progress = quizAttempt
-        ? (quizAttempt.score / quizAttempt.totalPossibleScore) * 100
-        : 0;
+      if (task.quizId) {
+        // console.log(`Calculating quiz progress for task ${task._id} with quizId ${task.quizId}`);
+        const quizAttempt = await QuizAttempt.findOne({
+          user: userId,
+          community: communityId,
+          quiz: task.quizId,
+        }).sort({ createdAt: -1 }).exec();
+        if (quizAttempt) {
+          // console.log("Found quiz attempt:", quizAttempt);
+          progress = (quizAttempt.score / quizAttempt.totalPossibleScore) * 100;
+        } else {
+          // console.log("No quiz attempt found for task.quizId:", task.quizId);
+          progress = 0;
+        }
+      } else {
+        // console.log("Task has no quizId");
+        progress = 0;
+      }
       break;
-
     default:
       progress = 0;
   }
