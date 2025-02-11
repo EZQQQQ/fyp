@@ -95,12 +95,12 @@ function Dashboard() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4"
       aria-modal="true"
       role="dialog"
     >
       <div
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full relative"
+        className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg relative"
         role="document"
       >
         <button
@@ -110,13 +110,13 @@ function Dashboard() {
         >
           &#x2715;
         </button>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-3">
           Welcome, {user.name}!
         </h1>
-        <h5 className="mb-3 text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+        <h5 className="mb-3 text-base sm:text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
           {user.role === "student" ? "Features for Students" : "Features for Professors"}
         </h5>
-        <ul className="mb-4 text-gray-700 dark:text-gray-300 list-disc list-inside space-y-2">
+        <ul className="mb-4 text-sm sm:text-base text-gray-700 dark:text-gray-300 list-disc list-inside space-y-2">
           {instructions.map((item, index) => (
             <li key={index} className="flex items-start">
               {instructionIcons[index % instructionIcons.length]}
@@ -134,13 +134,13 @@ function Dashboard() {
           />
           <label
             htmlFor="doNotRemind"
-            className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+            className="ml-2 text-xs sm:text-sm md:text-base font-medium text-gray-900 dark:text-gray-300"
           >
             Do not remind me again
           </label>
         </div>
         <button
-          className="mt-4 flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
+          className="mt-4 flex items-center justify-center px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none"
           onClick={handleProceed}
         >
           Proceed
