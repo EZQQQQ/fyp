@@ -1,4 +1,4 @@
-// /frontend/src/components/Community/CommunityList.js
+// frontend/src/components/Community/CommunityList.js
 
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,16 +8,16 @@ import {
   selectCommunities,
 } from "../../features/communitySlice";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CommunityCard from "./CommunityCard"; 
+import CommunityCard from "./CommunityCard";
 
 const CommunityList = ({ isTileView = false }) => {
   const dispatch = useDispatch();
   const communities = useSelector(selectCommunities);
   const loading = useSelector((state) => state.communities.loading);
   const error = useSelector((state) => state.communities.error);
-  const user = useSelector((state) => state.user.user); 
+  const user = useSelector((state) => state.user.user);
 
   useEffect(() => {
     dispatch(fetchCommunities());
@@ -46,7 +46,7 @@ const CommunityList = ({ isTileView = false }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-4 overflow-x-hidden">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
         {isTileView ? "Explore Communities" : "Communities"}
       </h2>
