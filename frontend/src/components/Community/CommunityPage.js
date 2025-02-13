@@ -1,4 +1,4 @@
-// /frontend/src/components/Community/CommunityPage.js
+// frontend/src/components/Community/CommunityPage.js
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -15,9 +15,10 @@ import {
   fetchUserParticipation,
 } from "../../features/assessmentSlice";
 
-import { Typography, Button } from "@material-tailwind/react";
+import { Button } from "@material-tailwind/react";
 import QuestionCard from "../KnowledgeNode/QuestionCard";
 import CreateQuestionButton from "../KnowledgeNode/CreateQuestionButton";
+import FilterDropdown from "../KnowledgeNode/FilterDropdown";
 import CommunityAvatar from "./CommunityAvatar";
 import AssessmentTasks from "./AssessmentTasks";
 import AdminAssessmentTasks from "./AdminAssessmentTasks";
@@ -26,8 +27,8 @@ import UserAvatar from "../../common/UserAvatar";
 import "react-toastify/dist/ReactToastify.css";
 
 function CommunityPage() {
-  const { id } = useParams();          // community ID from the URL
-  const navigate = useNavigate();      // for programmatic navigation
+  const { id } = useParams(); // community ID from the URL
+  const navigate = useNavigate(); // for programmatic navigation
   const user = useSelector(selectUser);
   const dispatch = useDispatch();
 
@@ -37,6 +38,17 @@ function CommunityPage() {
   const [isMember, setIsMember] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // For filtering questions (similar to AllQuestions)
+  const [filter, setFilter] = useState("newest");
+  const filterOptions = [
+    { label: "Newest", value: "newest" },
+    { label: "Popular", value: "popular" },
+  ];
+  const handleFilterChange = (option) => {
+    setFilter(option.value);
+  };
+  const selectedFilter = filterOptions.find((opt) => opt.value === filter);
 
   const assessment = useSelector((state) => state.assessment);
 
@@ -126,7 +138,6 @@ function CommunityPage() {
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        // GET /api/quizzes/:communityId/quizzes
         const res = await quizService.getQuizzesByCommunity(id);
         if (res.success) {
           setQuizzes(res.quizzes);
@@ -190,9 +201,6 @@ function CommunityPage() {
 
   // Navigate to Create Quiz Page
   const handleCreateQuiz = () => {
-    // e.g. /communities/:communityId/create-quiz
-    // Note: In your quiz creation component, ensure that after creating a quiz,
-    // an assessment task is also created (e.g., by calling createAssessmentTask).
     navigate(`/communities/${id}/create-quiz`);
   };
 
@@ -222,7 +230,6 @@ function CommunityPage() {
     try {
       await quizService.deleteQuiz(quizId);
       toast.success("Quiz deleted successfully.");
-      // Remove from local state
       setQuizzes((prev) => prev.filter((q) => q._id !== quizId));
     } catch (err) {
       console.error("Error deleting quiz:", err);
@@ -231,34 +238,44 @@ function CommunityPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6">
+    <div className="max-w-7xl mx-auto p-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-4 overflow-x-hidden">
       {/* Main Content */}
-      <div className="flex-1 shrink-0 min-w-[36rem]">
-        {/* Header Section */}
+      <div className="flex-1 shrink-0 w-full md:min-w-[36rem]">
+        {/* Header Section (Refactored to a single row) */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <CommunityAvatar
               avatarUrl={community.avatar}
               name={community.name}
-              className="h-12 w-12"
+              className="h-10 w-10"  // Smaller avatar
             />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
               {community.name}
             </h1>
           </div>
-          <div className="flex items-center space-x-2">
-            {/* Create Question Button */}
-            <CreateQuestionButton communityId={id} />
-
+          <div className="flex items-center gap-2">
+            {/* Create Question Button (smaller) */}
+            <CreateQuestionButton
+              communityId={id}
+              className="text-xs sm:text-sm px-2 py-1"
+            />
             {/* Join Button */}
             {user && !isMember && (
               <button
                 onClick={handleJoin}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition-colors duration-200"
+                className="bg-green-500 text-white text-xs sm:text-sm px-2 py-1 rounded-md hover:bg-green-600 transition-colors duration-200"
               >
                 Join
               </button>
             )}
+            {/* Filter Dropdown for questions */}
+            <FilterDropdown
+              options={filterOptions}
+              selected={selectedFilter}
+              onSelect={handleFilterChange}
+              buttonClassName="text-xs sm:text-sm px-2 py-1"
+              optionClassName="text-xs sm:text-sm px-4 py-2"
+            />
           </div>
         </div>
 
@@ -373,14 +390,7 @@ function CommunityPage() {
                           }
                           size="sm"
                           variant="outlined"
-                          className="
-                              text-black dark:text-white
-                              border-gray-300 dark:border-gray-600
-                              hover:bg-gray-300 dark:hover:bg-gray-700
-                              hover:text-black dark:hover:text-white
-                              transition-colors duration-200
-                              rounded-md
-                            "
+                          className="text-black dark:text-white border-gray-300 dark:border-gray-600 hover:bg-gray-300 dark:hover:bg-gray-700 hover:text-black dark:hover:text-white transition-colors duration-200 rounded-md"
                         >
                           Take
                         </Button>
@@ -393,14 +403,7 @@ function CommunityPage() {
                           }
                           size="sm"
                           variant="outlined"
-                          className="
-                              text-blue-600 dark:text-blue-400
-                              border-blue-600 dark:border-blue-400
-                              hover:bg-blue-600 dark:hover:bg-blue-400
-                              hover:text-white dark:hover:text-white
-                              transition-colors duration-200
-                              rounded-md
-                            "
+                          className="text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400 hover:bg-blue-600 dark:hover:bg-blue-400 hover:text-white dark:hover:text-white transition-colors duration-200 rounded-md"
                         >
                           View
                         </Button>

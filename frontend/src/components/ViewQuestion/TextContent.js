@@ -65,8 +65,13 @@ function TextContent({ content, type }) {
     };
   }, [isModalOpen]);
 
+  // Sanitize the content
   const sanitizedContent = DOMPurify.sanitize(content);
 
+  // Remove empty paragraphs (those that contain only whitespace and/or <br>)
+  const cleanedContent = sanitizedContent.replace(/<p>(\s|<br\s*\/?>)*<\/p>/gi, "");
+
+  // Define options for html-react-parser
   const options = {
     replace: (node) => {
       // Handle preformatted text blocks
@@ -201,7 +206,7 @@ function TextContent({ content, type }) {
 
   return (
     <div className="text-gray-800 dark:text-gray-200 break-words">
-      {parse(sanitizedContent, options)}
+      {parse(cleanedContent, options)}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"

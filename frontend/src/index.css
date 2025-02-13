@@ -18,6 +18,7 @@ html,
 body,
 #root {
   height: 100%;
+  overflow-x: hidden;
 }
 
 /* Remove fixed layout styles to prevent conflicts */
@@ -78,4 +79,9 @@ body,
 .quill-light .ql-toolbar {
   background-color: #f3f4f6;
   border: none;
+}
+
+.custom-break {
+  word-break: break-word;
+  hyphens: auto;
 }

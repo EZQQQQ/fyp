@@ -32,7 +32,7 @@ function CommentSection({
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-3">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={handleToggleCollapse}
@@ -53,12 +53,12 @@ function CommentSection({
           ) : (
             comments.map((comment) => (
               <div
-                className="mb-4 pl-4 border-l border-gray-300 dark:border-gray-600"
+                className="mb-2 pl-4 border-l border-gray-300 dark:border-gray-600"
                 key={comment._id}
               >
-                <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
+                <p className="text-gray-700 dark:text-gray-300 text-sm custom-break">
                   {comment.comment} -{" "}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-medium">
+                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-small">
                     {comment.user?.username || comment.user?.name || "Anonymous"}
                   </span>{" "}
                   <span className="text-xs text-gray-500 dark:text-gray-400">

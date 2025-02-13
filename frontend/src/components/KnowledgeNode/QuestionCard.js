@@ -15,7 +15,27 @@ import CommunityAvatar from "../Community/CommunityAvatar";
 import MediaViewer from "../MediaViewer/MediaViewer";
 import PollResults from "../Polls/PollResults";
 
-function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote, uploadPath = 'communityPosts' }) {
+// Helper function to compute relative time from createdAt date string
+function getRelativeTime(dateString) {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds} sec. ago`;
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `${minutes} min. ago`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `${hours} hr. ago`;
+  } else {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `${days} day${days > 1 ? "s" : ""} ago`;
+  }
+}
+
+function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote, uploadPath = "communityPosts" }) {
   const {
     _id,
     title,
@@ -42,18 +62,10 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
   };
 
   // Custom voting hook
-  const { handleUpvote, handleDownvote, loading } = useVote(
-    _id,
-    true,
-    handleVoteUpdate
-  );
+  const { handleUpvote, handleDownvote, loading } = useVote(_id, true, handleVoteUpdate);
 
   // Custom bookmarking hook
-  const { isBookmarked, handleBookmarkToggle } = useBookmark(
-    _id,
-    currentUser,
-    onUserUpdate
-  );
+  const { isBookmarked, handleBookmarkToggle } = useBookmark(_id, currentUser, onUserUpdate);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 pl-4 pr-4 w-full border dark:border-gray-700">
@@ -61,21 +73,14 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
       <div className="flex items-center justify-between">
         {community && (
           <div className="flex items-center gap-2">
-            <CommunityAvatar
-              avatarUrl={community.avatar}
-              name={community.name}
-            />
+            <CommunityAvatar avatarUrl={community.avatar} name={community.name} />
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
               {community.name || "Unknown Community"}
             </span>
           </div>
         )}
-        {/* Bookmark Buttons: same idea as VoteButtons */}
-        <BookmarkButtons
-          isBookmarked={isBookmarked}
-          onToggleBookmark={handleBookmarkToggle}
-          loading={false}
-        />
+        {/* Bookmark Buttons */}
+        <BookmarkButtons isBookmarked={isBookmarked} onToggleBookmark={handleBookmarkToggle} loading={false} />
       </div>
 
       {/* Question Title */}
@@ -88,30 +93,19 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
 
       {/* Question Description */}
       <div className="mb-2 line-clamp-3 md:line-clamp-6 break-all whitespace-pre-wrap">
-        <TextContent
-          content={content || textcontent}
-          type="question"
-        />
+        <TextContent content={content || textcontent} type="question" />
       </div>
 
       {/* Files Preview */}
       {files?.length > 0 && (
         <div className="my-1">
           {files.map((fileUrl, index) => {
-            // Determine if the file is a PDF
-            const isPDF = fileUrl.toLowerCase().endsWith('.pdf');
+            const isPDF = fileUrl.toLowerCase().endsWith(".pdf");
             return (
               <div key={index}>
-                {/* Pass uploadPath */}
                 <MediaViewer file={fileUrl} uploadPath={uploadPath} />
-                {/* If the file is a PDF, render a link underneath */}
                 {isPDF && (
-                  <a
-                    href={fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
+                  <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                     View PDF
                   </a>
                 )}
@@ -121,14 +115,14 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
         </div>
       )}
 
-      {/* If this is a poll, display the PollResults */}
+      {/* Poll Results (if applicable) */}
       {contentType === 2 && (
         <div className="my-4">
           <PollResults questionId={_id} />
         </div>
       )}
 
-      {/* Bottom Row: Vote Buttons + Total Responses | Time Posted and User Info */}
+      {/* Bottom Row: Vote Buttons, Responses, Time Posted and User Info */}
       <div className="flex md:flex-row justify-between items-center my-2">
         {/* Left Side: Vote Buttons and Total Responses */}
         <div className="flex items-center space-x-4">
@@ -144,29 +138,18 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
           <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-1 h-8">
             <IconButton size="small" color="default" className="p-0">
               <Link to={`/question/${_id}`}>
-                <ChatBubbleOutline
-                  className="text-gray-500 dark:text-white"
-                  fontSize="small"
-                />
+                <ChatBubbleOutline className="text-gray-500 dark:text-white" fontSize="small" />
               </Link>
             </IconButton>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              {totalResponses}
-            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{totalResponses}</span>
           </div>
         </div>
 
         {/* Right Side: Time Posted and User Info */}
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 md:mt-0 mr-2">
-          <span className="mr-2">{new Date(createdAt).toLocaleString()}</span>
-          <UserAvatar
-            user={user}
-            handleSignOut={() => { }}
-            className="h-6 w-6 mr-2"
-          />
-          <p className="text-gray-800 dark:text-gray-100">
-            {user?.username || "Unknown User"}
-          </p>
+        <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2 md:mt-0 mr-2">
+          <span className="mr-2">{getRelativeTime(createdAt)}</span>
+          <UserAvatar user={user} handleSignOut={() => { }} className="h-6 w-6 mr-2" />
+          <p className="text-gray-800 dark:text-gray-100">{user?.username || "Unknown User"}</p>
         </div>
       </div>
     </div>

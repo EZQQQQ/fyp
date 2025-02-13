@@ -21,6 +21,21 @@ import CommentSection from "./CommentSection";
 import { selectUser } from "../../features/userSlice";
 import CommunityAvatar from "../Community/CommunityAvatar";
 
+// Helper function to format time difference in a "time ago" format
+function formatTimeAgo(date) {
+  const diff = Date.now() - new Date(date).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) {
+    return `${minutes} min. ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hr. ago`;
+  }
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? "s" : ""} ago`;
+}
+
 function MainQuestion() {
   const { questionId } = useParams();
   const voteData = useSelector(selectVoteData);
@@ -32,25 +47,25 @@ function MainQuestion() {
   const [answers, setAnswers] = useState([]);
   const [answerText, setAnswerText] = useState("");
   const [answerLoading, setAnswerLoading] = useState({});
-  const [answerComments, setAnswerComments] = useState({}); // State to manage comments for each answer
-  const [loadingAnswerComments, setLoadingAnswerComments] = useState(false); // Loading state for answer comments
+  const [answerComments, setAnswerComments] = useState({});
+  const [loadingAnswerComments, setLoadingAnswerComments] = useState(false);
 
   // Fetch Question Data on Mount
   useEffect(() => {
     const fetchQuestion = async () => {
       try {
         const response = await axiosInstance.get(`/question/${questionId}`);
-        setQuestion(response.data.data);
-        setComments(response.data.data.comments || []);
-        setAnswers(response.data.data.answers || []);
-        // Initialize vote data in Redux
+        const qData = response.data.data;
+        setQuestion(qData);
+        setComments(qData.comments || []);
+        setAnswers(qData.answers || []);
         dispatch(
           setVoteData({
             targetId: questionId,
             voteInfo: {
-              voteCount: response.data.data.voteCount,
-              userHasUpvoted: response.data.data.userHasUpvoted,
-              userHasDownvoted: response.data.data.userHasDownvoted,
+              voteCount: qData.voteCount,
+              userHasUpvoted: qData.userHasUpvoted,
+              userHasDownvoted: qData.userHasDownvoted,
             },
           })
         );
@@ -59,13 +74,13 @@ function MainQuestion() {
         const fetchAllAnswerComments = async () => {
           setLoadingAnswerComments(true);
           try {
-            const commentsPromises = response.data.data.answers.map((ans) =>
+            const commentsPromises = qData.answers.map((ans) =>
               axiosInstance.get(`/comment/answer/${ans._id}`)
             );
             const commentsResponses = await Promise.all(commentsPromises);
             const initialAnswerComments = {};
             commentsResponses.forEach((res, index) => {
-              initialAnswerComments[response.data.data.answers[index]._id] =
+              initialAnswerComments[qData.answers[index]._id] =
                 res.data.data || [];
             });
             setAnswerComments(initialAnswerComments);
@@ -111,8 +126,8 @@ function MainQuestion() {
           return {
             ...ans,
             voteCount: voteInfo.voteCount,
-            userHasUpvoted: voteInfo.userHasUpvoted,
-            userHasDownvoted: voteInfo.userHasDownvoted,
+            userHasUpvoted: voteInfo.voteCount ? voteInfo.userHasUpvoted : false,
+            userHasDownvoted: voteInfo.voteCount ? voteInfo.userHasDownvoted : false,
           };
         }
         return ans;
@@ -120,7 +135,6 @@ function MainQuestion() {
     );
   }, [voteData]);
 
-  // Handle voting for the main question using useVote hook
   const {
     handleUpvote: handleQuestionUpvote,
     handleDownvote: handleQuestionDownvote,
@@ -129,20 +143,16 @@ function MainQuestion() {
     setQuestion((prev) => ({
       ...prev,
       voteCount: voteData.voteCount,
-      userHasUpvoted: voteData.userHasUpvoted,
+      userHasUpvoted: voteData.voteHasUpvoted,
       userHasDownvoted: voteData.userHasDownvoted,
     }));
   });
 
-  // Handle bookmarking the question
   const { isBookmarked, handleBookmarkToggle } = useBookmark(questionId, currentUser);
 
-  // Handle voting for answers using existing functions with loading state
   const handleAnswerVote = async (type, answerId) => {
     if (answerLoading[answerId]) return;
-
     setAnswerLoading((prev) => ({ ...prev, [answerId]: true }));
-
     try {
       const voteResult = await handleVote(type, answerId, false);
       setAnswers((prevAnswers) =>
@@ -151,8 +161,8 @@ function MainQuestion() {
             ? {
               ...ans,
               voteCount: voteResult.voteCount,
-              userHasUpvoted: voteResult.userHasUpvoted,
-              userHasDownvoted: voteResult.userHasDownvoted,
+              userHasUpvoted: voteResult.voteResult,
+              userHasDownvoted: voteResult.voteResult,
             }
             : ans
         )
@@ -162,8 +172,8 @@ function MainQuestion() {
           targetId: answerId,
           voteInfo: {
             voteCount: voteResult.voteCount,
-            userHasUpvoted: voteResult.userHasUpvoted,
-            userHasDownvoted: voteResult.userHasDownvoted,
+            userHasUpvoted: voteResult.voteResult,
+            userHasDownvoted: voteResult.voteResult,
           },
         })
       );
@@ -225,21 +235,17 @@ function MainQuestion() {
         answer: answerText,
       });
       const newAnswer = response.data.data;
-
       const answerWithDefaults = {
         ...newAnswer,
         userHasUpvoted: false,
         userHasDownvoted: false,
-        comments: [], // Initialize comments array for the new answer
+        comments: [],
       };
-
       setAnswers((prevAnswers) => [...prevAnswers, answerWithDefaults]);
-
       setAnswerComments((prev) => ({
         ...prev,
         [newAnswer._id]: [],
       }));
-
       setAnswerText("");
       toast.success("Answer posted successfully!");
     } catch (error) {
@@ -250,30 +256,25 @@ function MainQuestion() {
 
   if (!question) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen overflow-x-hidden">
         <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-md shadow-md">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:justify-between mb-1">
-        {/* Community Avatar and Name */}
-        {question.community && (
-          <div className="flex items-center gap-2 mb-1 sm:mb-0">
-            <CommunityAvatar
-              avatarUrl={question.community.avatar}
-              name={question.community.name}
-            />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              {question.community.name || "Unknown Community"}
-            </span>
-          </div>
-        )}
-
-        {/* Bookmark Button */}
+    <div className="w-full sm:max-w-4xl mx-auto bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-md shadow-md overflow-x-hidden">
+      {/* Header: Community Info and Bookmark on the same row */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <CommunityAvatar
+            avatarUrl={question.community?.avatar}
+            name={question.community?.name}
+          />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            {question.community?.name || "Unknown Community"}
+          </span>
+        </div>
         <BookmarkButtons
           isBookmarked={isBookmarked}
           onToggleBookmark={handleBookmarkToggle}
@@ -281,13 +282,13 @@ function MainQuestion() {
         />
       </div>
 
-      <h2 className="text-2xl font-bold mb-4 sm:mb-0 text-gray-900 dark:text-gray-100 break-words">
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100 break-words">
         {question.title}
       </h2>
 
       {/* Question Info */}
-      <div className="mb-6">
-        <div className="flex flex-wrap text-sm text-gray-500 dark:text-gray-400">
+      <div className="mb-4">
+        <div className="flex flex-wrap text-xs sm:text-sm text-gray-500 dark:text-gray-400">
           <p className="mr-4">
             Asked:{" "}
             <span className="text-gray-700 dark:text-gray-300">
@@ -304,13 +305,10 @@ function MainQuestion() {
       </div>
 
       {/* Question Section */}
-      <div className="mb-8">
-        {/* Content */}
-        <div className="mb-4">
+      <div className="mb-3">
+        <div className="mb-3 w-full custom-break whitespace-normal">
           <TextContent content={question.content} type="question" />
         </div>
-
-        {/* Files */}
         {question.files?.length > 0 && (
           <div className="my-4">
             {question.files.map((fileUrl, index) => (
@@ -318,39 +316,27 @@ function MainQuestion() {
             ))}
           </div>
         )}
-
-        {/* Poll Results */}
         {question.contentType === 2 && <PollResults questionId={questionId} />}
-
-        {/* Author Info and Voting Buttons */}
-        <div className="flex items-center justify-between mt-6">
-          {/* Voting Buttons */}
-          <VoteButtons
-            voteCount={question.voteCount}
-            onUpvote={handleQuestionUpvote}
-            onDownvote={handleQuestionDownvote}
-            userHasUpvoted={question.userHasUpvoted}
-            userHasDownvoted={question.userHasDownvoted}
-            loading={questionLoading}
-          />
-
-          {/* Author Info */}
-          <div className="flex items-center space-x-2">
-            <UserAvatar
-              user={question.user}
-              handleSignOut={() => { }}
-              className=""
+        {/* Combined vote buttons and user avatar/name in a single row,
+            user info flushed right and date removed */}
+        <div className="flex items-center mt-4 justify-between">
+          <div className="w-fit">
+            <VoteButtons
+              voteCount={question.voteCount}
+              onUpvote={handleQuestionUpvote}
+              onDownvote={handleQuestionDownvote}
+              userHasUpvoted={question.userHasUpvoted}
+              userHasDownvoted={question.userHasDownvoted}
+              loading={questionLoading}
             />
+          </div>
+          <div className="flex items-center space-x-2">
+            <UserAvatar user={question.user} handleSignOut={() => { }} />
             <p className="text-gray-900 dark:text-gray-100 font-medium">
               {question.user?.username || question.user?.name || "Anonymous"}
             </p>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {new Date(question.createdAt).toLocaleString()}
-            </span>
           </div>
         </div>
-
-        {/* Comments */}
         <CommentSection
           comments={comments}
           onAddComment={handleAddQuestionComment}
@@ -360,11 +346,10 @@ function MainQuestion() {
         />
       </div>
 
-      {/* Separator between Question and Answers */}
-      <hr className="border-t border-gray-300 dark:border-gray-700 mb-8" />
+      <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
 
       {/* Answer Form */}
-      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm">
+      <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm mb-4">
         <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
           Your Answer
         </h3>
@@ -377,28 +362,34 @@ function MainQuestion() {
         </div>
         <button
           onClick={handleAnswerSubmit}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
         >
           Post Your Answer
         </button>
       </div>
 
       {/* Answers Section */}
-      <div className="mb-8">
+      <div className="mb-4">
         <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
           {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
         </h3>
         {answers.map((answer, index) => (
           <div key={answer._id}>
-            <div
-              className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col"
-            >
-              {/* Content */}
-              <div className="mb-4">
+            <div className="mb-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col space-y-4">
+              {/* Answer Meta: Avatar, Username, and Time in one row */}
+              <div className="flex items-center space-x-2">
+                <UserAvatar user={answer.user} handleSignOut={() => { }} />
+                <p className="text-gray-900 dark:text-gray-100 font-medium">
+                  {answer.user?.username || answer.user?.name || "Anonymous"}
+                </p>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {formatTimeAgo(answer.createdAt)}
+                </span>
+              </div>
+              {/* Answer Content */}
+              <div className="my-3 custom-break whitespace-normal">
                 <TextContent content={answer.answer} type="answer" />
               </div>
-
-              {/* Files (Optional) */}
               {answer.files?.length > 0 && (
                 <div className="my-4">
                   {answer.files.map((fileUrl, idx) => (
@@ -406,10 +397,8 @@ function MainQuestion() {
                   ))}
                 </div>
               )}
-
-              {/* Author Info and Voting Buttons */}
-              <div className="flex items-center justify-between mt-6">
-                {/* Voting Buttons */}
+              {/* Vote Buttons for Answer */}
+              <div className="flex">
                 <VoteButtons
                   voteCount={answer.voteCount}
                   onUpvote={() => handleAnswerVote("upvote", answer._id)}
@@ -418,24 +407,7 @@ function MainQuestion() {
                   userHasDownvoted={answer.userHasDownvoted}
                   loading={answerLoading[answer._id] || false}
                 />
-
-                {/* Author Info */}
-                <div className="flex items-center space-x-2">
-                  <UserAvatar
-                    user={answer.user}
-                    handleSignOut={() => { }}
-                    className=""
-                  />
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">
-                    {answer.user?.username || answer.user?.name || "Anonymous"}
-                  </p>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(answer.createdAt).toLocaleString()}
-                  </span>
-                </div>
               </div>
-
-              {/* Comments for Answer */}
               <CommentSection
                 comments={answerComments[answer._id] || []}
                 onAddComment={handleAddAnswerComment}
@@ -444,15 +416,12 @@ function MainQuestion() {
                 commentType="answer"
               />
             </div>
-            {/* Separator between answers */}
             {index !== answers.length - 1 && (
-              <hr className="border-t border-gray-300 dark:border-gray-700 mb-6" />
+              <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
             )}
           </div>
         ))}
       </div>
-
-
     </div>
   );
 }

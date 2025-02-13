@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import bookmarkService from "../../services/bookmarkService";
 import QuestionCard from "../KnowledgeNode/QuestionCard";
-import FilterButton from "../KnowledgeNode/FilterButton";
+import FilterDropdown from "../KnowledgeNode/FilterDropdown";
 import { useDispatch, useSelector } from "react-redux";
 import { setVoteData } from "../../features/voteSlice";
 import { selectUser } from "../../features/userSlice";
@@ -88,13 +88,13 @@ function BookmarkedQuestions() {
 
           {/* Filter Buttons on the right */}
           <div className="inline-flex rounded-md shadow-sm">
-            <FilterButton
+            <FilterDropdown
               label="Newest"
               active={filter === "newest"}
               onClick={() => handleFilterChange("newest")}
               rounded="rounded-l-md"
             />
-            <FilterButton
+            <FilterDropdown
               label="Popular"
               active={filter === "popular"}
               onClick={() => handleFilterChange("popular")}

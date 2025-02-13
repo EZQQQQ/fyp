@@ -121,7 +121,7 @@
 │   │   │   ├── KnowledgeNode
 │   │   │   │   ├── AllQuestions.js
 │   │   │   │   ├── CreateQuestionButton.js
-│   │   │   │   ├── FilterButton.js
+│   │   │   │   ├── FilterDropdown.js
 │   │   │   │   ├── QuestionCard.js
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   └── SidebarLink.js
