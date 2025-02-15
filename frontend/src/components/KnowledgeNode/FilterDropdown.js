@@ -1,4 +1,4 @@
-// frontend/src/components/KnowledgeNode/FilterButton.js
+// frontend/src/components/KnowledgeNode/FilterDropdown.js
 
 import React, { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";

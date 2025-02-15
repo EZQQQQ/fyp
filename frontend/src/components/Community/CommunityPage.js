@@ -23,18 +23,23 @@ import AdminAssessmentTasks from "./AdminAssessmentTasks";
 import UserAvatar from "../../common/UserAvatar";
 import QuestionCard from "../KnowledgeNode/QuestionCard";
 
+// Import Tabs, Tab, Box, and useMediaQuery from MUI
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
+
+// Import Button from Material Tailwind so that the style matches AdminAssessmentTasks
+import { Button } from "@material-tailwind/react";
+
 import { styled } from "@mui/material/styles";
 
 import "react-toastify/dist/ReactToastify.css";
 
 // --- Custom Box Component ---
-// removing padding.
+// This component overrides the default MUI Box styles—for example, removing padding.
 const CustomBox = styled(Box)(({ theme }) => ({
-  padding: "0 !important", // Remove default padding; add more overrides as needed
+  padding: "0 !important",
 }));
 
 // --- Custom Tab Panel component for mobile tabs ---
@@ -114,7 +119,6 @@ function CommunityPage() {
       try {
         const response = await communityService.getCommunityById(id);
         setCommunity(response.data);
-
         if (user) {
           setIsMember(
             response.data.members.some((member) => member._id === user._id)
@@ -142,15 +146,14 @@ function CommunityPage() {
       try {
         const response = await questionService.getQuestionsByCommunity(id);
         setQuestions(response.data.data || []);
-
         response.data.data.forEach((question) => {
           dispatch(
             setVoteData({
               targetId: question._id,
               voteInfo: {
                 voteCount: question.voteCount,
-                userHasUpvoted: question.userHasUpvoted,
-                userHasDownvoted: question.userHasDownvoted,
+                userHasUpvoted: question.voteHasUpvoted,
+                userHasDownvoted: question.voteHasDownvoted,
               },
             })
           );
@@ -312,12 +315,13 @@ function CommunityPage() {
             Quizzes
           </h2>
           {isAdmin && (
-            <button
+            <Button
               onClick={handleCreateQuiz}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-2 py-1 rounded-md"
+              size="sm"
+              className="mt-2 sm:mt-0 bg-blue-600 hover:bg-blue-700"
             >
               Create Quiz
-            </button>
+            </Button>
           )}
         </div>
         {quizzes.length > 0 ? (
@@ -333,18 +337,20 @@ function CommunityPage() {
                   <div className="flex-shrink-0 space-x-2 mt-1">
                     {isAdmin ? (
                       <>
-                        <button
+                        <Button
                           onClick={() => navigate(`/quiz/${quiz._id}/edit`)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-2 py-1 rounded-md"
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
                           Edit
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => handleDeleteQuiz(quiz._id)}
-                          className="bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm px-2 py-1 rounded-md"
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </>
                     ) : !quiz.hasAttempted ? (
                       <button

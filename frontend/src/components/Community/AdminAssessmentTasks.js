@@ -1,6 +1,6 @@
 // /frontend/src/components/Community/AdminAssessmentTasks.js
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createAssessmentTask,
@@ -12,6 +12,7 @@ import {
 import { Typography, Button } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import CustomDialog from "../Modal/CustomDialog";
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 function AdminAssessmentTasks({ communityId }) {
   const dispatch = useDispatch();
@@ -37,6 +38,22 @@ function AdminAssessmentTasks({ communityId }) {
     quizNumber: "",
   });
 
+  // State for custom dropdown menu
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const openDialog = (task = null) => {
     setCurrentTask(task);
     if (task) {
@@ -59,6 +76,7 @@ function AdminAssessmentTasks({ communityId }) {
       });
     }
     setIsDialogOpen(true);
+    setMenuOpen(false);
   };
 
   const closeDialog = () => {
@@ -174,23 +192,48 @@ function AdminAssessmentTasks({ communityId }) {
     }
   };
 
+  // Function to handle export to Excel functionality (stubbed)
+  const handleExportExcel = () => {
+    // TODO: Implement the export logic here using your preferred library (e.g., xlsx)
+    toast.info("Export to Excel feature triggered!");
+    setMenuOpen(false);
+  };
+
   // Defensive Coding: Ensure tasks is an array
   const isTasksArray = Array.isArray(tasks);
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 relative">
         <Typography variant="h6" className="text-gray-900 dark:text-gray-100">
           Assessment Tasks
         </Typography>
-        <Button
-          onClick={() => openDialog()}
-          size="sm"
-          className="mt-2 sm:mt-0 bg-blue-600 hover:bg-blue-700"
-        >
-          Add Task
-        </Button>
+        {/* Custom Dropdown Trigger using MoreHorizIcon */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+          >
+            <MoreHorizIcon style={{ color: "gray" }} />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg z-10">
+              <button
+                onClick={() => openDialog()}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                Add Task
+              </button>
+              <button
+                onClick={handleExportExcel}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600"
+              >
+                Export to Excel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Loading and Error Messages */}
@@ -482,4 +525,3 @@ function AdminAssessmentTasks({ communityId }) {
 }
 
 export default AdminAssessmentTasks;
-
