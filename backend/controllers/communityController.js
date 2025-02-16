@@ -619,6 +619,65 @@ async function calculateStudentProgress(userId, task, communityId) {
   return progress;
 }
 
+/**
+ * Get all participation data for all members of a community.
+ *
+ * For each assessment task in the community and for each member,
+ * this function calculates the student's progress for that task.
+ * It returns an array where each element is an object with the following structure:
+ * {
+ *   _id: task._id,                // task result identifier (task id)
+ *   label: task.label,
+ *   total: task.total,
+ *   studentProgress: <calculated progress>,
+ *   type: task.type,
+ *   adminLabel: task.adminLabel,
+ *   studentId: member._id,
+ *   studentName: member.name,
+ *   studentEmail: member.email
+ * }
+ */
+async function getAllParticipation(req, res) {
+  const { communityId } = req.params;
+
+  try {
+    const community = await Community.findById(communityId)
+      .populate("members", "name email")
+      .exec();
+
+    if (!community) {
+      return res.status(404).json({ message: "Community not found." });
+    }
+
+    const allParticipation = [];
+
+    // Loop through each assessment task in the community.
+    for (const task of community.assessmentTasks) {
+      // Loop through each member in the community.
+      for (const member of community.members) {
+        // Calculate progress for this member on the current task.
+        const progress = await calculateStudentProgress(member._id, task, communityId);
+        allParticipation.push({
+          _id: task._id,
+          label: task.label,
+          total: task.total,
+          studentProgress: progress,
+          type: task.type,
+          adminLabel: task.adminLabel,
+          studentId: member._id,
+          studentName: member.name,
+          studentEmail: member.email,
+        });
+      }
+    }
+
+    res.json({ participation: allParticipation });
+  } catch (error) {
+    console.error("Error fetching all participation:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+}
+
 module.exports = {
   createCommunity,
   getAllCommunities,
@@ -629,6 +688,7 @@ module.exports = {
   checkCommunityName,
   getAssessmentTasks,
   getUserParticipation,
+  getAllParticipation,
   createAssessmentTask,
   updateAssessmentTask,
   deleteAssessmentTask,

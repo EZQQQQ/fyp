@@ -29,6 +29,19 @@ export const fetchUserParticipation = createAsyncThunk(
   }
 );
 
+// Thunk to fetch participation for all community members
+export const fetchAllParticipation = createAsyncThunk(
+  "assessment/fetchAllParticipation",
+  async (communityId, { rejectWithValue }) => {
+    try {
+      const data = await assessmentService.getAllParticipation(communityId);
+      return data.participation; // Assuming data contains { participation: [...] }
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 // Thunk to create an assessment task
 export const createAssessmentTask = createAsyncThunk(
   "assessment/createAssessmentTask",
@@ -111,6 +124,21 @@ const assessmentSlice = createSlice({
         state.participation = action.payload || [];
       })
       .addCase(fetchUserParticipation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Fetch All Participation
+    builder
+      .addCase(fetchAllParticipation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllParticipation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allParticipation = action.payload || [];
+      })
+      .addCase(fetchAllParticipation.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

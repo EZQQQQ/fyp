@@ -18,6 +18,12 @@ const getUserParticipation = async (communityId) => {
   return response.data;
 };
 
+// Get participation for all members in a community
+const getAllParticipation = async (communityId) => {
+  const response = await axiosInstance.get(`/communities/${communityId}/all-participation`);
+  return response.data; // expect data to have { participation: [...] }
+};
+
 // Create an assessment task
 const createAssessmentTask = async (communityId, taskData) => {
   const response = await axiosInstance.post(
@@ -47,6 +53,7 @@ const deleteAssessmentTask = async (communityId, taskId) => {
 export default {
   getAssessmentTasks,
   getUserParticipation,
+  getAllParticipation,
   createAssessmentTask,
   updateAssessmentTask,
   deleteAssessmentTask,

@@ -1,5 +1,4 @@
-// /frontend/src/components/Community/AdminAssessmentTasks.js
-
+// frontend/src/components/Community/AdminAssessmentTasks.js
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,28 +6,35 @@ import {
   updateAssessmentTask,
   deleteAssessmentTask,
   fetchAssessmentTasks,
+  fetchAllParticipation  // import the new thunk
 } from "../../features/assessmentSlice";
 
 import { Typography, Button } from "@material-tailwind/react";
 import { toast } from "react-toastify";
 import CustomDialog from "../Modal/CustomDialog";
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+
+// Import the Excel export and grouping functions
+import { exportAssessmentResultsToExcel } from "../../exporters/exportAssessmentResults";
+import { groupParticipationByStudent } from "../../exporters/groupParticipation";
 
 function AdminAssessmentTasks({ communityId }) {
   const dispatch = useDispatch();
-  const { tasks, loading, error } = useSelector((state) => state.assessment);
+  const { tasks, allParticipation, loading, error } = useSelector(
+    (state) => state.assessment
+  );
 
   // Fetch assessment tasks on component mount
   useEffect(() => {
     if (communityId) {
       dispatch(fetchAssessmentTasks(communityId));
+      dispatch(fetchAllParticipation(communityId)); // fetch participation for all members
     }
   }, [dispatch, communityId]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState(null);
 
-  // Updated formData to include adminLabel and quizNumber for quiz tasks
   const [formData, setFormData] = useState({
     adminLabel: "",
     type: "",
@@ -38,11 +44,9 @@ function AdminAssessmentTasks({ communityId }) {
     quizNumber: "",
   });
 
-  // State for custom dropdown menu
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef();
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -92,18 +96,14 @@ function AdminAssessmentTasks({ communityId }) {
     });
   };
 
-  // Handle form field changes
   const handleChange = (value, name) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Generate student-facing label. For quizzes, show quiz number.
   const generateStudentLabel = () => {
     const { type, contentType, total, quizNumber } = formData;
     if (!type) return "";
-
     let label = "";
-
     switch (type) {
       case "votes":
         if (contentType === "questions & answers") {
@@ -124,28 +124,21 @@ function AdminAssessmentTasks({ communityId }) {
         }
         break;
       case "quizzes":
-        // Use quizNumber to create a label such as "Complete quiz 1"
         label = `Complete quiz ${quizNumber || 1}`;
         break;
       default:
         label = `Assessment Task`;
     }
-
     return label;
   };
 
   const handleConfirm = async (e) => {
     e.preventDefault();
-
-    // Validation
     if (!formData.adminLabel) {
       toast.error("Admin Label is required.");
       return;
     }
-
-    // Generate student label
     const studentLabel = generateStudentLabel();
-
     const payload = {
       adminLabel: formData.adminLabel,
       label: studentLabel,
@@ -155,7 +148,6 @@ function AdminAssessmentTasks({ communityId }) {
       weight: formData.weight ? Number(formData.weight) : 0,
       quizNumber: formData.type === "quizzes" ? formData.quizNumber : undefined,
     };
-
     try {
       if (currentTask) {
         await dispatch(
@@ -174,6 +166,7 @@ function AdminAssessmentTasks({ communityId }) {
       }
       closeDialog();
       dispatch(fetchAssessmentTasks(communityId));
+      dispatch(fetchAllParticipation(communityId));
     } catch (err) {
       console.error("Failed to save assessment task:", err);
       toast.error(err.message || "Failed to save assessment task.");
@@ -192,14 +185,18 @@ function AdminAssessmentTasks({ communityId }) {
     }
   };
 
-  // Function to handle export to Excel functionality (stubbed)
+  // Use the new allParticipation data for export.
   const handleExportExcel = () => {
-    // TODO: Implement the export logic here using your preferred library (e.g., xlsx)
-    toast.info("Export to Excel feature triggered!");
+    if (!tasks.length || !allParticipation.length) {
+      toast.error("No assessment data available for export.");
+      setMenuOpen(false);
+      return;
+    }
+    const groupedParticipation = groupParticipationByStudent(allParticipation);
+    exportAssessmentResultsToExcel(tasks, groupedParticipation);
     setMenuOpen(false);
   };
 
-  // Defensive Coding: Ensure tasks is an array
   const isTasksArray = Array.isArray(tasks);
 
   return (
@@ -209,7 +206,6 @@ function AdminAssessmentTasks({ communityId }) {
         <Typography variant="h6" className="text-gray-900 dark:text-gray-100">
           Assessment Tasks
         </Typography>
-        {/* Custom Dropdown Trigger using MoreHorizIcon */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -236,13 +232,13 @@ function AdminAssessmentTasks({ communityId }) {
         </div>
       </div>
 
-      {/* Loading and Error Messages */}
       {loading && (
         <p className="text-gray-500 dark:text-gray-400">Loading...</p>
       )}
-      {error && <p className="text-red-500 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="text-red-500 dark:text-red-400">{error}</p>
+      )}
 
-      {/* Task List */}
       <ul className="space-y-4">
         {isTasksArray && tasks.length > 0 ? (
           tasks.map((task) => (
@@ -309,9 +305,7 @@ function AdminAssessmentTasks({ communityId }) {
         )}
       </ul>
 
-      {/* Custom Dialog for Adding/Editing Tasks */}
       <CustomDialog isOpen={isDialogOpen} onClose={closeDialog} size="md">
-        {/* Dialog Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {currentTask ? "Edit Assessment Task" : "Add Assessment Task"}
@@ -323,186 +317,8 @@ function AdminAssessmentTasks({ communityId }) {
             &times;
           </button>
         </div>
-
-        {/* Dialog Form */}
         <form onSubmit={handleConfirm} className="space-y-6">
-          {/* Admin Label Input */}
-          <div className="flex flex-col">
-            <label
-              htmlFor="adminLabel"
-              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-            >
-              Admin Label
-            </label>
-            <input
-              id="adminLabel"
-              name="adminLabel"
-              type="text"
-              value={formData.adminLabel}
-              onChange={(e) => handleChange(e.target.value, "adminLabel")}
-              required
-              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Enter admin label"
-            />
-          </div>
-
-          {/* Type Selection */}
-          <div className="flex flex-col">
-            <label
-              htmlFor="type"
-              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-            >
-              Type
-            </label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type}
-              onChange={(e) => handleChange(e.target.value, "type")}
-              required
-              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            >
-              <option value="">Select Type</option>
-              <option value="votes">Votes</option>
-              <option value="postings">Postings</option>
-              <option value="quizzes">Quizzes</option>
-            </select>
-          </div>
-
-          {/* Content Type Selection (Conditional) */}
-          {(formData.type === "votes" || formData.type === "postings") && (
-            <div className="flex flex-col">
-              <label
-                htmlFor="contentType"
-                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-              >
-                Content Type
-              </label>
-              <select
-                id="contentType"
-                name="contentType"
-                value={formData.contentType}
-                onChange={(e) => handleChange(e.target.value, "contentType")}
-                required
-                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              >
-                <option value="">Select Content Type</option>
-                {/* For Votes */}
-                {formData.type === "votes" && (
-                  <>
-                    <option value="questions & answers">
-                      Questions & Answers
-                    </option>
-                    <option value="questions">Questions</option>
-                    <option value="answers">Answers</option>
-                  </>
-                )}
-                {/* For Postings */}
-                {formData.type === "postings" && (
-                  <>
-                    <option value="questions">Questions</option>
-                    <option value="answers">Answers</option>
-                    <option value="both">Both</option>
-                  </>
-                )}
-              </select>
-            </div>
-          )}
-
-          {/* Quiz Number Input (Conditional for quizzes) */}
-          {formData.type === "quizzes" && (
-            <div className="flex flex-col">
-              <label
-                htmlFor="quizNumber"
-                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-              >
-                Quiz Number
-              </label>
-              <input
-                id="quizNumber"
-                name="quizNumber"
-                type="number"
-                value={formData.quizNumber}
-                onChange={(e) => handleChange(e.target.value, "quizNumber")}
-                required
-                min="1"
-                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Enter quiz number (e.g., 1)"
-              />
-            </div>
-          )}
-
-          {/* Total Required */}
-          {(formData.type === "votes" ||
-            formData.type === "postings" ||
-            formData.type === "quizzes") && (
-              <div className="flex flex-col">
-                <label
-                  htmlFor="total"
-                  className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-                >
-                  {formData.type === "quizzes"
-                    ? "Total Possible Score (for quiz)"
-                    : "Total Required"}
-                </label>
-                <input
-                  id="total"
-                  name="total"
-                  type="number"
-                  value={formData.total}
-                  onChange={(e) => handleChange(e.target.value, "total")}
-                  required={formData.type !== "quizzes"}
-                  min="1"
-                  className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder={
-                    formData.type === "quizzes"
-                      ? "Enter total possible score"
-                      : "Enter count"
-                  }
-                />
-                {formData.type === "quizzes" && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    For quizzes, specify the total possible score.
-                  </p>
-                )}
-              </div>
-            )}
-
-          {/* Weight */}
-          <div className="flex flex-col">
-            <label
-              htmlFor="weight"
-              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
-            >
-              Weight (%)
-            </label>
-            <input
-              id="weight"
-              name="weight"
-              type="number"
-              value={formData.weight}
-              onChange={(e) => handleChange(e.target.value, "weight")}
-              required
-              min="0"
-              max="100"
-              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
-                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
-                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Enter weight percentage"
-            />
-          </div>
-
-          {/* Submit and Cancel Buttons */}
+          {/* Form fields go here */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"

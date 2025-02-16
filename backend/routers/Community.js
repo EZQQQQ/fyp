@@ -84,4 +84,13 @@ router.get(
   CommunityController.getUserParticipation
 );
 
+// Route to get participation data for all members in a community
+router.get(
+  "/:communityId/all-participation",
+  auth,
+  authorizeRoles("professor", "admin"),
+  CommunityController.getAllParticipation
+);
+
+
 module.exports = router;
