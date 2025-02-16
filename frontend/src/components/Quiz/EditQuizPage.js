@@ -5,7 +5,7 @@ import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
-import TextContent from "../ViewQuestion/TextContent"; // Import TextContent
+import TextContent from "../ViewQuestion/TextContent"; // For instructions preview
 
 function EditQuizPage() {
   const { quizId } = useParams();
@@ -13,7 +13,7 @@ function EditQuizPage() {
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch quiz data on component mount.
+  // Fetch quiz data on mount.
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -21,7 +21,6 @@ function EditQuizPage() {
         if (!res.success) {
           throw new Error(res.message || "Failed to load quiz");
         }
-        // Set the quiz data (which includes title, instructions, and questions)
         setQuiz(res.quiz);
       } catch (err) {
         console.error("Error fetching quiz:", err);
@@ -33,23 +32,14 @@ function EditQuizPage() {
     fetchQuiz();
   }, [quizId]);
 
-  // Handler for changing the quiz title.
   const handleTitleChange = (e) => {
-    setQuiz((prev) => ({
-      ...prev,
-      title: e.target.value,
-    }));
+    setQuiz((prev) => ({ ...prev, title: e.target.value }));
   };
 
-  // Handler for updating the instructions (using MarkdownEditor).
   const handleInstructionsChange = (value) => {
-    setQuiz((prev) => ({
-      ...prev,
-      instructions: value,
-    }));
+    setQuiz((prev) => ({ ...prev, instructions: value }));
   };
 
-  // Handler for updating a field in a specific question.
   const handleQuestionChange = (qIndex, field, value) => {
     setQuiz((prev) => {
       const updatedQuestions = [...prev.questions];
@@ -58,7 +48,6 @@ function EditQuizPage() {
     });
   };
 
-  // Handler for adding a new question.
   const handleAddQuestion = () => {
     setQuiz((prev) => ({
       ...prev,
@@ -74,7 +63,6 @@ function EditQuizPage() {
     }));
   };
 
-  // Handler for removing a question.
   const handleRemoveQuestion = (qIndex) => {
     setQuiz((prev) => ({
       ...prev,
@@ -82,7 +70,6 @@ function EditQuizPage() {
     }));
   };
 
-  // Handler for adding an option to a question.
   const handleAddOption = (qIndex) => {
     setQuiz((prev) => {
       const updatedQuestions = [...prev.questions];
@@ -91,7 +78,17 @@ function EditQuizPage() {
     });
   };
 
-  // Handler for updating an option's field.
+  // Fix: Use qIndex instead of qIdx in the filter.
+  const handleRemoveOption = (qIndex, optIndex) => {
+    setQuiz((prev) => {
+      const updatedQuestions = [...prev.questions];
+      updatedQuestions[qIndex].options = updatedQuestions[qIndex].options.filter(
+        (_, index) => index !== optIndex
+      );
+      return { ...prev, questions: updatedQuestions };
+    });
+  };
+
   const handleOptionChange = (qIndex, optIndex, field, value) => {
     setQuiz((prev) => {
       const updatedQuestions = [...prev.questions];
@@ -100,7 +97,6 @@ function EditQuizPage() {
     });
   };
 
-  // Validate that the quiz has a title, instructions, and that each question has text and at least one correct option.
   const validateQuiz = (quizData) => {
     if (!quizData.title.trim()) {
       toast.error("Quiz title cannot be empty.");
@@ -125,7 +121,6 @@ function EditQuizPage() {
     return true;
   };
 
-  // Handle saving the updated quiz.
   const handleSave = async () => {
     const updatedQuizData = {
       title: quiz.title,
@@ -133,9 +128,7 @@ function EditQuizPage() {
       questions: quiz.questions,
     };
 
-    if (!validateQuiz(updatedQuizData)) {
-      return;
-    }
+    if (!validateQuiz(updatedQuizData)) return;
 
     try {
       const res = await quizService.updateQuiz(quizId, updatedQuizData);
@@ -143,7 +136,6 @@ function EditQuizPage() {
         throw new Error(res.message || "Failed to update quiz");
       }
       toast.success("Quiz updated successfully!");
-      // Navigate back (for example, to the community page or quiz list)
       navigate(-1);
     } catch (err) {
       console.error("Error updating quiz:", err);
@@ -176,7 +168,7 @@ function EditQuizPage() {
         <label className="block font-medium mb-1">Quiz Title</label>
         <input
           type="text"
-          className="border p-2 w-full"
+          className="border border-gray-300 dark:border-gray-600 p-2 w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           value={quiz.title}
           onChange={handleTitleChange}
         />
@@ -190,11 +182,16 @@ function EditQuizPage() {
           onChange={handleInstructionsChange}
           placeholder="Enter quiz instructions"
         />
-
-        {/* Preview rendered instructions */}
-        <div className="mt-4 p-4 border rounded bg-gray-50">
-          <h3 className="font-semibold mb-2">Instructions Preview:</h3>
-          <TextContent content={quiz.instructions} type="html" />
+        {/* Instructions Preview */}
+        <div className="mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800">
+          <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            Instructions Preview:
+          </h3>
+          <TextContent
+            content={quiz.instructions}
+            type="html"
+            className="text-gray-900 dark:text-gray-100"
+          />
         </div>
       </div>
 
@@ -202,7 +199,7 @@ function EditQuizPage() {
       <div className="mb-4">
         <label className="block font-medium mb-1">Questions</label>
         {quiz.questions.map((question, qIdx) => (
-          <div key={qIdx} className="relative border rounded p-2 mb-2">
+          <div key={qIdx} className="relative border border-gray-300 dark:border-gray-600 rounded p-2 mb-2">
             {/* Remove Question Button */}
             <button
               onClick={() => handleRemoveQuestion(qIdx)}
@@ -211,25 +208,19 @@ function EditQuizPage() {
             >
               &#x2715;
             </button>
-
-            {/* Question Text using MarkdownEditor */}
             <label className="block font-medium mb-1">Question Text</label>
             <MarkdownEditor
               value={question.questionText}
               onChange={(value) => handleQuestionChange(qIdx, "questionText", value)}
               placeholder="Enter question text"
             />
-
-            {/* Explanation (optional) */}
             <label className="block font-medium mb-1 mt-2">Explanation (optional)</label>
             <textarea
-              className="border p-2 w-full h-24"
+              className="border border-gray-300 dark:border-gray-600 p-2 w-full h-24 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               placeholder="Enter explanation for this question (optional)"
               value={question.explanation}
               onChange={(e) => handleQuestionChange(qIdx, "explanation", e.target.value)}
             ></textarea>
-
-            {/* Allow Multiple Correct */}
             <div className="mt-2">
               <label className="flex items-center">
                 <input
@@ -241,19 +232,17 @@ function EditQuizPage() {
                 Allow multiple correct answers?
               </label>
             </div>
-
-            {/* Options */}
             <div className="ml-4 mt-2">
               {question.options.map((opt, optIdx) => (
                 <div key={optIdx} className="flex items-center mb-2">
                   <input
                     type="text"
-                    className="border p-1 mr-2 flex-1"
+                    className="border border-gray-300 dark:border-gray-600 p-1 mr-2 flex-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     placeholder="Enter option text"
                     value={opt.optionText}
                     onChange={(e) => handleOptionChange(qIdx, optIdx, "optionText", e.target.value)}
                   />
-                  <label className="flex items-center">
+                  <label className="flex items-center mr-2">
                     <input
                       type="checkbox"
                       className="mr-1"
@@ -262,6 +251,13 @@ function EditQuizPage() {
                     />
                     Correct
                   </label>
+                  <button
+                    onClick={() => handleRemoveOption(qIdx, optIdx)}
+                    className="text-red-500 hover:text-red-700 text-lg focus:outline-none"
+                    title="Remove Option"
+                  >
+                    &#x2715;
+                  </button>
                 </div>
               ))}
               <Button

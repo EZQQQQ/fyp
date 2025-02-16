@@ -8,7 +8,7 @@ import { Button } from "@material-tailwind/react";
 import quizService from "../../services/quizService";
 import { createAssessmentTask } from "../../features/assessmentSlice";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
-import TextContent from "../ViewQuestion/TextContent"; // Import TextContent for preview
+import TextContent from "../ViewQuestion/TextContent"; // For instructions preview
 
 function CreateQuizPage() {
   const { communityId } = useParams();
@@ -34,32 +34,45 @@ Force Completion: Once started, this test must be completed in one sitting. Do n
 Due Date: This Test is due on {time set by professor}. Test submitted past this date will not be recorded.`
   );
 
-  // Add an empty question including an explanation field.
+  // Add an empty question.
   const handleAddQuestion = () => {
     setQuestions((prev) => [
       ...prev,
       {
-        questionText: "", // Markdown content for the question text.
-        explanation: "",  // Plain text explanation (optional)
+        questionText: "",
+        explanation: "",
         allowMultipleCorrect: false,
         options: [{ optionText: "", isCorrect: false }],
       },
     ]);
   };
 
-  // Remove a question at a given index.
+  // Remove a question.
   const handleRemoveQuestion = (qIdx) => {
     setQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
   };
 
-  // Add an empty option to a specific question.
+  // Add an option to a question.
   const handleAddOption = (qIdx) => {
-    const updated = [...questions];
-    updated[qIdx].options.push({ optionText: "", isCorrect: false });
-    setQuestions(updated);
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[qIdx].options.push({ optionText: "", isCorrect: false });
+      return updated;
+    });
   };
 
-  // Validate that each question has at least one correct answer and that required fields are filled.
+  // Remove an option from a question.
+  const handleRemoveOption = (qIdx, optIdx) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[qIdx].options = updated[qIdx].options.filter(
+        (_, index) => index !== optIdx
+      );
+      return updated;
+    });
+  };
+
+  // Validate quiz.
   const validateQuiz = () => {
     if (!title.trim()) {
       toast.error("Quiz title cannot be empty.");
@@ -86,12 +99,9 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
 
   // Handle form submission.
   const handleSubmit = async () => {
-    if (!validateQuiz()) {
-      return;
-    }
+    if (!validateQuiz()) return;
 
     try {
-      // Package quiz data including rich text instructions and questions.
       const quizData = { title, instructions, questions };
       console.log("Quiz Data:", quizData);
 
@@ -105,7 +115,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
           adminLabel: title,
           label: `Complete quiz ${title}`,
           type: "quizzes",
-          total: questions.length, // total possible score based on number of questions
+          total: questions.length,
           weight: 0,
           quizId: res.quiz._id,
         };
@@ -114,7 +124,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
         toast.success("Assessment task for quiz created!");
       }
 
-      // Navigate back to the community page.
       navigate(`/communities/${communityId}`);
     } catch (err) {
       console.error("Error creating quiz:", err);
@@ -131,7 +140,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
         <label className="block font-medium mb-1">Quiz Title</label>
         <input
           type="text"
-          className="border p-2 w-full"
+          className="border border-gray-300 dark:border-gray-600 p-2 w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           placeholder="Enter quiz title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -149,11 +158,16 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           You can modify these instructions if needed.
         </p>
-
-        {/* Preview the rendered instructions using TextContent */}
-        <div className="mt-4 p-4 border rounded bg-gray-50">
-          <h3 className="font-semibold mb-2">Instructions Preview:</h3>
-          <TextContent content={instructions} type="html" />
+        {/* Instructions Preview */}
+        <div className="mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800">
+          <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            Instructions Preview:
+          </h3>
+          <TextContent
+            content={instructions}
+            type="html"
+            className="text-gray-900 dark:text-gray-100"
+          />
         </div>
       </div>
 
@@ -161,7 +175,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
       <div className="mb-4">
         <label className="block font-medium mb-1">Questions</label>
         {questions.map((question, qIdx) => (
-          <div key={qIdx} className="relative border rounded p-2 mb-2">
+          <div key={qIdx} className="relative border border-gray-300 dark:border-gray-600 rounded p-2 mb-2">
             {/* Remove Question Button */}
             <button
               onClick={() => handleRemoveQuestion(qIdx)}
@@ -170,8 +184,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
             >
               &#x2715;
             </button>
-
-            {/* Question Text using MarkdownEditor */}
+            {/* Question Text */}
             <label className="block font-medium mb-1">Question Text</label>
             <MarkdownEditor
               value={question.questionText}
@@ -182,11 +195,10 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
               }}
               placeholder="Enter question text"
             />
-
-            {/* Explanation field using a simple textarea */}
+            {/* Explanation */}
             <label className="block font-medium mb-1 mt-2">Explanation (optional)</label>
             <textarea
-              className="border p-2 w-full h-24"
+              className="border border-gray-300 dark:border-gray-600 p-2 w-full h-24 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               placeholder="Enter explanation for this question (optional)"
               value={question.explanation}
               onChange={(e) => {
@@ -195,7 +207,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                 setQuestions(updated);
               }}
             ></textarea>
-
             {/* Allow Multiple Correct */}
             <div className="mt-2">
               <label className="flex items-center">
@@ -212,14 +223,13 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                 Allow multiple correct answers?
               </label>
             </div>
-
             {/* Options */}
             <div className="ml-4 mt-2">
               {question.options.map((opt, optIdx) => (
                 <div key={optIdx} className="flex items-center mb-2">
                   <input
                     type="text"
-                    className="border p-1 mr-2 flex-1"
+                    className="border border-gray-300 dark:border-gray-600 p-1 mr-2 flex-1 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     placeholder="Enter option text"
                     value={opt.optionText}
                     onChange={(e) => {
@@ -228,7 +238,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                       setQuestions(updated);
                     }}
                   />
-                  <label className="flex items-center">
+                  <label className="flex items-center mr-2">
                     <input
                       type="checkbox"
                       className="mr-1"
@@ -241,6 +251,13 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                     />
                     Correct
                   </label>
+                  <button
+                    onClick={() => handleRemoveOption(qIdx, optIdx)}
+                    className="text-red-500 hover:text-red-700 text-lg focus:outline-none"
+                    title="Remove Option"
+                  >
+                    &#x2715;
+                  </button>
                 </div>
               ))}
               <Button
