@@ -19,15 +19,13 @@ const DefaultLayout = ({ darkMode, setDarkMode, user, openCreateCommunityModal }
 
       {/* Content Area */}
       <div className="relative flex flex-1 flex-col lg:ml-72 transition-all duration-300">
-        {/* Header (sticky) */}
-        <div className="sticky top-0 z-50">
-          <Header
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-          />
-        </div>
+        {/* Header */}
+        <Header
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
 
         {/* Main Content – this is the only vertical scrolling container */}
         <main className="flex-1 overflow-y-auto pt-0">
