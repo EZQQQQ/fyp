@@ -440,7 +440,7 @@ function CommunityPage() {
   // --- Mobile Layout using Tabs ---
   if (isMobile) {
     return (
-      <div className="max-w-7xl mx-auto p-4 overflow-x-hidden">
+      <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-0 md:mb-4">
           <div className="flex items-center space-x-4">

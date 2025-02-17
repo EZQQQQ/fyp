@@ -5,8 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Styles */
-
 /* Reset Styles */
 * {
   margin: 0;
@@ -14,14 +12,35 @@
   box-sizing: border-box;
 }
 
+/* Let the document grow naturally vertically and hide horizontal overflow */
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
   overflow-x: hidden;
 }
 
-/* Remove fixed layout styles to prevent conflicts */
+/* Sidebar styles (if still used) */
+.sidebar {
+  width: 250px;
+  background-color: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  position: fixed; /* if you want a fixed sidebar */
+  top: 64px; /* Adjust as needed */
+  left: 0;
+  height: calc(100% - 64px);
+  overflow-y: auto;
+}
+
+/* Main content area */
+/* (Ensure your layout component gives the main area a top padding equal to the header height) */
+.main-content {
+  margin-left: 250px; /* if using a sidebar */
+  padding: 20px;
+  flex: 1;
+}
+
 @media (max-width: 768px) {
   .sidebar {
     width: 200px;
@@ -34,13 +53,7 @@ body,
   }
 }
 
-@media (max-width: 768px) {
-  .all-questions-container {
-    max-height: 800px; /* Enough for ~3 cards plus buttons */
-  }
-}
-
-/* Retain scrollbar styles if necessary, but ensure they don't interfere with responsiveness */
+/* Custom Scrollbar Styling (optional) */
 .styled-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #a0aec0 #edf2f7;
@@ -60,22 +73,19 @@ body,
   border: 2px solid #edf2f7;
 }
 
-/* Dark Mode for ReactQuill */
+/* Dark Mode for ReactQuill (if used) */
 .quill-dark .ql-editor {
   background-color: #1f2937;
   color: #f3f4f6;
 }
-
 .quill-dark .ql-toolbar {
   background-color: #374151;
   border: none;
 }
-
 .quill-light .ql-editor {
   background-color: #ffffff;
   color: #1f2937;
 }
-
 .quill-light .ql-toolbar {
   background-color: #f3f4f6;
   border: none;

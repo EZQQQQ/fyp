@@ -46,7 +46,7 @@ const CommunityList = ({ isTileView = false }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 overflow-x-hidden">
+    <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
       <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
         {isTileView ? "Explore Communities" : "Communities"}
       </h2>

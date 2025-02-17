@@ -1,3 +1,5 @@
+// frontend/src/components/KnowledgeNode/Sidebar.js
+
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -61,7 +63,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, [sidebarOpen, setSidebarOpen]);
 
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
@@ -75,8 +78,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
   return (
     <aside
       ref={sidebarRef}
-      className={`fixed left-0 top-0 z-9999 flex h-screen w-72 flex-col overflow-y-auto bg-black dark:bg-boxdark transition-transform duration-300 ease-linear 
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+      className={`fixed left-0 top-0 z-9999 flex h-screen w-72 flex-col overflow-y-auto bg-black dark:bg-boxdark transition-transform duration-300 ease-linear
+        ${sidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none"}
         lg:translate-x-0`}
     >
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">

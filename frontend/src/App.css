@@ -26,7 +26,7 @@ body,
   background-color: #f4f4f4;
   display: flex;
   flex-direction: column;
-  position: fixed;
+  position: relative;
   top: 64px; /* Below the header */
   left: 0;
   height: calc(100% - 64px);
