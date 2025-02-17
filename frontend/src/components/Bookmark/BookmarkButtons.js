@@ -13,7 +13,7 @@ import PropTypes from "prop-types";
  */
 function BookmarkButtons({ isBookmarked, onToggleBookmark, loading }) {
   return (
-    <div className="flex items-center space-x-2 p-1">
+    <div className="flex items-center p-1">
       <IconButton
         onClick={onToggleBookmark}
         size="small"

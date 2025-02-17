@@ -1,6 +1,6 @@
 // frontend/src/components/Community/CommunityPage.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import communityService from "../../services/communityService";
 import questionService from "../../services/questionService";
@@ -13,6 +13,7 @@ import { setVoteData } from "../../features/voteSlice";
 import {
   fetchAssessmentTasks,
   fetchUserParticipation,
+  fetchAllParticipation,
 } from "../../features/assessmentSlice";
 
 import CreateQuestionButton from "../KnowledgeNode/CreateQuestionButton";
@@ -28,6 +29,8 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 // Import Button from Material Tailwind so that the style matches AdminAssessmentTasks
 import { Button } from "@material-tailwind/react";
@@ -71,7 +74,6 @@ function a11yProps(index) {
   };
 }
 
-// --- CommunityPage Component ---
 function CommunityPage() {
   const { id } = useParams(); // community ID from the URL
   const navigate = useNavigate();
@@ -257,12 +259,19 @@ function CommunityPage() {
   const isAdmin = user && (user.role === "professor" || user.role === "admin");
 
   // Determine if we are on a mobile device (using Material UI breakpoint)
-  const isMobile = useMediaQuery("(max-width:767px)");
-  // For mobile, use local tab state
+  const mobileBreakpoint = useMediaQuery("(max-width:767px)");
+
+  // For mobile tabs state
   const [mobileTab, setMobileTab] = useState(0);
   const handleMobileTabChange = (event, newValue) => {
     setMobileTab(newValue);
   };
+
+  // Determine if user is a student (for collapsible sections)
+  const isStudent = user && user.role === "student";
+  // For collapsible sections: for students, default collapsed; for others, always expanded.
+  const [assessmentExpanded, setAssessmentExpanded] = useState(isStudent ? false : true);
+  const [membersExpanded, setMembersExpanded] = useState(isStudent ? false : true);
 
   if (loading) {
     return (
@@ -285,7 +294,7 @@ function CommunityPage() {
     <div className="space-y-4">
       {/* Community Description */}
       <div>
-        <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl font-semibold my-2 text-gray-900 dark:text-gray-100">
           Description
         </h2>
         <p className="text-gray-700 dark:text-gray-300">
@@ -383,46 +392,81 @@ function CommunityPage() {
         )}
       </div>
       <hr className="border-gray-300 dark:border-gray-600" />
-      {/* Assessment Tasks */}
-      <div>
-        {isAdmin ? (
-          <AdminAssessmentTasks communityId={id} />
-        ) : assessment.loading ? (
-          <p className="text-gray-500 dark:text-gray-400">
-            Loading assessment tasks...
-          </p>
-        ) : assessment.error ? (
-          <p className="text-red-500 dark:text-red-400">{assessment.error}</p>
-        ) : (
-          <AssessmentTasks tasks={assessment.participation} />
+      {/* Assessment Tasks Section */}
+      <div className="mb-2">
+        <div
+          className={`flex items-center justify-between ${isStudent ? "cursor-pointer" : ""}`}
+          onClick={isStudent ? () => setAssessmentExpanded((prev) => !prev) : undefined}
+        >
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {isStudent ? "Your Progress" : ""}
+          </h2>
+          {isStudent && (
+            <button className="focus:outline-none">
+              {assessmentExpanded ? (
+                <ArrowDropUpIcon className="text-gray-900 dark:text-gray-100" />
+              ) : (
+                <ArrowDropDownIcon className="text-gray-900 dark:text-gray-100" />
+              )}
+            </button>
+          )}
+        </div>
+        {(isStudent ? assessmentExpanded : true) && (
+          <div>
+            {isAdmin ? (
+              <AdminAssessmentTasks communityId={id} />
+            ) : assessment.loading ? (
+              <p className="text-gray-500 dark:text-gray-400">Loading assessment tasks...</p>
+            ) : assessment.error ? (
+              <p className="text-red-500 dark:text-red-400">{assessment.error}</p>
+            ) : (
+              <AssessmentTasks tasks={assessment.participation} />
+            )}
+          </div>
         )}
       </div>
       <hr className="border-gray-300 dark:border-gray-600" />
       {/* Members Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-          Members
-        </h2>
-        <ul className="space-y-4">
-          {community.members && community.members.length > 0 ? (
-            community.members.map((member) => (
-              <li key={member._id} className="flex items-center">
-                <UserAvatar
-                  user={member}
-                  handleSignOut={() => { }}
-                  className="h-8 w-8 mr-2"
-                />
-                <span className="text-gray-700 dark:text-gray-300">
-                  {member.username || member.name}
-                </span>
-              </li>
-            ))
-          ) : (
-            <li className="text-gray-500 dark:text-gray-400">
-              No members in this community yet.
-            </li>
+      <div className="mb-4">
+        <div
+          className={`flex items-center justify-between ${isStudent ? "cursor-pointer" : ""}`}
+          onClick={isStudent ? () => setMembersExpanded((prev) => !prev) : undefined}
+        >
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
+            Members
+          </h2>
+          {isStudent && (
+            <button className="focus:outline-none">
+              {membersExpanded ? (
+                <ArrowDropUpIcon className="text-gray-900 dark:text-gray-100" />
+              ) : (
+                <ArrowDropDownIcon className="text-gray-900 dark:text-gray-100" />
+              )}
+            </button>
           )}
-        </ul>
+        </div>
+        {(isStudent ? membersExpanded : true) && (
+          <ul className="space-y-4">
+            {community.members && community.members.length > 0 ? (
+              community.members.map((member) => (
+                <li key={member._id} className="flex items-center">
+                  <UserAvatar
+                    user={member}
+                    handleSignOut={() => { }}
+                    className="h-8 w-8 mr-2"
+                  />
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {member.username || member.name}
+                  </span>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500 dark:text-gray-400">
+                No members in this community yet.
+              </li>
+            )}
+          </ul>
+        )}
       </div>
       <hr className="border-gray-300 dark:border-gray-600" />
       {/* Leave Button */}
@@ -438,7 +482,7 @@ function CommunityPage() {
   );
 
   // --- Mobile Layout using Tabs ---
-  if (isMobile) {
+  if (mobileBreakpoint) {
     return (
       <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
         {/* Header Section */}
@@ -483,8 +527,14 @@ function CommunityPage() {
               onChange={handleMobileTabChange}
               aria-label="community page tabs"
             >
-              <Tab label="Feed" {...a11yProps(0)} />
-              <Tab label="About" {...a11yProps(1)} />
+              <Tab
+                label={<span className="text-gray-900 dark:text-gray-100">Feed</span>}
+                {...a11yProps(0)}
+              />
+              <Tab
+                label={<span className="text-gray-900 dark:text-gray-100">About</span>}
+                {...a11yProps(1)}
+              />
             </Tabs>
           </CustomBox>
           <CustomTabPanel value={mobileTab} index={0}>

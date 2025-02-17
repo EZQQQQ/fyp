@@ -12,11 +12,6 @@ function AssessmentTasks({ tasks }) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-        Your Progress
-      </h2>
-
       {/* List of tasks */}
       {tasks.map((task) => {
         const { _id, label, total, studentProgress, type } = task;

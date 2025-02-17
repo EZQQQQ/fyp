@@ -334,8 +334,7 @@ function Question() {
               InputProps={{
                 ...params.InputProps,
                 sx: { borderRadius: "20px" },
-                className:
-                  "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
+                className: "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
               }}
               InputLabelProps={{
                 className: "text-gray-700 dark:text-gray-300",
@@ -343,6 +342,9 @@ function Question() {
             />
           )}
         />
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Press Enter to input Tags
+        </p>
       </div>
 
       {/* Tabs */}

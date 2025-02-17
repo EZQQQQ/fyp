@@ -68,7 +68,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
   const { isBookmarked, handleBookmarkToggle } = useBookmark(_id, currentUser, onUserUpdate);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 pl-4 pr-4 w-full border dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 px-4 w-full border dark:border-gray-700">
       {/* Top Row: Community Info and Bookmark */}
       <div className="flex items-center justify-between">
         {community && (

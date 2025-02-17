@@ -59,6 +59,8 @@ function AdminAssessmentTasks({ communityId }) {
   }, []);
 
   const openDialog = (task = null) => {
+    console.log("openDialog called with task:", task);
+
     setCurrentTask(task);
     if (task) {
       setFormData({
@@ -202,8 +204,8 @@ function AdminAssessmentTasks({ communityId }) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 relative">
-        <Typography variant="h6" className="text-gray-900 dark:text-gray-100">
+      <div className="flex items-center justify-between mb-2">
+        <Typography variant="h6" className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
           Assessment Tasks
         </Typography>
         <div className="relative" ref={menuRef}>
@@ -305,7 +307,9 @@ function AdminAssessmentTasks({ communityId }) {
         )}
       </ul>
 
+      {/* Custom Dialog for Adding/Editing Tasks */}
       <CustomDialog isOpen={isDialogOpen} onClose={closeDialog} size="md">
+        {/* Dialog Header */}
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             {currentTask ? "Edit Assessment Task" : "Add Assessment Task"}
@@ -317,8 +321,186 @@ function AdminAssessmentTasks({ communityId }) {
             &times;
           </button>
         </div>
+
+        {/* Dialog Form */}
         <form onSubmit={handleConfirm} className="space-y-6">
-          {/* Form fields go here */}
+          {/* Admin Label Input */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="adminLabel"
+              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+            >
+              Admin Label
+            </label>
+            <input
+              id="adminLabel"
+              name="adminLabel"
+              type="text"
+              value={formData.adminLabel}
+              onChange={(e) => handleChange(e.target.value, "adminLabel")}
+              required
+              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              placeholder="Enter admin label"
+            />
+          </div>
+
+          {/* Type Selection */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="type"
+              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+            >
+              Type
+            </label>
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={(e) => handleChange(e.target.value, "type")}
+              required
+              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >
+              <option value="">Select Type</option>
+              <option value="votes">Votes</option>
+              <option value="postings">Postings</option>
+              <option value="quizzes">Quizzes</option>
+            </select>
+          </div>
+
+          {/* Content Type Selection (Conditional) */}
+          {(formData.type === "votes" || formData.type === "postings") && (
+            <div className="flex flex-col">
+              <label
+                htmlFor="contentType"
+                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Content Type
+              </label>
+              <select
+                id="contentType"
+                name="contentType"
+                value={formData.contentType}
+                onChange={(e) => handleChange(e.target.value, "contentType")}
+                required
+                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              >
+                <option value="">Select Content Type</option>
+                {/* For Votes */}
+                {formData.type === "votes" && (
+                  <>
+                    <option value="questions & answers">
+                      Questions & Answers
+                    </option>
+                    <option value="questions">Questions</option>
+                    <option value="answers">Answers</option>
+                  </>
+                )}
+                {/* For Postings */}
+                {formData.type === "postings" && (
+                  <>
+                    <option value="questions">Questions</option>
+                    <option value="answers">Answers</option>
+                    <option value="both">Both</option>
+                  </>
+                )}
+              </select>
+            </div>
+          )}
+
+          {/* Quiz Number Input (Conditional for quizzes) */}
+          {formData.type === "quizzes" && (
+            <div className="flex flex-col">
+              <label
+                htmlFor="quizNumber"
+                className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+              >
+                Quiz Number
+              </label>
+              <input
+                id="quizNumber"
+                name="quizNumber"
+                type="number"
+                value={formData.quizNumber}
+                onChange={(e) => handleChange(e.target.value, "quizNumber")}
+                required
+                min="1"
+                className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Enter quiz number (e.g., 1)"
+              />
+            </div>
+          )}
+
+          {/* Total Required */}
+          {(formData.type === "votes" ||
+            formData.type === "postings" ||
+            formData.type === "quizzes") && (
+              <div className="flex flex-col">
+                <label
+                  htmlFor="total"
+                  className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+                >
+                  {formData.type === "quizzes"
+                    ? "Total Possible Score (for quiz)"
+                    : "Total Required"}
+                </label>
+                <input
+                  id="total"
+                  name="total"
+                  type="number"
+                  value={formData.total}
+                  onChange={(e) => handleChange(e.target.value, "total")}
+                  required={formData.type !== "quizzes"}
+                  min="1"
+                  className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                           block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                           dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  placeholder={
+                    formData.type === "quizzes"
+                      ? "Enter total possible score"
+                      : "Enter count"
+                  }
+                />
+                {formData.type === "quizzes" && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    For quizzes, specify the total possible score.
+                  </p>
+                )}
+              </div>
+            )}
+
+          {/* Weight */}
+          <div className="flex flex-col">
+            <label
+              htmlFor="weight"
+              className="mb-2 text-gray-700 dark:text-gray-300 font-medium"
+            >
+              Weight (%)
+            </label>
+            <input
+              id="weight"
+              name="weight"
+              type="number"
+              value={formData.weight}
+              onChange={(e) => handleChange(e.target.value, "weight")}
+              required
+              min="0"
+              max="100"
+              className="bg-gray-50 border border-gray-300 text-base sm:text-lg text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 
+                         block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white 
+                         dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              placeholder="Enter weight percentage"
+            />
+          </div>
+
+          {/* Submit and Cancel Buttons */}
           <div className="flex justify-end space-x-4">
             <button
               type="button"

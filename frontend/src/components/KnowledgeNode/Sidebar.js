@@ -80,7 +80,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
       ref={sidebarRef}
       className={`fixed left-0 top-0 z-9999 flex h-screen w-72 flex-col overflow-y-auto bg-black dark:bg-boxdark transition-transform duration-300 ease-linear
         ${sidebarOpen ? "translate-x-0 pointer-events-auto" : "-translate-x-full pointer-events-none"}
-        lg:translate-x-0`}
+        lg:translate-x-0 lg:pointer-events-auto`}
     >
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
         <Link to="/" onClick={closeSidebar}>
