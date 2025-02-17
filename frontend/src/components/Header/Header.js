@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchNotifications } from "../../features/notificationSlice";
 
 import SearchBar from "../Search/Searchbar";
 import DropdownNotification from "./DropdownNotification";
@@ -17,8 +18,16 @@ import { selectUser } from "../../features/userSlice";
 const Header = (props) => {
   // Receive sidebarOpen and setSidebarOpen for toggling on mobile, as well as dark mode props.
   const { sidebarOpen, setSidebarOpen, darkMode, setDarkMode } = props;
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const [theme, setTheme] = useState("light");
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchNotifications(user._id));
+    }
+  }, [user, dispatch]);
+
 
   useEffect(() => {
     const isDark = document.documentElement.classList.contains("dark");

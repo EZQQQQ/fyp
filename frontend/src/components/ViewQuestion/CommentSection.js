@@ -9,11 +9,12 @@ function CommentSection({
   onAddComment,
   loading,
   parentId,
-  commentType, // 'question' or 'answer'
+  commentType,
 }) {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [visibleCommentsCount, setVisibleCommentsCount] = useState(3);
 
   const handleToggleCommentBox = () => {
     setShowCommentBox(!showCommentBox);
@@ -33,25 +34,34 @@ function CommentSection({
 
   return (
     <div className="mt-3">
-      <div
-        className="flex items-center justify-between cursor-pointer"
-        onClick={handleToggleCollapse}
-      >
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-2">
-          Comments
-        </h3>
-        {isCollapsed ? (
-          <ExpandMoreIcon className="text-gray-700 dark:text-gray-400" />
-        ) : (
-          <ExpandLessIcon className="text-gray-700 dark:text-gray-400" />
-        )}
+      <div className="flex items-center justify-between mb-2">
+        <div
+          className="flex items-center cursor-pointer"
+          onClick={handleToggleCollapse}
+        >
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+            Comments
+          </h3>
+          {isCollapsed ? (
+            <ExpandMoreIcon className="text-gray-700 dark:text-gray-400 ml-2" />
+          ) : (
+            <ExpandLessIcon className="text-gray-700 dark:text-gray-400 ml-2" />
+          )}
+        </div>
+        <button
+          className="text-sm text-blue-500 hover:underline"
+          onClick={handleToggleCommentBox}
+        >
+          Add a comment
+        </button>
       </div>
+
       {!isCollapsed && (
         <>
           {loading ? (
             <p className="text-gray-500 dark:text-gray-400">Loading comments...</p>
           ) : (
-            comments.map((comment) => (
+            comments.slice(0, visibleCommentsCount).map((comment) => (
               <div
                 className="mb-2 pl-4 border-l border-gray-300 dark:border-gray-600"
                 key={comment._id}
@@ -68,12 +78,14 @@ function CommentSection({
               </div>
             ))
           )}
-          <button
-            className="text-sm text-blue-500 hover:underline"
-            onClick={handleToggleCommentBox}
-          >
-            Add a comment
-          </button>
+          {comments.length > visibleCommentsCount && (
+            <button
+              onClick={() => setVisibleCommentsCount((prev) => prev + 3)}
+              className="text-sm text-blue-500 hover:underline pl-4 border-l border-gray-300 dark:border-gray-600"
+            >
+              Show More
+            </button>
+          )}
           {showCommentBox && (
             <div className="mt-4 pl-4 border-l border-gray-300 dark:border-gray-600">
               <textarea
@@ -82,7 +94,7 @@ function CommentSection({
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 resize-none"
-              ></textarea>
+              />
               <button
                 onClick={handleCommentSubmit}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mt-2"

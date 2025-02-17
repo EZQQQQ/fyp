@@ -15,9 +15,46 @@ const voteRoutes = require("./routers/Vote");
 const bookmarkRoutes = require("./routers/Bookmark");
 const pollRoutes = require("./routers/Poll");
 const quizRoutes = require("./routers/Quiz");
+const notificationRouter = require("./routers/Notification");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
+
+// Socket.io
+const http = require("http");
+const socketIo = require("socket.io");
+
+const server = http.createServer(app);
+const io = socketIo(server, {
+  cors: { origin: "*" }, // adjust as needed
+});
+
+// Keep a map of connected users
+const userSockets = new Map();
+
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  // When a client registers their userId
+  socket.on("register", (userId) => {
+    userSockets.set(userId, socket.id);
+    // console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  socket.on("disconnect", () => {
+    for (let [userId, socketId] of userSockets.entries()) {
+      if (socketId === socket.id) {
+        userSockets.delete(userId);
+        console.log(`User ${userId} disconnected`);
+        break;
+      }
+    }
+  });
+});
+
+// Make io accessible to your controllers if needed
+app.set("io", io);
+app.set("userSockets", userSockets);
 
 // Connect to Database
 connectToDatabase();
@@ -63,6 +100,7 @@ app.use("/api", voteRoutes);
 app.use("/api", bookmarkRoutes);
 app.use("/api/poll", pollRoutes);
 app.use("/api", quizRoutes);
+app.use("/api/notifications", notificationRouter);
 
 // Removed the local file serving line
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));

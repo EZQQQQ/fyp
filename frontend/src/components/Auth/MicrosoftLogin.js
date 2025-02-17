@@ -5,10 +5,10 @@ import { Button } from "@mui/material";
 import { auth, microsoftProvider } from "../../config/firebase-config";
 import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
-import { ssoLoginUser } from "../../features/userSlice"; // Ensure this thunk exists
+import { ssoLoginUser } from "../../features/userSlice";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import OutlookLogo from "../../assets/Outlook.png"; // Ensure the correct path
+import OutlookLogo from "../../assets/Outlook.png";
 
 function MicrosoftLogin({ isAdmin }) {
   const dispatch = useDispatch();

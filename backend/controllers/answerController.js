@@ -2,6 +2,8 @@
 
 const Answer = require("../models/Answer");
 const Question = require("../models/Question");
+const User = require("../models/User");
+const Notification = require("../models/Notification");
 const mongoose = require("mongoose");
 
 // Add an answer to a question
@@ -32,13 +34,46 @@ const addAnswer = async (req, res) => {
     const savedAnswer = await newAnswer.save();
 
     // Increment the user's answersCount
-    await User.findByIdAndUpdate(req.user.id, { $inc: { answersCount: 1 } });
+    await User.findByIdAndUpdate(req.user._id, { $inc: { answersCount: 1 } });
 
     // Re-query the answer to ensure 'user' is populated
     const populatedAnswer = await Answer.findById(savedAnswer._id).populate(
       "user",
       "name username profilePicture"
     );
+
+    // Build a notification payload. 
+    const notificationData = {
+      recipient: question.user, // the question owner
+      sender: req.user._id,      // the user who answered
+      community: question.community,
+      type: "questionAnswer",    // type for an answer to a question
+      content: answer.substring(0, 100) + "...", // a snippet of the answer
+      questionId: question._id,
+      createdAt: new Date(),
+      isRead: false,
+    };
+
+    // Persist the notification to the database
+    // console.log("Persisting notification (answer):", notificationData);
+    const persistedNotification = await Notification.create(notificationData);
+    // console.log("Persisted notification:", persistedNotification);
+
+    // Get io instance and userSockets map from the app
+    const io = req.app.get("io");
+    const userSockets = req.app.get("userSockets");
+
+    // console.log("Notification Data to emit:", notificationData)
+
+    // Retrieve the socketId for the question owner (recipient)
+    const recipientSocket = userSockets.get(String(question.user));
+    if (recipientSocket) {
+      // console.log(`Emitting notification to socket ${recipientSocket} for recipient ${question.user}`);
+      io.to(recipientSocket).emit("newNotification", notificationData);
+    }
+    // else {
+    // console.log(`No socket found for recipient ${question.user}`);
+    // }
 
     res.status(201).json({
       status: true,

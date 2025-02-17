@@ -8,7 +8,7 @@ import assessmentReducer from "../features/assessmentSlice";
 import bookmarkReducer from "../features/bookmarkSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { BookmarkAddOutlined } from "@mui/icons-material";
+import notificationReducer from "../features/notificationSlice";
 
 // Combine all reducers into an app reducer
 const appReducer = combineReducers({
@@ -17,6 +17,7 @@ const appReducer = combineReducers({
   vote: voteReducer,
   assessment: assessmentReducer,
   bookmark: bookmarkReducer,
+  notification: notificationReducer,
 });
 
 // Root reducer that resets state on 'user/logout' action

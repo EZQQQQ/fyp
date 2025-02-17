@@ -5,6 +5,7 @@
 │   │   ├── bookmarkController.js
 │   │   ├── commentController.js
 │   │   ├── communityController.js
+│   │   ├── notificationController.js
 │   │   ├── questionController.js
 │   │   ├── pollController.js
 │   │   ├── quizController.js
@@ -23,6 +24,7 @@
 │   │   ├── Answer.js
 │   │   ├── Comment.js
 │   │   ├── Community.js
+│   │   ├── Notification.js
 │   │   ├── Question.js
 │   │   ├── Quiz.js
 │   │   ├── QuizAttempt.js
@@ -37,9 +39,10 @@
 │   │   ├── Community.js
 │   │   ├── Question.js
 │   │   ├── Quiz.js
+│   │   ├── Notification.js
 │   │   ├── User.js
-│   │   └── index.js
-│   │   └── Poll.js
+│   │   ├── index.js
+│   │   ├── Poll.js
 │   │   └── Vote.js
 │   ├── server.js
 │   └── uploads
@@ -130,6 +133,8 @@
 │   │   │   ├── Modal
 │   │   │   │   ├── CustomDialog.js
 │   │   │   │   └── CommunitySelectModal.js
+│   │   │   ├── Notification
+│   │   │   │   └── NotificationsListener.js
 │   │   │   ├── Polls
 │   │   │   │   └── PollResults.js
 │   │   │   ├── Quiz/
@@ -165,6 +170,7 @@
 │   │   │   ├── assessmentSlice.js
 │   │   │   ├── bookmarkSlice.js
 │   │   │   ├── communitySlice.js
+│   │   │   ├── notificationSlice.js
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
 │   │   ├── hooks
@@ -180,6 +186,7 @@
 │   │   │   ├── assessmentService.js
 │   │   │   ├── bookmarkService.js
 │   │   │   ├── communityService.js
+│   │   │   ├── notificationService.js
 │   │   │   ├── pollService.js
 │   │   │   ├── questionService.js
 │   │   │   ├── quizService.js

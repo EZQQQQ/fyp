@@ -1,32 +1,43 @@
 // frontend/src/components/Header/DropdownNotification.js
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import ClickOutside from './ClickOutside';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import ClickOutside from "./ClickOutside";
+import { markNotificationRead, markAllNotificationsRead } from "../../features/notificationSlice";
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notifying, setNotifying] = useState(true);
+  const notifications = useSelector((state) => state.notification.notifications);
+  const dispatch = useDispatch();
+
+  // console.log("Current Redux notifications:", notifications);
+
+  // When clicking the bell, mark all notifications as read and toggle the dropdown
+  const handleBellClick = () => {
+    // Mark all notifications as read
+    dispatch(markAllNotificationsRead());
+    setDropdownOpen(!dropdownOpen);
+  };
+
+  const handleMarkRead = (id) => {
+    dispatch(markNotificationRead(id));
+  };
+
+  // Limit displayed notifications to 4
+  const displayedNotifications = notifications.slice(0, 4);
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
       <li>
         <Link
-          onClick={() => {
-            setNotifying(false);
-            setDropdownOpen(!dropdownOpen);
-          }}
+          onClick={handleBellClick}
           to="#"
-          className="flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
+          className="flex h-8.5 w-8.5 items-center justify-center rounded-full border border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
         >
-          {/* Red dot notification indicator */}
-          <span
-            className={`absolute -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-meta-1 ${!notifying ? 'hidden' : 'inline'
-              }`}
-          >
-            <span className="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-meta-1 opacity-75"></span>
-          </span>
-
-          {/* Bell Icon */}
+          {/* Red dot if there are unread notifications */}
+          {notifications && notifications.some((n) => !n.isRead) && (
+            <span className="absolute -top-0.5 right-0 z-10 h-2 w-2 rounded-full bg-red-500" />
+          )}
           <svg
             className="fill-current duration-300 ease-in-out"
             width="18"
@@ -42,76 +53,88 @@ const DropdownNotification = () => {
         </Link>
 
         {dropdownOpen && (
-          <div
-            className={`absolute -right-27 mt-2.5 flex h-90 w-75 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80`}
-          >
+          <div className="absolute -right-27 mt-2.5 flex h-90 w-75 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80">
             <div className="px-4.5 py-3">
-              <h5 className="text-sm font-medium text-bodydark2">Notification</h5>
+              <h5 className="text-sm font-medium text-bodydark2">Notifications</h5>
             </div>
-
             <ul className="flex h-auto flex-col overflow-y-auto">
-              <li>
-                <Link
-                  className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-                  to="#"
-                >
-                  <p className="text-sm">
-                    <span className="text-black dark:text-white">
-                      Edit your information in a swipe
-                    </span>{' '}
-                    Sint occaecat cupidatat non proident, sunt in culpa qui
-                    officia deserunt mollit anim.
-                  </p>
-                  <p className="text-xs">12 May, 2025</p>
-                </Link>
-              </li>
+              {displayedNotifications &&
+                displayedNotifications.map((notification) => {
+                  // Extract questionId (if it is an object, extract id or _id)
+                  const rawQuestionId = notification.questionId;
+                  const extractedQuestionId =
+                    (rawQuestionId && rawQuestionId.id) ||
+                    (rawQuestionId && rawQuestionId._id) ||
+                    rawQuestionId;
+                  const questionUrl = extractedQuestionId
+                    ? `/question/${extractedQuestionId.toString()}`
+                    : "#";
 
-              <li>
-                <Link
-                  className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-                  to="#"
-                >
-                  <p className="text-sm">
-                    <span className="text-black dark:text-white">
-                      It is a long established fact
-                    </span>{' '}
-                    that a reader will be distracted by the readable.
-                  </p>
-                  <p className="text-xs">24 Feb, 2025</p>
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-                  to="#"
-                >
-                  <p className="text-sm">
-                    <span className="text-black dark:text-white">
-                      There are many variations
-                    </span>{' '}
-                    of passages of Lorem Ipsum available, but the majority have
-                    suffered
-                  </p>
-                  <p className="text-xs">04 Jan, 2025</p>
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-                  to="#"
-                >
-                  <p className="text-sm">
-                    <span className="text-black dark:text-white">
-                      There are many variations
-                    </span>{' '}
-                    of passages of Lorem Ipsum available, but the majority have
-                    suffered
-                  </p>
-                  <p className="text-xs">01 Dec, 2024</p>
-                </Link>
-              </li>
+                  return (
+                    <li key={notification._id} className="border-t border-stroke">
+                      <Link
+                        onClick={() => handleMarkRead(notification._id)}
+                        to={questionUrl}
+                        className="flex gap-3 px-4.5 py-3 hover:bg-gray-2 dark:hover:bg-meta-4"
+                      >
+                        {/* User Avatar */}
+                        <div className="flex-shrink-0">
+                          {notification.sender && notification.sender.profilePicture ? (
+                            <img
+                              src={notification.sender.profilePicture}
+                              alt={notification.sender.username}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-700">
+                              {notification.sender && notification.sender.username
+                                ? notification.sender.username.charAt(0).toUpperCase()
+                                : "U"}
+                            </div>
+                          )}
+                        </div>
+                        {/* Notification Content */}
+                        <div className="flex-1">
+                          <p className="text-xs">
+                            <strong>
+                              {notification.sender && notification.sender.username
+                                ? notification.sender.username
+                                : "unknown user"}{" "}
+                              replied to your{" "}
+                              <strong>
+                                {notification.type === "questionAnswer"
+                                  ? "question"
+                                  : notification.type === "questionComment"
+                                    ? "question"
+                                    : "answer"}
+                              </strong>{" "}
+                              in{" "}
+                              <strong>
+                                {notification.community && notification.community.name
+                                  ? notification.community.name
+                                  : "unknown community"}
+                              </strong>
+                            </strong>{" "}
+                            • {new Date(notification.createdAt).toLocaleDateString()}
+                          </p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            {notification.content}
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              {notifications.length > 4 && (
+                <li className="border-t border-stroke">
+                  <Link
+                    to="/notifications"
+                    className="block text-center px-4.5 py-3 hover:bg-gray-2 dark:hover:bg-meta-4 text-xs"
+                  >
+                    View all notifications
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         )}

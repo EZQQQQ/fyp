@@ -56,6 +56,7 @@ function MainQuestion() {
       try {
         const response = await axiosInstance.get(`/question/${questionId}`);
         const qData = response.data.data;
+        // console.log("Question Data:", qData);
         setQuestion(qData);
         setComments(qData.comments || []);
         setAnswers(qData.answers || []);
@@ -105,15 +106,44 @@ function MainQuestion() {
     fetchQuestion();
   }, [questionId, dispatch]);
 
+  // Uncomment below for debugging if needed
+  // console.log("Rendering MainQuestion with question:", question);
+  // if (question) {
+  //   if (question.community) {
+  //     console.log("Community data:", question.community);
+  //   } else {
+  //     console.warn("Community data is missing in question:", question);
+  //   }
+  //   if (question.user) {
+  //     console.log("User data:", question.user);
+  //   } else {
+  //     console.warn("User data is missing in question:", question);
+  //   }
+  // }
+
   // Update local question state when vote data changes
   useEffect(() => {
     if (voteData[questionId]) {
-      setQuestion((prev) => ({
-        ...prev,
-        voteCount: voteData[questionId].voteCount,
-        userHasUpvoted: voteData[questionId].userHasUpvoted,
-        userHasDownvoted: voteData[questionId].userHasDownvoted,
-      }));
+      setQuestion((prev) => {
+        // console.log("Before vote update, prev question state:", prev);
+        // console.log("Incoming voteData for question:", voteData[questionId]);
+
+        // Only update vote info if the previous state is complete (has an _id)
+        if (!prev || !prev._id) {
+          // console.warn("Vote update skipped because full question data is not yet loaded.");
+          return prev;
+        }
+
+        const updatedQuestion = {
+          ...prev,
+          voteCount: voteData[questionId].voteCount,
+          userHasUpvoted: voteData[questionId].userHasUpvoted,
+          userHasDownvoted: voteData[questionId].userHasDownvoted,
+        };
+
+        // console.log("After vote update, new question state:", updatedQuestion);
+        return updatedQuestion;
+      });
     }
   }, [voteData, questionId]);
 
@@ -254,6 +284,7 @@ function MainQuestion() {
     }
   };
 
+  // Only render content if question data is loaded
   if (!question) {
     return (
       <div className="flex justify-center items-center h-screen overflow-x-hidden">
@@ -265,7 +296,7 @@ function MainQuestion() {
   return (
     <div className="w-full sm:max-w-4xl mx-auto bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-md shadow-md overflow-x-hidden">
       {/* Header: Community Info and Bookmark on the same row */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <CommunityAvatar
             avatarUrl={question.community?.avatar}
@@ -282,7 +313,7 @@ function MainQuestion() {
         />
       </div>
 
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100 break-words">
+      <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100 break-words">
         {question.title}
       </h2>
 
@@ -375,7 +406,7 @@ function MainQuestion() {
         </h3>
         {answers.map((answer, index) => (
           <div key={answer._id}>
-            <div className="mb-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-md shadow-sm flex flex-col space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-md shadow-sm flex flex-col space-y-4">
               {/* Answer Meta: Avatar, Username, and Time in one row */}
               <div className="flex items-center space-x-2">
                 <UserAvatar user={answer.user} handleSignOut={() => { }} />

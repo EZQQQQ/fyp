@@ -34,6 +34,7 @@ import AttemptQuizPage from "./components/Quiz/AttemptQuizPage";
 import EditQuizPage from "./components/Quiz/EditQuizPage";
 import QuizInstructionsPage from "./components/Quiz/QuizInstructionsPage";
 import QuizResultsPage from "./components/Quiz/QuizResultsPage";
+import NotificationsListener from "./components/Notification/NotificationsListener";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -43,7 +44,7 @@ import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function App() {
+function App({ socket }) {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
@@ -114,6 +115,9 @@ function App() {
         draggable
         pauseOnHover
       />
+
+      {/* Notifications Listener */}
+      <NotificationsListener socket={socket} />
 
       <Routes>
         {/* ===== Standalone Routes (No Layout) ===== */}

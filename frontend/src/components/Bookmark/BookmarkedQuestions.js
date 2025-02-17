@@ -85,7 +85,7 @@ function BookmarkedQuestions() {
   return (
     <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
           Bookmarked Questions
         </h1>

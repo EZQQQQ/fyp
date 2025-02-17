@@ -105,7 +105,7 @@ const createQuestion = async (req, res) => {
     await question.save();
 
     // Increment the user's questionsCount
-    await User.findByIdAndUpdate(req.user.id, { $inc: { questionsCount: 1 } });
+    await User.findByIdAndUpdate(req.user._id, { $inc: { questionsCount: 1 } });
 
     res.status(201).json({
       status: true,
