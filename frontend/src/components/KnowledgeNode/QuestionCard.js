@@ -70,7 +70,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 px-4 w-full border dark:border-gray-700">
       {/* Top Row: Community Info and Bookmark */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-2">
         {community && (
           <div className="flex items-center gap-2">
             <CommunityAvatar avatarUrl={community.avatar} name={community.name} />

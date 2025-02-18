@@ -35,6 +35,7 @@ import EditQuizPage from "./components/Quiz/EditQuizPage";
 import QuizInstructionsPage from "./components/Quiz/QuizInstructionsPage";
 import QuizResultsPage from "./components/Quiz/QuizResultsPage";
 import NotificationsListener from "./components/Notification/NotificationsListener";
+import LoadingAnimation from "./components/LoadingAnimation/LoadingAnimation";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -91,11 +92,15 @@ function App({ socket }) {
   // Show loading screen while initializing
   if (appLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <p className="text-xl text-gray-700 dark:text-gray-300">Loading...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 relative">
+        {/* Render the loading animation */}
+        <LoadingAnimation />
+        {/* Render the Loading text */}
+        <p className="text-xl text-gray-700 dark:text-gray-300 mt-4">Loading...</p>
       </div>
     );
   }
+
 
   // Handlers to open/close CreateCommunity modal
   const openCreateCommunityModal = () => setIsCreateCommunityOpen(true);

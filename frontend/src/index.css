@@ -20,6 +20,13 @@ body,
   overflow-x: hidden;
 }
 
+html,
+body {
+  transition:
+    background-color 0.5s ease,
+    color 0.5s ease;
+}
+
 /* Sidebar styles (if still used) */
 .sidebar {
   width: 250px;
