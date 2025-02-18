@@ -120,6 +120,7 @@
 │   │   │   │   └── CreateCommunity.js
 │   │   │   ├── Header
 │   │   │   │   ├── ClickOutside.js
+│   │   │   │   ├── DarkModeSwitcher.css
 │   │   │   │   ├── DarkModeSwitcher.js
 │   │   │   │   ├── DropdownNotification.js
 │   │   │   │   ├── DropdownUser.js

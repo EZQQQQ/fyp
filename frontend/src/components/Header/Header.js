@@ -110,9 +110,14 @@ const Header = (props) => {
             </div>
           )}
           <ul className="flex items-center gap-3 sm:gap-4 md:gap-4">
-            <DarkModeSwitcher />
-            <DropdownNotification />
+            <li className="flex-shrink-0">
+              <DarkModeSwitcher />
+            </li>
+            <li className="flex-shrink-0">
+              <DropdownNotification />
+            </li>
           </ul>
+
           <DropdownUser user={user} />
         </div>
       </div>
