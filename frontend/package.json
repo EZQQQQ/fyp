@@ -46,6 +46,8 @@
     "rehype-highlight": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "socket.io-client": "^4.8.1",
+    "three": "^0.173.0",
+    "vanta": "^0.5.24",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
   },
@@ -80,6 +82,9 @@
     "jest": "^27.5.1",
     "postcss": "^8.4.47",
     "prettier": "^3.3.3",
+    "resolve-url-loader": "^5.0.0",
+    "sass": "^1.85.0",
+    "sass-loader": "^16.0.5",
     "tailwindcss": "^3.4.14"
   }
 }

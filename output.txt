@@ -101,9 +101,12 @@
 │   │   │   │   └── Question.js
 │   │   │   ├── Auth
 │   │   │   │   ├── AdminAuth.js
-│   │   │   │   ├── MicrosoftLogin.js
-│   │   │   │   ├── Unauthorized.js
-│   │   │   │   └── index.js
+│   │   │   │   ├── AuthPage.css
+│   │   │   │   ├── AuthText.scss
+│   │   │   │   ├── index.js
+│   │   │   │   ├── LoginButton.css
+│   │   │   │   ├── MicrosoftLoginButton.js
+│   │   │   │   └── Unauthorized.js
 │   │   │   ├── BookmarkButtons
 │   │   │   │   └── BookmarkButtons.js
 │   │   │   ├── Community

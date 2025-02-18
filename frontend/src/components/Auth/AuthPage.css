@@ -1,0 +1,61 @@
+.auth-page-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh; /* Use min-height to allow flexibility */
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.auth-text-column {
+  flex: 1;
+  text-align: right;
+  min-width: 40%;
+}
+
+.login-button-column {
+  flex: 1;
+  text-align: left;
+  min-width: 40%;
+}
+
+/* Media query for mobile/smaller screens in AuthPage.css */
+@media (max-width: 768px) {
+  .auth-page-container {
+    flex-direction: column;
+    align-items: center; /* Center content horizontally */
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .auth-text-column,
+  .login-button-column {
+    text-align: center;
+    min-width: 100%;
+    width: 100%;
+  }
+
+  /* Center the child container within the auth-text-column */
+  .auth-text-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Optional button adjustments */
+  .login-button-column {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .button {
+    font-size: 1.5em;
+    max-width: 90%;
+    width: 100%;
+    padding: 0.5em 1em;
+    box-sizing: border-box;
+  }
+}

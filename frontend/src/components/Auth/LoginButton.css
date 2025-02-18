@@ -1,0 +1,84 @@
+/* Remove default button styling */
+.button {
+  margin: 0;
+  height: auto;
+  background: transparent;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+/* Button styling */
+.button {
+  --border-right: 6px;
+  --text-stroke-color: rgba(0, 0, 0, 0.6);
+  --animation-color: #3498db; /* Blue tone */
+  --fs-size: 2em;
+  letter-spacing: 3px;
+  text-decoration: none;
+  font-size: var(--fs-size);
+  font-family: "Fira Code", monospace;
+  position: relative;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--text-stroke-color);
+}
+
+/* Actual text displayed inside the button */
+.actual-text {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.2em;
+}
+
+/* Logo styling */
+.logo {
+  height: 1.2em;
+  margin-right: 0.5em;
+}
+
+/* Hover text (animated effect) */
+.hover-text {
+  position: absolute;
+  box-sizing: border-box;
+  content: attr(data-text);
+  color: var(--animation-color);
+  width: 0%;
+  top: 0;
+  bottom: 0;
+  /* Shift hover text further right */
+  left: 1.8em;
+  right: 0;
+  border-right: var(--border-right) solid var(--animation-color);
+  overflow: hidden;
+  transition: 0.5s;
+  -webkit-text-stroke: 1px var(--animation-color);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Hover effect */
+.button:hover .hover-text {
+  width: 90%;
+  filter: drop-shadow(0 0 23px var(--animation-color));
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  /* Allow text to break into multiple lines without reducing font size */
+  .button {
+    white-space: normal; /* Allow the text to wrap */
+    word-break: break-word; /* Ensure words can break if needed */
+  }
+
+  .hover-text {
+    left: 2.5em;
+    margin-top: 0.2em; /* Shift hover text further right */
+  }
+
+  /* Make the hover text extend longer on mobile */
+  .button:hover .hover-text {
+    width: 80%; /* Increase the hover effect width */
+  }
+}

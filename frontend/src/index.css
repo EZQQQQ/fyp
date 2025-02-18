@@ -20,6 +20,10 @@ body,
   overflow-x: hidden;
 }
 
+body {
+  font-family: "Fira Code", monospace;
+}
+
 /* Sidebar styles (if still used) */
 .sidebar {
   width: 250px;

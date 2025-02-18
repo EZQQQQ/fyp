@@ -1,16 +1,15 @@
-// /frontend/src/components/Auth/MicrosoftLogin.js
-
+// /frontend/src/components/Auth/MicrosoftLoginButton.js
 import React from "react";
-import { Button } from "@mui/material";
-import { auth, microsoftProvider } from "../../config/firebase-config";
-import { signInWithPopup } from "firebase/auth";
 import { useDispatch } from "react-redux";
-import { ssoLoginUser } from "../../features/userSlice";
 import { useNavigate } from "react-router-dom";
+import { signInWithPopup } from "firebase/auth";
+import { auth, microsoftProvider } from "../../config/firebase-config";
+import { ssoLoginUser } from "../../features/userSlice";
 import { toast } from "react-toastify";
 import OutlookLogo from "../../assets/Outlook.png";
+import "./LoginButton.css";
 
-function MicrosoftLogin({ isAdmin }) {
+function MicrosoftLoginButton({ isAdmin }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -18,11 +17,9 @@ function MicrosoftLogin({ isAdmin }) {
     try {
       const result = await signInWithPopup(auth, microsoftProvider);
       const token = await result.user.getIdToken();
-
       dispatch(ssoLoginUser({ token, isAdmin }))
         .unwrap()
         .then((data) => {
-          // Check if user needs to create a profile
           if (!data.data.user.username) {
             navigate("/profile");
           } else {
@@ -31,7 +28,6 @@ function MicrosoftLogin({ isAdmin }) {
         })
         .catch((error) => {
           console.error("SSO Login Error:", error);
-          // Error handling is managed in the slice via toast
         });
     } catch (error) {
       console.error("Microsoft Sign-In Error:", error);
@@ -40,16 +36,16 @@ function MicrosoftLogin({ isAdmin }) {
   };
 
   return (
-    <Button
-      onClick={handleMicrosoftLogin}
-      variant="contained"
-      color="primary"
-      className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
-    >
-      <img src={OutlookLogo} alt="Outlook Logo" className="w-6 h-6 mr-2" />
-      Login with Outlook
-    </Button>
+    <button className="button" data-text="Login with Microsoft" onClick={handleMicrosoftLogin}>
+      <span className="actual-text">
+        <img src={OutlookLogo} alt="Outlook Logo" className="logo" />
+        &nbsp;Login with Microsoft&nbsp;
+      </span>
+      <span aria-hidden="true" className="hover-text">
+        &nbsp;Login with Microsoft&nbsp;
+      </span>
+    </button>
   );
 }
 
-export default MicrosoftLogin;
+export default MicrosoftLoginButton;

@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
+
+/* Base styles for larger screens */
+.auth-text-container {
+  position: relative;
+  width: 80%;
+  margin: 0 auto; /* This centers the container horizontally by default */
+  text-align: right;
+  height: 6em;
+  overflow: hidden;
+}
+
+.auth-text {
+  position: relative;
+  font-family: 'Fira Code', monospace;
+  font-size: 2em;
+  color: #000;
+}
+
+/* Responsive adjustments for mobile/smaller screens */
+@media (max-width: 768px) {
+  .auth-text-container {
+    height: 12em; 
+    text-align: center;
+    width: 90%;
+  }
+}
+
+/* Allow line breaks using pre-line */
+.sentence {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  white-space: pre-line; /* honors <br /> tags */
+  overflow: hidden;
+  opacity: 0;
+}
+
+/*
+Keyframes for a full 16s cycle:
+  
+Active window for each sentence (first 25% = 4s):
+  - 0%          : Start with width: 0; and visible (opacity: 1)
+  - 6.25% (1s)  : Typing phase ends; width: 100%
+  - 12.5% (2s)  : Hold full width
+  - 18.75% (3s) : Backspacing completes; width: 0
+  - 25% (4s)    : Set opacity to 0
+Inactive (25%-100%): Remain hidden
+*/
+@keyframes typeBackspace16 {
+  0% {
+    width: 0;
+    opacity: 1;
+  }
+  6.25% {
+    width: 100%;
+    opacity: 1;
+  }
+  12.5% {
+    width: 100%;
+    opacity: 1;
+  }
+  18.75% {
+    width: 0;
+    opacity: 1;
+  }
+  25% {
+    width: 0;
+    opacity: 0;
+  }
+  100% {
+    width: 0;
+    opacity: 0;
+  }
+}
+
+/* Apply the animation with the new step counts and staggered delays */
+.sentence1 {
+  animation: typeBackspace16 16s steps(47) infinite;
+  animation-delay: 0s;
+}
+.sentence2 {
+  animation: typeBackspace16 16s steps(36) infinite;
+  animation-delay: 4s;
+}
+.sentence3 {
+  animation: typeBackspace16 16s steps(50) infinite;
+  animation-delay: 8s;
+}
+.sentence4 {
+  animation: typeBackspace16 16s steps(40) infinite;
+  animation-delay: 12s;
+}
