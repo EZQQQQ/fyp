@@ -1,0 +1,23 @@
+// frontend/src/components/CommunityChat/ChatMessage.css
+.chat-message {
+  padding: 6px 8px;
+  font-size: 15px;
+  line-height: 1.4;
+  background: transparent; /* No default background */
+  transition: background-color 0.3s ease; /* Smooth transition */
+  cursor: default;
+}
+
+.chat-message:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Slight highlight on hover */
+}
+
+.chat-message-sender {
+  color: var(--message-sender);
+  margin-right: 6px;
+  font-weight: 500;
+}
+
+.chat-message-content {
+  color: var(--message-text);
+}

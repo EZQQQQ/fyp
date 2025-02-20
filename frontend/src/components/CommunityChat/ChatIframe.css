@@ -1,17 +1,33 @@
-/* frontend/src/components/CommunityChat/ChatIframe.css */
 .chat-iframe-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 1000;
-  width: 300px;
-  height: 400px;
+  width: 350px;
+  height: 500px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
+.chat-iframe-container.minimized {
+  height: 40px;
+}
+
+.chat-iframe-iframe {
+  width: 100%;
+  height: calc(100% - 40px);
+  border: none;
+  transition: opacity 0.3s ease;
+}
+
+.chat-iframe-container.minimized .chat-iframe-iframe {
+  opacity: 0;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .chat-iframe-container {
     bottom: 0;

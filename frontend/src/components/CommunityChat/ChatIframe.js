@@ -1,17 +1,17 @@
 // frontend/src/components/CommunityChat/ChatIframe.js
-// ChatIframe.js
 import React from 'react';
+import ChatIframeHeader from './ChatIframeHeader';
 import './ChatIframe.css';
 
 const ChatIframe = ({ onMinimize, communityId }) => {
-  // URL to contain a :communityId parameter.
   const chatUrl = `/chat/${communityId}`;
   return (
     <div className="chat-iframe-container">
+      <ChatIframeHeader onMinimize={onMinimize} title="Community Chat" />
       <iframe
         src={chatUrl}
         title="Community Chat"
-        style={{ width: '100%', height: '100%', border: 'none' }}
+        style={{ width: '100%', height: 'calc(100% - 40px)', border: 'none' }}
       ></iframe>
     </div>
   );

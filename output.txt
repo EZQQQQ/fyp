@@ -127,6 +127,9 @@
 │   │   │   │   ├── ChatContainer.js
 │   │   │   │   ├── ChatIframe.css
 │   │   │   │   ├── ChatIframe.js
+│   │   │   │   ├── ChatIframeHeader.js
+│   │   │   │   ├── ChatIframeHeader.css
+│   │   │   │   ├── ChatMessage.css
 │   │   │   │   ├── ChatMessage.js
 │   │   │   │   ├── ChatSessionProvider.js
 │   │   │   │   └── CommunityChatPage.js

@@ -1,0 +1,23 @@
+.chat-iframe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #333;
+  padding: 8px 12px;
+  color: #fff;
+  height: 40px;
+}
+
+.chat-iframe-title {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.chat-iframe-minimize-button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  outline: none;
+}

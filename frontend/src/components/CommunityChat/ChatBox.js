@@ -1,5 +1,4 @@
-// frontend/src/components/CommunityChat/ChatBox.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ChatMessage from './ChatMessage';
 import { useChatSession } from './ChatSessionProvider';
@@ -7,17 +6,19 @@ import config from '../../config';
 import io from 'socket.io-client';
 import axios from '../../utils/axiosConfig';
 import { addMessage, setMessages } from '../../features/communityChatSlice';
+import { toast } from 'react-toastify';
 import './ChatBox.css';
 
-// Create a singleton socket connection using your backend URL.
 const socket = io(config.BACKEND_URL);
 
-const ChatBox = ({ communityId, onMinimize }) => {
+const ChatBox = ({ communityId, onMinimize, hideMinimize = false }) => {
   const dispatch = useDispatch();
   const [input, setInput] = useState('');
-  // Get messages from Redux
   const messages = useSelector((state) => state.communityChat.messages);
   const { anonymousName } = useChatSession();
+
+  // Create a ref for the chat window
+  const chatWindowRef = useRef(null);
 
   // Fetch historical messages on mount
   useEffect(() => {
@@ -25,35 +26,45 @@ const ChatBox = ({ communityId, onMinimize }) => {
       axios.get(`/chat/${communityId}/messages`)
         .then(response => {
           if (response.data && response.data.messages) {
-            // Set the historical messages into Redux
             dispatch(setMessages(response.data.messages));
           }
         })
         .catch(error => {
           console.error("Error fetching historical messages:", error);
+          toast.error("Error loading chat history");
         });
     }
   }, [communityId, dispatch]);
 
+  // Socket listeners
   useEffect(() => {
-    // Only join the room if both communityId and anonymousName are available.
     if (anonymousName && communityId) {
       socket.emit('joinRoom', { communityId, anonymousName });
     }
 
-    // Listen for new chat messages via socket.io
     socket.on('chatMessage', (message) => {
       dispatch(addMessage(message));
     });
 
-    // Cleanup on component unmount
+    socket.on('chatError', (errorData) => {
+      toast.error(errorData.message || "Message not sent due to profanity.");
+    });
+
     return () => {
       if (anonymousName && communityId) {
         socket.emit('leaveRoom', { communityId, anonymousName });
       }
       socket.off('chatMessage');
+      socket.off('chatError');
     };
   }, [communityId, anonymousName, dispatch]);
+
+  // Auto-scroll the chat window to the bottom when messages change
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSend = () => {
     if (input.trim()) {
@@ -63,7 +74,6 @@ const ChatBox = ({ communityId, onMinimize }) => {
         communityId,
         createdAt: new Date().toISOString(),
       };
-      // Emit the message to the server so that all clients in the room receive it
       socket.emit('chatMessage', messageData);
       setInput('');
     }
@@ -71,11 +81,7 @@ const ChatBox = ({ communityId, onMinimize }) => {
 
   return (
     <div className="chat-box">
-      <div className="chat-header">
-        <span>Chat</span>
-        <button className="minimize-button items-center justify-center" onClick={onMinimize}>–</button>
-      </div>
-      <div className="chat-window">
+      <div className="chat-window" ref={chatWindowRef}>
         <ul className="message-list">
           {messages.map((msg, index) => (
             <ChatMessage key={index} message={msg} />
@@ -83,19 +89,34 @@ const ChatBox = ({ communityId, onMinimize }) => {
         </ul>
       </div>
       <div className="chat-input">
-        <input
-          type="text"
-          className="message-input"
-          placeholder="Type your message here"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSend();
-          }}
-        />
-        <button className="send-button" onClick={handleSend}>
-          Send
-        </button>
+        <div className="messageBox">
+          <input
+            required
+            placeholder="Message..."
+            type="text"
+            className="message-input"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSend();
+            }}
+          />
+          <button className="send-button" onClick={handleSend}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 664 663">
+              <path
+                fill="none"
+                d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"
+              ></path>
+              <path
+                stroke-linejoin="round"
+                stroke-linecap="round"
+                stroke-width="33.67"
+                stroke="#6c6c6c"
+                d="M646.293 331.888L17.7538 17.6187L155.245 331.888M646.293 331.888L17.753 646.157L155.245 331.888M646.293 331.888L318.735 330.228L155.245 331.888"
+              ></path>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

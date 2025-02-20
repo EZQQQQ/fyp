@@ -13,14 +13,17 @@ const censor = new TextCensor();
 
 /**
  * Middleware to censor profanity from chat message content.
- * It assumes that the incoming request has a JSON body with a 'content' field.
+ * the incoming request has a JSON body with a 'content' field.
  */
 module.exports = (req, res, next) => {
   if (req.body && req.body.content) {
     // Get all matches from the input text.
     const matches = matcher.getAllMatches(req.body.content);
-    // Censor the text using the matcher results.
-    req.body.content = censor.applyTo(req.body.content, matches);
+
+    if (matches && matches.length > 0) {
+      // If profanity is detected, return an error response.
+      return res.status(400).json({ message: "Message contains profanity and was not sent." });
+    }
   }
   next();
 };

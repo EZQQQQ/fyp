@@ -136,7 +136,14 @@ const AppContent = ({ socket }) => {
         <Route path="/unauthorized" element={<Unauthorized />} />
 
         {/* Community Chat Page */}
-        <Route path="/chat/:communityId" element={<CommunityChatPage />} />
+        <Route
+          path="/chat/:communityId"
+          element={
+            <ProtectedRoute>
+              <CommunityChatPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* ===== Routes with DefaultLayout ===== */}
         <Route

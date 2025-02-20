@@ -25,6 +25,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const http = require("http");
 const socketIo = require("socket.io");
 const CommunityChat = require("./models/CommunityChat");
+const { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } = require('obscenity');
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -33,6 +34,14 @@ const io = socketIo(server, {
 
 // Keep a map of connected users
 const userSockets = new Map();
+
+// Create a matcher and censor instance (you might want to move this outside the connection handler to avoid re-instantiation)
+const matcher = new RegExpMatcher({
+  ...englishDataset.build(),
+  ...englishRecommendedTransformers,
+});
+const censor = new TextCensor();
+
 
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
@@ -68,12 +77,25 @@ io.on("connection", (socket) => {
   // When a client sends a chat message
   socket.on("chatMessage", async (messageData) => {
     try {
-      // Save the chat message to the database
+      // Check for profanity using obscenity
+      const matches = matcher.getAllMatches(messageData.content);
+
+      if (matches && matches.length > 0) {
+        // If profanity is found, do not save or broadcast.
+        // Send an error back to the sender only.
+        socket.emit("chatError", { message: "Message contains profanity and was not sent." });
+        console.log("Profanity detected, message rejected:", messageData.content);
+        return;
+      }
+
+      // Otherwise, save the clean message to the database
       const newMessage = await CommunityChat.create(messageData);
       // Broadcast the message to all clients in the same community room
       io.to(messageData.communityId).emit("chatMessage", newMessage);
     } catch (error) {
       console.error("Error saving chat message:", error);
+      // Optionally, you can emit an error back if something goes wrong
+      socket.emit("chatError", { message: "Error sending message." });
     }
   });
 });
