@@ -5,6 +5,7 @@
 │   │   ├── bookmarkController.js
 │   │   ├── commentController.js
 │   │   ├── communityController.js
+│   │   ├── communityChatController.js
 │   │   ├── notificationController.js
 │   │   ├── questionController.js
 │   │   ├── pollController.js
@@ -15,6 +16,7 @@
 │   ├── middlewares
 │   │   ├── auth.js
 │   │   ├── authorize.js
+│   │   ├── chatMessageFilter.js
 │   │   ├── errorHandler.js
 │   │   ├── upload.js
 │   │   ├── uploadCommunity.js
@@ -24,6 +26,7 @@
 │   │   ├── Answer.js
 │   │   ├── Comment.js
 │   │   ├── Community.js
+│   │   ├── CommunityChat.js
 │   │   ├── Notification.js
 │   │   ├── Question.js
 │   │   ├── Quiz.js
@@ -37,6 +40,7 @@
 │   │   ├── Bookmark.js
 │   │   ├── Comment.js
 │   │   ├── Community.js
+│   │   ├── CommunityChat.js
 │   │   ├── Question.js
 │   │   ├── Quiz.js
 │   │   ├── Notification.js
@@ -45,11 +49,8 @@
 │   │   ├── Poll.js
 │   │   └── Vote.js
 │   ├── server.js
-│   └── uploads
-│       ├── communityPosts
-│       ├── profilePhotos
-│       ├── defaults
-│       └── communityAvatars
+│   └── adjectives.txt
+│   └── animals.txt
 ├── frontend
 │   ├── build
 │   │   ├── asset-manifest.json
@@ -118,6 +119,17 @@
 │   │   │   │   ├── CommunityList.js
 │   │   │   │   ├── CommunityPage.js
 │   │   │   │   └── CreateCommunity.js
+│   │   │   ├── CommunityChat
+│   │   │   │   ├── ChatBox.css
+│   │   │   │   ├── ChatBox.js
+│   │   │   │   ├── ChatButton.css
+│   │   │   │   ├── ChatButton.js
+│   │   │   │   ├── ChatContainer.js
+│   │   │   │   ├── ChatIframe.css
+│   │   │   │   ├── ChatIframe.js
+│   │   │   │   ├── ChatMessage.js
+│   │   │   │   ├── ChatSessionProvider.js
+│   │   │   │   └── CommunityChatPage.js
 │   │   │   ├── Header
 │   │   │   │   ├── ClickOutside.js
 │   │   │   │   ├── DarkModeSwitcher.css
@@ -174,6 +186,7 @@
 │   │   │   ├── assessmentSlice.js
 │   │   │   ├── bookmarkSlice.js
 │   │   │   ├── communitySlice.js
+│   │   │   ├── communityChatSlice.js
 │   │   │   ├── notificationSlice.js
 │   │   │   ├── votingSlice.js
 │   │   │   └── userSlice.js
@@ -190,6 +203,7 @@
 │   │   │   ├── assessmentService.js
 │   │   │   ├── bookmarkService.js
 │   │   │   ├── communityService.js
+│   │   │   ├── communityChatService.js
 │   │   │   ├── notificationService.js
 │   │   │   ├── pollService.js
 │   │   │   ├── questionService.js

@@ -1,0 +1,98 @@
+/* frontend/src/components/CommunityChat/ChatButton.css */
+:root {
+  --chat-btn-bg: #007bff; /* Light mode background */
+  --chat-btn-bg-dark: #1e90ff; /* Dark mode background */
+  --chat-btn-text: #ffffff;
+}
+
+.Btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 45px;
+  height: 45px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    width 0.3s,
+    border-radius 0.3s;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+  background-color: var(--chat-btn-bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .Btn {
+    background-color: var(--chat-btn-bg-dark);
+  }
+}
+
+.sign {
+  width: 100%;
+  transition:
+    width 0.3s,
+    padding-left 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sign svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--chat-btn-text);
+}
+
+.text {
+  position: absolute;
+  right: 0;
+  width: 0;
+  opacity: 0;
+  color: var(--chat-btn-text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition:
+    width 0.3s,
+    opacity 0.3s,
+    padding-right 0.3s;
+}
+
+.Btn:hover {
+  width: 125px;
+  border-radius: 40px;
+}
+
+.Btn:hover .sign {
+  width: 30%;
+  padding-left: 20px;
+}
+
+.Btn:hover .text {
+  opacity: 1;
+  width: 70%;
+  padding-right: 10px;
+}
+
+.Btn:active {
+  transform: translate(2px, 2px);
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 768px) {
+  .Btn {
+    width: 35px;
+    height: 35px;
+  }
+  .Btn:hover {
+    width: 90px;
+  }
+  .sign svg {
+    width: 16px;
+    height: 16px;
+  }
+  .text {
+    font-size: 0.75rem;
+  }
+}

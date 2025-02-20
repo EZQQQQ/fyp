@@ -1,0 +1,23 @@
+/* frontend/src/components/CommunityChat/ChatIframe.css */
+.chat-iframe-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 300px;
+  height: 400px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .chat-iframe-container {
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    height: 75vh;
+    border-radius: 0;
+  }
+}

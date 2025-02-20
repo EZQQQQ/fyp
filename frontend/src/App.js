@@ -6,6 +6,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -36,6 +37,7 @@ import QuizInstructionsPage from "./components/Quiz/QuizInstructionsPage";
 import QuizResultsPage from "./components/Quiz/QuizResultsPage";
 import NotificationsListener from "./components/Notification/NotificationsListener";
 import LoadingAnimation from "./components/LoadingAnimation/LoadingAnimation";
+import CommunityChatPage from "./components/CommunityChat/CommunityChatPage";
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -45,9 +47,15 @@ import "./index.css";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function App({ socket }) {
+// A wrapper component that provides access to the location
+// and conditionally renders the Dashboard component
+const AppContent = ({ socket }) => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
+  const location = useLocation();
+
+  // Determine if the Dashboard should be hidden (e.g., for Community Chat in an iframe)
+  const hideDashboard = location.pathname.startsWith("/chat");
 
   // Dark Mode State
   const [darkMode, setDarkMode] = useState(() => {
@@ -61,7 +69,7 @@ function App({ socket }) {
   // CreateCommunity Modal State
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
 
-  // Toggle Dark Mode
+  // Toggle Dark Mode Effect
   useEffect(() => {
     const root = window.document.documentElement;
     if (darkMode) {
@@ -89,25 +97,22 @@ function App({ socket }) {
     initializeUser();
   }, [dispatch]);
 
-  // Show loading screen while initializing
+  // Display a loading screen until the app has initialized
   if (appLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 relative">
-        {/* Render the loading animation */}
         <LoadingAnimation />
-        {/* Render the Loading text */}
         <p className="text-xl text-gray-700 dark:text-gray-300 mt-4">Loading...</p>
       </div>
     );
   }
 
-
-  // Handlers to open/close CreateCommunity modal
+  // Handlers for CreateCommunity modal
   const openCreateCommunityModal = () => setIsCreateCommunityOpen(true);
   const closeCreateCommunityModal = () => setIsCreateCommunityOpen(false);
 
   return (
-    <Router>
+    <>
       {/* Toast Notifications */}
       <ToastContainer
         position="top-right"
@@ -130,6 +135,9 @@ function App({ socket }) {
         <Route path="/admin/login" element={<AdminAuth />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
+        {/* Community Chat Page */}
+        <Route path="/chat/:communityId" element={<CommunityChatPage />} />
+
         {/* ===== Routes with DefaultLayout ===== */}
         <Route
           path="/*"
@@ -142,7 +150,6 @@ function App({ socket }) {
             />
           }
         >
-          {/* Profile Creation - only used once for new users */}
           <Route
             path="create-profile"
             element={
@@ -151,8 +158,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Profile Page (subsequent visits) */}
           <Route
             path="profile"
             element={
@@ -161,8 +166,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Profile Settings */}
           <Route
             path="settings"
             element={
@@ -171,8 +174,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* All Questions */}
           <Route
             path="questions"
             element={
@@ -181,8 +182,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Main Question View */}
           <Route
             path="question/:questionId"
             element={
@@ -191,8 +190,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Add Question */}
           <Route
             path="add-question"
             element={
@@ -201,8 +198,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Explore Communities */}
           <Route
             path="explore"
             element={
@@ -211,8 +206,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Community Page */}
           <Route
             path="communities/:id"
             element={
@@ -221,8 +214,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Quiz Instructions Page */}
           <Route
             path="quiz/:quizId/instructions"
             element={
@@ -231,8 +222,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Create Quiz Page for a specific community */}
           <Route
             path="communities/:communityId/create-quiz"
             element={
@@ -241,8 +230,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Attempt a Quiz */}
           <Route
             path="quiz/:quizId/attempt/:attemptId"
             element={
@@ -251,8 +238,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Quiz Results Page */}
           <Route
             path="quiz/:quizId/attempt/:attemptId/results"
             element={
@@ -261,8 +246,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Edit Quiz Page */}
           <Route
             path="quiz/:quizId/edit"
             element={
@@ -271,11 +254,7 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Search Results */}
           <Route path="search" element={<SearchResults />} />
-
-          {/* Bookmarked Questions */}
           <Route
             path="bookmark"
             element={
@@ -284,8 +263,6 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Root (Home) - Use index instead of path="/" */}
           <Route
             index
             element={
@@ -294,14 +271,13 @@ function App({ socket }) {
               </ProtectedRoute>
             }
           />
-
-          {/* Catch-All Route within Layout */}
+          {/* Redirect all unmatched paths to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
 
-      {/* Dashboard (often a side overlay or hidden for certain roles) */}
-      {user && <Dashboard />}
+      {/* Conditionally render the Dashboard only if the user exists and the route is not for Community Chat */}
+      {user && !hideDashboard && <Dashboard />}
 
       {/* CreateCommunity Modal */}
       {user && (
@@ -310,6 +286,14 @@ function App({ socket }) {
           onClose={closeCreateCommunityModal}
         />
       )}
+    </>
+  );
+};
+
+function App(props) {
+  return (
+    <Router>
+      <AppContent {...props} />
     </Router>
   );
 }

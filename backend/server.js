@@ -16,6 +16,7 @@ const bookmarkRoutes = require("./routers/Bookmark");
 const pollRoutes = require("./routers/Poll");
 const quizRoutes = require("./routers/Quiz");
 const notificationRouter = require("./routers/Notification");
+const communityChatRouter = require("./routers/CommunityChat");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -23,10 +24,11 @@ const swaggerJsdoc = require("swagger-jsdoc");
 // Socket.io
 const http = require("http");
 const socketIo = require("socket.io");
+const CommunityChat = require("./models/CommunityChat");
 
 const server = http.createServer(app);
 const io = socketIo(server, {
-  cors: { origin: "*" }, // adjust as needed
+  cors: { origin: "*" },
 });
 
 // Keep a map of connected users
@@ -38,7 +40,6 @@ io.on("connection", (socket) => {
   // When a client registers their userId
   socket.on("register", (userId) => {
     userSockets.set(userId, socket.id);
-    // console.log(`User ${userId} registered with socket ${socket.id}`);
   });
 
   socket.on("disconnect", () => {
@@ -50,7 +51,34 @@ io.on("connection", (socket) => {
       }
     }
   });
+
+  // Chat events:
+  // When a client joins a chat room for a community
+  socket.on("joinRoom", ({ communityId, anonymousName }) => {
+    socket.join(communityId);
+    console.log(`User ${anonymousName} joined community ${communityId}`);
+  });
+
+  // When a client leaves a chat room
+  socket.on("leaveRoom", ({ communityId, anonymousName }) => {
+    socket.leave(communityId);
+    console.log(`User ${anonymousName} left community ${communityId}`);
+  });
+
+  // When a client sends a chat message
+  socket.on("chatMessage", async (messageData) => {
+    try {
+      // Save the chat message to the database
+      const newMessage = await CommunityChat.create(messageData);
+      // Broadcast the message to all clients in the same community room
+      io.to(messageData.communityId).emit("chatMessage", newMessage);
+    } catch (error) {
+      console.error("Error saving chat message:", error);
+    }
+  });
 });
+
+
 
 // Make io accessible to your controllers if needed
 app.set("io", io);
@@ -101,6 +129,7 @@ app.use("/api", bookmarkRoutes);
 app.use("/api/poll", pollRoutes);
 app.use("/api", quizRoutes);
 app.use("/api/notifications", notificationRouter);
+app.use("/api/chat", communityChatRouter);
 
 // Removed the local file serving line
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -124,7 +153,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use(errorHandler);
 
 // Start Server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

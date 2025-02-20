@@ -1,7 +1,7 @@
 /* frontend/src/components/Bookmark/BookmarkButtons.css */
 .ui-bookmark {
-  --icon-size: 24px;
-  --icon-secondary-color: rgb(77, 77, 77);
+  --icon-size: 1.4em;
+  --icon-secondary-color: rgb(200, 200, 200);
   --icon-hover-color: rgb(97, 97, 97);
   --icon-primary-color: gold;
   --icon-circle-border: 1px solid var(--icon-primary-color);

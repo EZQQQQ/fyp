@@ -9,6 +9,7 @@ import bookmarkReducer from "../features/bookmarkSlice";
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import notificationReducer from "../features/notificationSlice";
+import communityChatReducer from "../features/communityChatSlice";
 
 // Combine all reducers into an app reducer
 const appReducer = combineReducers({
@@ -18,6 +19,7 @@ const appReducer = combineReducers({
   assessment: assessmentReducer,
   bookmark: bookmarkReducer,
   notification: notificationReducer,
+  communityChat: communityChatReducer,
 });
 
 // Root reducer that resets state on 'user/logout' action

@@ -1,5 +1,5 @@
 // frontend/src/components/Header/DropdownNotification.js
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import ClickOutside from "./ClickOutside";
@@ -7,21 +7,38 @@ import { markNotificationRead, markAllNotificationsRead } from "../../features/n
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Record the timestamp when the bell is clicked
+  const [lastBellClickTime, setLastBellClickTime] = useState(null);
   const notifications = useSelector((state) => state.notification.notifications);
   const dispatch = useDispatch();
 
-  // console.log("Current Redux notifications:", notifications);
+  // On mount, load the last bell click time from localStorage if available
+  useEffect(() => {
+    const storedTime = localStorage.getItem("lastBellClickTime");
+    if (storedTime) {
+      setLastBellClickTime(new Date(storedTime));
+    }
+  }, []);
 
-  // When clicking the bell, mark all notifications as read and toggle the dropdown
+  // When clicking the bell, mark all notifications as read, toggle the dropdown,
+  // and persist the bell click timestamp in localStorage.
   const handleBellClick = () => {
-    // Mark all notifications as read
     dispatch(markAllNotificationsRead());
+    const now = new Date();
+    setLastBellClickTime(now);
+    localStorage.setItem("lastBellClickTime", now.toISOString());
     setDropdownOpen(!dropdownOpen);
   };
 
   const handleMarkRead = (id) => {
     dispatch(markNotificationRead(id));
   };
+
+  // Only show the red dot if there are unread notifications that are newer than lastBellClickTime.
+  const hasNewNotifications = notifications?.some((n) => {
+    if (!lastBellClickTime) return !n.isRead;
+    return !n.isRead && new Date(n.createdAt) > lastBellClickTime;
+  });
 
   // Limit displayed notifications to 4
   const displayedNotifications = notifications.slice(0, 4);
@@ -34,8 +51,8 @@ const DropdownNotification = () => {
           to="#"
           className="flex h-8.5 w-8.5 items-center justify-center rounded-full border border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
         >
-          {/* Red dot if there are unread notifications */}
-          {notifications && notifications.some((n) => !n.isRead) && (
+          {/* Only show red dot if there are NEW unread notifications */}
+          {hasNewNotifications && (
             <span className="absolute -top-0.5 right-0 z-10 h-2 w-2 rounded-full bg-red-500" />
           )}
           <svg
@@ -53,7 +70,7 @@ const DropdownNotification = () => {
         </Link>
 
         {dropdownOpen && (
-          <div className="absolute -right-27 mt-2.5 flex h-90 w-75 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80">
+          <div className="absolute -right-6 mt-2.5 flex h-90 w-75 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80">
             <div className="px-4.5 py-3">
               <h5 className="text-sm font-medium text-bodydark2">Notifications</h5>
             </div>

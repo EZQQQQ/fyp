@@ -11,6 +11,8 @@ import config from "./config";
 import io from "socket.io-client";
 import "./index.css";
 
+localStorage.debug = '*'
+
 // Connect to the backend Socket.IO server
 const socket = io(config.BACKEND_URL, {
   autoConnect: false,

@@ -31,7 +31,7 @@ function getRelativeTime(dateString) {
     return `${hours} hr. ago`;
   } else {
     const days = Math.floor(diffInSeconds / 86400);
-    return `${days} day${days > 1 ? "s" : ""} ago`;
+    return `${days} d ago`;
   }
 }
 
@@ -70,18 +70,32 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 px-4 w-full border dark:border-gray-700">
       {/* Top Row: Community Info and Bookmark */}
+      {/* Top Row: Community Info, Time Posted and User Info, and Bookmark */}
       <div className="flex items-center justify-between mt-2">
-        {community && (
-          <div className="flex items-center gap-2">
-            <CommunityAvatar avatarUrl={community.avatar} name={community.name} />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-              {community.name || "Unknown Community"}
-            </span>
+        <div className="flex items-center gap-4">
+          {/* Community Info */}
+          {community && (
+            <div className="flex items-center gap-2">
+              <CommunityAvatar avatarUrl={community.avatar} name={community.name} />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                {community.name || "Unknown Community"}
+              </span>
+            </div>
+          )}
+          {/* Time Posted and User Info */}
+          <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+            <span className="mr-2">{getRelativeTime(createdAt)}</span>
           </div>
-        )}
-        {/* Bookmark Buttons */}
-        <BookmarkButtons isBookmarked={isBookmarked} onToggleBookmark={handleBookmarkToggle} loading={false} />
+        </div>
+
+        {/* Bookmark Buttons (stays on the right) */}
+        <BookmarkButtons
+          isBookmarked={isBookmarked}
+          onToggleBookmark={handleBookmarkToggle}
+          loading={false}
+        />
       </div>
+
 
       {/* Question Title */}
       <Link
@@ -90,6 +104,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
       >
         {title}
       </Link>
+
 
       {/* Question Description */}
       <div className="mb-2 line-clamp-3 md:line-clamp-6 break-all whitespace-pre-wrap">
@@ -122,8 +137,8 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
         </div>
       )}
 
-      {/* Bottom Row: Vote Buttons, Responses, Time Posted and User Info */}
-      <div className="flex md:flex-row justify-between items-center my-2">
+      {/* Bottom Row: Vote Buttons, Responses and User Info */}
+      <div className="flex justify-between items-center my-2">
         {/* Left Side: Vote Buttons and Total Responses */}
         <div className="flex items-center space-x-4">
           <VoteButtons
@@ -138,18 +153,24 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
           <div className="flex items-center space-x-1 border border-gray-300 dark:border-gray-600 rounded-full p-1 h-8">
             <IconButton size="small" color="default" className="p-0">
               <Link to={`/question/${_id}`}>
-                <ChatBubbleOutline className="text-gray-500 dark:text-white" fontSize="small" />
+                <ChatBubbleOutline
+                  className="text-gray-500 dark:text-white"
+                  fontSize="small"
+                />
               </Link>
             </IconButton>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{totalResponses}</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              {totalResponses}
+            </span>
           </div>
         </div>
 
-        {/* Right Side: Time Posted and User Info */}
-        <div className="flex items-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2 md:mt-0 mr-2">
-          <span className="mr-2">{getRelativeTime(createdAt)}</span>
-          <UserAvatar user={user} handleSignOut={() => { }} className="h-6 w-6 mr-2" />
-          <p className="text-gray-800 dark:text-gray-100">{user?.username || "Unknown User"}</p>
+        {/* Right Side: User Info (Avatar and Username) */}
+        <div className="flex items-center space-x-2">
+          <UserAvatar user={user} handleSignOut={() => { }} className="h-6 w-6" />
+          <p className="text-gray-800 dark:text-gray-100">
+            {user?.username || "Unknown User"}
+          </p>
         </div>
       </div>
     </div>

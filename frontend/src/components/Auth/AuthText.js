@@ -13,7 +13,7 @@ function AuthText() {
 					Your Hub for<br />Collaborative Expertise.
 				</span>
 				<span className="sentence sentence3">
-					Fostering Informed Dialogue<br />with Trusted Resources.
+					Fostering Dialogue<br />with Trusted Resources.
 				</span>
 				<span className="sentence sentence4">
 					Where Expert Discussion<br />Drives Knowledge.
