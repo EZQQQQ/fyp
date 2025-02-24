@@ -1,12 +1,8 @@
-// frontend/src/components/AddQuestion/Question.js
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Button,
   TextField,
-  Autocomplete,
   IconButton,
-  Chip,
   Tabs,
   Tab,
 } from "@mui/material";
@@ -25,7 +21,89 @@ import { selectUser } from "../../features/userSlice";
 import axiosInstance from "../../utils/axiosConfig";
 import { useNavigate } from "react-router-dom";
 import CommunityAvatar from "../Community/CommunityAvatar";
-import styles from "./styles.css";
+
+// Custom search-enabled dropdown for selecting a community using a flex layout
+const CommunityDropdown = ({ communities, selected, onChange }) => {
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // When a community is selected, update search term
+  useEffect(() => {
+    if (selected) {
+      setSearchTerm(selected.name);
+    }
+  }, [selected]);
+
+  // Filter communities by search term (case-insensitive)
+  const filteredCommunities = communities.filter((comm) =>
+    comm.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Container styled as an input box using flex */}
+      <div className="flex items-center w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-2xl h-15 px-4">
+        {selected ? (
+          <CommunityAvatar
+            avatarUrl={selected.avatar}
+            name={selected.name}
+            className="h-8 w-8 rounded-full"
+          />
+        ) : (
+
+          <div className="h-8 w-8" />
+        )}
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Select a Community"
+          className="flex-1 ml-2 bg-transparent focus:outline-none text-gray-800 dark:text-gray-200 text-lg"
+        />
+      </div>
+      {open && filteredCommunities.length > 0 && (
+        <ul className="absolute mt-1 w-full max-h-60 overflow-y-auto rounded-md shadow-lg z-10 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
+          {filteredCommunities.map((comm) => (
+            <li
+              key={comm._id}
+              onClick={() => {
+                onChange(comm);
+                setSearchTerm(comm.name);
+                setOpen(false);
+              }}
+              className="cursor-pointer flex items-center px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+            >
+              <CommunityAvatar
+                avatarUrl={comm.avatar}
+                name={comm.name}
+                className="h-8 w-8 rounded-full"
+              />
+              <span className="ml-2 text-gray-800 dark:text-gray-200">
+                {comm.name}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 function Question() {
   const user = useSelector(selectUser);
@@ -55,7 +133,6 @@ function Question() {
         setCommunities([]);
         return;
       }
-
       try {
         const response = await axiosInstance.get("/communities/user");
         if (response.data.status && Array.isArray(response.data.communities)) {
@@ -69,13 +146,8 @@ function Question() {
         setCommunities([]);
       }
     };
-
     fetchUserCommunities();
   }, [user]);
-
-  const handleCommunityChange = (event, value) => {
-    setCommunity(value);
-  };
 
   const handleTitleChange = (event) => {
     setTitle(event.target.value);
@@ -124,8 +196,7 @@ function Question() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-
+    e.preventDefault();
     // Reset previous errors
     setTitleError(false);
     setSubmissionError("");
@@ -135,7 +206,6 @@ function Question() {
       setTitleError(true);
       return;
     }
-
     // Validate community selection
     if (!community) {
       setSubmissionError("Please select a community.");
@@ -155,7 +225,6 @@ function Question() {
       setSubmissionError("Please upload at least one image or video.");
       return;
     }
-
     if (tabValue === 2) {
       const filledOptions = pollOptions.filter(
         (option) => option.text.trim() !== ""
@@ -183,7 +252,6 @@ function Question() {
         const pollOptionTexts = pollOptions
           .filter((option) => option.text.trim() !== "")
           .map((option) => ({ option: option.text.trim() }));
-
         formData.append("pollOptions", JSON.stringify(pollOptionTexts));
       }
 
@@ -192,11 +260,8 @@ function Question() {
       }
 
       const response = await axiosInstance.post("/question/create", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
       if (response.data.status) {
         alert("Question added successfully");
         navigate(`/question/${response.data.data._id}`);
@@ -205,7 +270,6 @@ function Question() {
       }
     } catch (err) {
       console.error("Error submitting question:", err);
-      // Log the entire response for debugging
       if (err.response && err.response.data) {
         console.error("Backend Response:", err.response.data);
         setSubmissionError(
@@ -219,9 +283,7 @@ function Question() {
 
   // Drag and Drop handlers for rearranging poll options
   const onDragEnd = (result) => {
-    if (!result.destination) {
-      return;
-    }
+    if (!result.destination) return;
     const reorderedOptions = Array.from(pollOptions);
     const [removed] = reorderedOptions.splice(result.source.index, 1);
     reorderedOptions.splice(result.destination.index, 0, removed);
@@ -237,48 +299,13 @@ function Question() {
       {/* Community Selection */}
       <div className="flex items-center mb-6 space-x-3">
         <PeopleIcon className="text-gray-600 dark:text-gray-300" />
-        <Autocomplete
-          options={communities}
-          getOptionLabel={(option) => option.name}
-          onChange={handleCommunityChange}
-          value={community}
-          renderOption={(props, option) => (
-            <li {...props}>
-              <div className="flex items-center space-x-3">
-                <CommunityAvatar
-                  avatarUrl={option.avatar}
-                  name={option.name}
-                  className="h-8 w-8"
-                />
-                <span className="text-gray-800 dark:text-gray-200">
-                  {option.name}
-                </span>
-              </div>
-            </li>
-          )}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select a Community"
-              variant="outlined"
-              className="w-full"
-              InputLabelProps={{
-                className: "text-gray-700 dark:text-gray-300",
-              }}
-              InputProps={{
-                ...params.InputProps,
-                sx: { borderRadius: "30px" },
-                className:
-                  "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
-              }}
-            />
-          )}
-          className="w-full"
-          noOptionsText="No communities found"
-          classes={{
-            listbox: styles.listbox, // Apply the custom listbox class
-          }}
-        />
+        <div className="flex-1">
+          <CommunityDropdown
+            communities={communities}
+            selected={community}
+            onChange={setCommunity}
+          />
+        </div>
       </div>
 
       {/* Title Input */}
@@ -307,44 +334,22 @@ function Question() {
 
       {/* Tags Input */}
       <div className="mb-6">
-        <Autocomplete
-          multiple
-          freeSolo
-          options={[]}
+        <TextField
+          label="Tags"
+          variant="outlined"
+          placeholder="Enter tags"
+          fullWidth
           value={tags}
-          onChange={(event, newValue) => {
-            setTags(newValue);
+          onChange={(e) => setTags(e.target.value.split(","))}
+          InputProps={{
+            sx: { borderRadius: "20px" },
+            className:
+              "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
           }}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                variant="outlined"
-                label={option}
-                {...getTagProps({ index })}
-                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full"
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              variant="outlined"
-              label="Tags"
-              placeholder="Enter tags"
-              InputProps={{
-                ...params.InputProps,
-                sx: { borderRadius: "20px" },
-                className: "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
-              }}
-              InputLabelProps={{
-                className: "text-gray-700 dark:text-gray-300",
-              }}
-            />
-          )}
+          InputLabelProps={{
+            className: "text-gray-700 dark:text-gray-300",
+          }}
         />
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Press Enter to input Tags
-        </p>
       </div>
 
       {/* Tabs */}
@@ -421,7 +426,6 @@ function Question() {
                 <CloudUploadIcon className="inline-block mr-2" />
                 Upload Files
               </label>
-              {/* Display selected files */}
               {files.length > 0 && (
                 <div className="mt-4 w-full">
                   <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">
@@ -466,14 +470,12 @@ function Question() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                             >
-                              {/* Drag Handle */}
                               <div
                                 {...provided.dragHandleProps}
                                 className="cursor-grab mr-2 text-gray-500 dark:text-gray-300"
                               >
                                 <DragIndicatorIcon />
                               </div>
-                              {/* Poll Option Input */}
                               <TextField
                                 variant="outlined"
                                 label={`Option ${index + 1}`}
@@ -490,7 +492,6 @@ function Question() {
                                   className: "text-gray-700 dark:text-gray-300",
                                 }}
                               />
-                              {/* Remove Option Button */}
                               {pollOptions.length > 2 && (
                                 <IconButton
                                   onClick={() => removePollOption(index)}
@@ -508,7 +509,6 @@ function Question() {
                   )}
                 </Droppable>
               </DragDropContext>
-              {/* Add Option Button */}
               <Button
                 variant="outlined"
                 color="primary"
@@ -521,12 +521,10 @@ function Question() {
           )}
         </div>
 
-        {/* Display submission error if any */}
         {submissionError && (
           <div className="mb-4 text-red-500 text-sm">{submissionError}</div>
         )}
 
-        {/* Post Button */}
         <div className="flex justify-center">
           <Button
             variant="contained"
