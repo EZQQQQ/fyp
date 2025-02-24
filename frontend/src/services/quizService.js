@@ -8,6 +8,17 @@ const createQuiz = async (communityId, quizData) => {
   return res.data;
 };
 
+// function for AI-enabled quiz creation
+const createQuizWithAI = async (communityId, formData) => {
+  // POST /api/communities/:communityId/quizzes/ai
+  const res = await axiosInstance.post(
+    `/communities/${communityId}/quizzes/ai`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return res.data;
+};
+
 const getQuizzesByCommunity = async (communityId) => {
   // GET /api/quizzes/:communityId/quizzes
   const res = await axiosInstance.get(`/quizzes/${communityId}/quizzes`);
@@ -62,6 +73,7 @@ const getQuizAttempt = async (quizId, attemptId) => {
 
 export default {
   createQuiz,
+  createQuizWithAI,
   getQuizzesByCommunity,
   getQuizById,
   updateQuiz,

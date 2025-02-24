@@ -201,8 +201,11 @@ function CommunityPage() {
   useEffect(() => {
     if (community) {
       dispatch(fetchAssessmentTasks(id));
+      if (user && user.role === "student") {
+        dispatch(fetchUserParticipation(id));
+      }
     }
-  }, [community, id, dispatch]);
+  }, [community, id, dispatch, user]);
 
   // Handle Joining and Leaving the Community
   const handleJoin = async () => {

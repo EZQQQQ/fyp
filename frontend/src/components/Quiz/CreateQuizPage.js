@@ -1,24 +1,27 @@
-// /frontend/src/components/Quiz/CreateQuizPage.js
+// frontend/src/components/Quiz/CreateQuizPage.js
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
-
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import quizService from "../../services/quizService";
 import { createAssessmentTask } from "../../features/assessmentSlice";
 import MarkdownEditor from "../TextEditor/MarkdownEditor";
-import TextContent from "../ViewQuestion/TextContent"; // For instructions preview
+import TextContent from "../ViewQuestion/TextContent";
 
 function CreateQuizPage() {
   const { communityId } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
 
-  // State for quiz title, questions, and instructions.
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState([]);
+  // Pre-populate state with generated quiz if available
+  const initialQuizData = location.state?.quizData;
+  const [title, setTitle] = useState(initialQuizData?.title || "");
+  const [questions, setQuestions] = useState(initialQuizData?.questions || []);
   const [instructions, setInstructions] = useState(
+    initialQuizData?.instructions ||
     `After you have completed the online lesson, complete this assessment quiz that tests your knowledge of the content covered in the online lesson.
 
 Note:
@@ -34,7 +37,6 @@ Force Completion: Once started, this test must be completed in one sitting. Do n
 Due Date: This Test is due on {time set by professor}. Test submitted past this date will not be recorded.`
   );
 
-  // Add an empty question.
   const handleAddQuestion = () => {
     setQuestions((prev) => [
       ...prev,
@@ -47,12 +49,10 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
     ]);
   };
 
-  // Remove a question.
   const handleRemoveQuestion = (qIdx) => {
     setQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
   };
 
-  // Add an option to a question.
   const handleAddOption = (qIdx) => {
     setQuestions((prev) => {
       const updated = [...prev];
@@ -61,18 +61,16 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
     });
   };
 
-  // Remove an option from a question.
   const handleRemoveOption = (qIdx, optIdx) => {
     setQuestions((prev) => {
       const updated = [...prev];
       updated[qIdx].options = updated[qIdx].options.filter(
-        (_, index) => index !== optIdx
+        (_, idx) => idx !== optIdx
       );
       return updated;
     });
   };
 
-  // Validate quiz.
   const validateQuiz = () => {
     if (!title.trim()) {
       toast.error("Quiz title cannot be empty.");
@@ -97,15 +95,14 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
     return true;
   };
 
-  // Handle form submission.
   const handleSubmit = async () => {
     if (!validateQuiz()) return;
 
     try {
-      const quizData = { title, instructions, questions };
-      console.log("Quiz Data:", quizData);
+      const quizDataToSend = { title, instructions, questions };
+      console.log("Quiz Data:", quizDataToSend);
 
-      const res = await quizService.createQuiz(communityId, quizData);
+      const res = await quizService.createQuiz(communityId, quizDataToSend);
 
       if (res.success) {
         toast.success("Quiz created!");
@@ -133,11 +130,21 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-semibold mb-4">Create a New Quiz</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Create a New Quiz</h2>
+        <Button
+          color="blue"
+          className="text-sm px-3 py-2"
+          onClick={() => navigate(`/communities/${communityId}/create-quiz/ai`)}
+        >
+          <AutoAwesomeIcon className="mr-2" />
+          Create Quiz with AI
+        </Button>
+      </div>
 
       {/* Quiz Title */}
       <div className="mb-4">
-        <label className="block font-medium mb-1">Quiz Title</label>
+        <label className="block font-medium mb-1 text-gray-900 dark:text-gray-100">Quiz Title</label>
         <input
           type="text"
           className="border border-gray-300 dark:border-gray-600 p-2 w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -149,7 +156,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
 
       {/* Quiz Instructions */}
       <div className="mb-4">
-        <label className="block font-medium mb-1">Quiz Instructions/Notes</label>
+        <label className="block font-medium mb-1 text-gray-900 dark:text-gray-100">Quiz Instructions/Notes</label>
         <MarkdownEditor
           value={instructions}
           onChange={setInstructions}
@@ -158,11 +165,8 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           You can modify these instructions if needed.
         </p>
-        {/* Instructions Preview */}
         <div className="mt-4 p-4 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-800">
-          <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">
-            Instructions Preview:
-          </h3>
+          <h3 className="font-semibold mb-2">Instructions Preview:</h3>
           <TextContent
             content={instructions}
             type="html"
@@ -173,10 +177,9 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
 
       {/* Questions */}
       <div className="mb-4">
-        <label className="block font-medium mb-1">Questions</label>
+        <label className="block font-medium mb-1 text-gray-900 dark:text-gray-100">Questions</label>
         {questions.map((question, qIdx) => (
           <div key={qIdx} className="relative border border-gray-300 dark:border-gray-600 rounded p-2 mb-2">
-            {/* Remove Question Button */}
             <button
               onClick={() => handleRemoveQuestion(qIdx)}
               className="absolute top-2 right-2 text-sm text-red-500 hover:text-red-700 focus:outline-none"
@@ -184,7 +187,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
             >
               &#x2715;
             </button>
-            {/* Question Text */}
             <label className="block font-medium mb-1">Question Text</label>
             <MarkdownEditor
               value={question.questionText}
@@ -195,7 +197,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
               }}
               placeholder="Enter question text"
             />
-            {/* Explanation */}
             <label className="block font-medium mb-1 mt-2">Explanation (optional)</label>
             <textarea
               className="border border-gray-300 dark:border-gray-600 p-2 w-full h-24 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
@@ -207,7 +208,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                 setQuestions(updated);
               }}
             ></textarea>
-            {/* Allow Multiple Correct */}
             <div className="mt-2">
               <label className="flex items-center">
                 <input
@@ -223,7 +223,6 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
                 Allow multiple correct answers?
               </label>
             </div>
-            {/* Options */}
             <div className="ml-4 mt-2">
               {question.options.map((opt, optIdx) => (
                 <div key={optIdx} className="flex items-center mb-2">

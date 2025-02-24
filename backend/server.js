@@ -17,6 +17,7 @@ const pollRoutes = require("./routers/Poll");
 const quizRoutes = require("./routers/Quiz");
 const notificationRouter = require("./routers/Notification");
 const communityChatRouter = require("./routers/CommunityChat");
+const ragRouter = require("./routers/Rag");
 const errorHandler = require("./middlewares/errorHandler");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
@@ -152,6 +153,7 @@ app.use("/api/poll", pollRoutes);
 app.use("/api", quizRoutes);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/chat", communityChatRouter);
+app.use("/api", ragRouter);
 
 // Removed the local file serving line
 // app.use("/uploads", express.static(path.join(__dirname, "uploads")));

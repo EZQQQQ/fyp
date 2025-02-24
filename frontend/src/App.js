@@ -31,6 +31,7 @@ import ProfilePage from "./components/Profile/ProfilePage";
 import ProfileSettings from "./components/Profile/ProfileSettings";
 import BookmarkedQuestions from "./components/Bookmark/BookmarkedQuestions";
 import CreateQuizPage from "./components/Quiz/CreateQuizPage";
+import CreateQuizWithAIPage from "./components/Quiz/CreateQuizWithAIPage";
 import AttemptQuizPage from "./components/Quiz/AttemptQuizPage";
 import EditQuizPage from "./components/Quiz/EditQuizPage";
 import QuizInstructionsPage from "./components/Quiz/QuizInstructionsPage";
@@ -234,6 +235,14 @@ const AppContent = ({ socket }) => {
             element={
               <ProtectedRoute>
                 <CreateQuizPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="communities/:communityId/create-quiz/ai"
+            element={
+              <ProtectedRoute>
+                <CreateQuizWithAIPage />
               </ProtectedRoute>
             }
           />

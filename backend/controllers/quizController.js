@@ -3,6 +3,8 @@
 const Quiz = require("../models/Quiz");
 const QuizAttempt = require("../models/QuizAttempt");
 const Community = require("../models/Community");
+const pdfParse = require('pdf-parse');
+const openai = require("../utils/openaiClient");
 
 /**
  * CREATE a new quiz for a specific community
@@ -36,6 +38,121 @@ async function createQuizForCommunity(req, res) {
     return res.status(201).json({ success: true, quiz });
   } catch (error) {
     console.error("Error creating quiz for community:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
+/**
+ * CREATE a new quiz using OpenAI API and an uploaded document.
+ * Processes the file from memory (using pdfParse) and uses GPT-4o.
+ * This endpoint does not save the quiz—it returns the generated quiz data for editing.
+ */
+async function createQuizWithAI(req, res) {
+  try {
+    const { communityId } = req.params;
+    const { learningObjective, numQuestions, numOptions, allowMultiple } = req.body;
+    const createdBy = req.user._id;
+
+    if (!learningObjective || !numQuestions || !numOptions) {
+      return res.status(400).json({ success: false, message: "Missing prompt inputs." });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No document uploaded." });
+    }
+
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ success: false, message: "Community not found." });
+    }
+
+    // Process file from memory using pdfParse
+    const data = await pdfParse(req.file.buffer);
+    const documentText = data.text;
+
+    const systemPrompt = `
+You are an AI assistant that creates quizzes based on educational documents.
+Follow the provided learning objective, number of questions, number of options, and document content.
+Generate a quiz in JSON format with the following structure:
+{
+  "title": "Quiz Title",
+  "instructions": "Quiz instructions with placeholders if needed",
+  "questions": [
+    {
+      "questionText": "Question text",
+      "allowMultipleCorrect": false,
+      "options": [
+        {"optionText": "Option text", "isCorrect": true},
+        {"optionText": "Option text", "isCorrect": false}
+      ],
+      "explanation": "Explanation for the question"
+    },
+    ...
+  ]
+}
+Only output the JSON without any additional commentary.
+    `;
+
+    const prompt = `
+Learning Objective: ${learningObjective}
+Number of Questions: ${numQuestions}
+Number of Options per Question: ${numOptions}
+Allow Multiple Correct Answers: ${allowMultiple}
+
+Document Content:
+${documentText}
+    `;
+
+    // Use GPT-4o to generate the quiz using the chat completions endpoint
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      temperature: 0.7,
+      max_tokens: 1500,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ],
+    });
+
+    // Remove markdown code fences if present
+    let responseText = completion.choices[0].message.content.trim();
+    responseText = responseText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+
+    let quizData;
+    try {
+      quizData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Error parsing OpenAI response:", parseError);
+      return res.status(500).json({ success: false, message: "Failed to parse AI response." });
+    }
+
+    // Set default instructions (do not override with AI-generated instructions)
+    const defaultInstructions = `After you have completed the online lesson, complete this assessment quiz that tests your knowledge of the content covered in the online lesson.
+
+Note:
+1) You will not be able to attempt the quiz after the due date and will not get any scores for this quiz.
+2) You are required to complete the entire quiz in a single session once you have started it. Please do not attempt the quiz from more than one browser window/tab or device as the second access would be considered a re-attempt.
+
+INSTRUCTIONS
+Description:
+This MCQ is based on the lecture content.
+Instructions:
+Complete all {number} questions.
+Force Completion: Once started, this test must be completed in one sitting. Do not leave the test before clicking Save and Submit.
+Due Date: This Test is due on {time set by professor}. Test submitted past this date will not be recorded.`;
+
+    // Instead of saving the quiz, return the quiz data for further editing.
+    // override the instructions with our default instructions.
+    const quiz = {
+      community: community._id,
+      title: quizData.title || "Untitled Quiz",
+      instructions: defaultInstructions,
+      createdBy,
+      questions: quizData.questions || [],
+    };
+
+    return res.status(200).json({ success: true, quiz });
+  } catch (error) {
+    console.error("Error creating quiz with AI:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 }
@@ -338,6 +455,7 @@ async function getQuizAttempt(req, res) {
 
 module.exports = {
   createQuizForCommunity,
+  createQuizWithAI,
   getQuizzesByCommunity,
   getQuizById,
   updateQuiz,

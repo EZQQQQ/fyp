@@ -5,6 +5,7 @@ const router = express.Router();
 const auth = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorize");
 const quizController = require("../controllers/quizController");
+const uploadMemory = require("../middlewares/uploadMemory");
 
 /**
  * CREATE a quiz for a community
@@ -15,6 +16,18 @@ router.post(
   auth,
   authorizeRoles("professor", "admin"),
   quizController.createQuizForCommunity
+);
+
+/**
+ * CREATE a quiz using AI by uploading a document and prompt inputs
+ * POST /api/communities/:communityId/quizzes/ai
+ */
+router.post(
+  "/communities/:communityId/quizzes/ai",
+  auth,
+  authorizeRoles("professor", "admin"),
+  uploadMemory.single("document"),
+  quizController.createQuizWithAI
 );
 
 /**
