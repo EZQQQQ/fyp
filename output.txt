@@ -10,6 +10,7 @@
 │   │   ├── questionController.js
 │   │   ├── pollController.js
 │   │   ├── quizController.js
+│   │   ├── ragController.js
 │   │   ├── userController.js
 │   │   ├── voteController.js
 │   ├── db.js
@@ -20,6 +21,7 @@
 │   │   ├── errorHandler.js
 │   │   ├── upload.js
 │   │   ├── uploadCommunity.js
+│   │   ├── uploadMemory.js
 │   │   ├── uploadProfile.js
 │   │   └── validate.js
 │   ├── models
@@ -45,11 +47,16 @@
 │   │   ├── Quiz.js
 │   │   ├── Notification.js
 │   │   ├── User.js
+│   │   ├── Rag.js
 │   │   ├── index.js
 │   │   ├── Poll.js
 │   │   └── Vote.js
+│   ├── utils
+│   │   └── openaiClient.js
 │   ├── server.js
-│   └── adjectives.txt
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── adjectives.txt
 │   └── animals.txt
 ├── frontend
 │   ├── build
@@ -147,6 +154,8 @@
 │   │   │   │   ├── QuestionCard.js
 │   │   │   │   ├── Sidebar.js
 │   │   │   │   └── SidebarLink.js
+│   │   │   ├── LoadingAnimation
+│   │   │   │   └── LoadingAnimation.js
 │   │   │   ├── MediaViewer
 │   │   │   │   └── MediaViewer.js
 │   │   │   ├── Modal
@@ -159,6 +168,7 @@
 │   │   │   ├── Quiz/
 │   │   │   │   ├── AttemptQuizPage.js
 │   │   │   │   ├── CreateQuizPage.js
+│   │   │   │   ├── CreateQuizWithAIPage.js
 │   │   │   │   ├── EditQuizPage.js
 │   │   │   │   ├── QuizInstructionsPage.js
 │   │   │   │   └── QuizResultsPage.js
