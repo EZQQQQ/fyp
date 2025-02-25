@@ -20,6 +20,7 @@ import PollResults from "../Polls/PollResults";
 import CommentSection from "./CommentSection";
 import { selectUser } from "../../features/userSlice";
 import CommunityAvatar from "../Community/CommunityAvatar";
+import FilterDropdown from "../KnowledgeNode/FilterDropdown";
 
 // Helper function to format time difference in a "time ago" format
 function formatTimeAgo(date) {
@@ -49,6 +50,13 @@ function MainQuestion() {
   const [answerLoading, setAnswerLoading] = useState({});
   const [answerComments, setAnswerComments] = useState({});
   const [loadingAnswerComments, setLoadingAnswerComments] = useState(false);
+
+  // State for answer filter
+  const [answerFilter, setAnswerFilter] = useState("newest");
+  const answerFilterOptions = [
+    { label: "Newest", value: "newest" },
+    { label: "Popular", value: "popular" },
+  ];
 
   // Fetch Question Data on Mount
   useEffect(() => {
@@ -191,8 +199,8 @@ function MainQuestion() {
             ? {
               ...ans,
               voteCount: voteResult.voteCount,
-              userHasUpvoted: voteResult.voteResult,
-              userHasDownvoted: voteResult.voteResult,
+              userHasUpvoted: type === "upvote" ? true : false,
+              userHasDownvoted: type === "downvote" ? true : false,
             }
             : ans
         )
@@ -202,8 +210,8 @@ function MainQuestion() {
           targetId: answerId,
           voteInfo: {
             voteCount: voteResult.voteCount,
-            userHasUpvoted: voteResult.voteResult,
-            userHasDownvoted: voteResult.voteResult,
+            userHasUpvoted: type === "upvote" ? true : false,
+            userHasDownvoted: type === "downvote" ? true : false,
           },
         })
       );
@@ -292,6 +300,16 @@ function MainQuestion() {
       </div>
     );
   }
+
+  // Sort answers based on answerFilter
+  const sortedAnswers = [...answers].sort((a, b) => {
+    if (answerFilter === "newest") {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    } else if (answerFilter === "popular") {
+      return b.voteCount - a.voteCount;
+    }
+    return 0;
+  });
 
   return (
     <div className="w-full sm:max-w-4xl mx-auto bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-md shadow-md overflow-x-hidden">
@@ -400,58 +418,74 @@ function MainQuestion() {
       </div>
 
       {/* Answers Section */}
-      <div className="mb-4">
-        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          {answers.length} {answers.length === 1 ? "Answer" : "Answers"}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          {sortedAnswers.length} {sortedAnswers.length === 1 ? "Answer" : "Answers"}
         </h3>
-        {answers.map((answer, index) => (
-          <div key={answer._id}>
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-md shadow-sm flex flex-col space-y-4">
-              {/* Answer Meta: Avatar, Username, and Time in one row */}
-              <div className="flex items-center space-x-2">
-                <UserAvatar user={answer.user} handleSignOut={() => { }} />
-                <p className="text-gray-900 dark:text-gray-100 font-medium">
-                  {answer.user?.username || answer.user?.name || "Anonymous"}
-                </p>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatTimeAgo(answer.createdAt)}
-                </span>
-              </div>
-              {/* Answer Content */}
-              <div className="my-3 custom-break whitespace-normal">
-                <TextContent content={answer.answer} type="answer" />
-              </div>
-              {answer.files?.length > 0 && (
-                <div className="my-4">
-                  {answer.files.map((fileUrl, idx) => (
-                    <MediaViewer key={idx} file={fileUrl} />
-                  ))}
+        <FilterDropdown
+          options={answerFilterOptions}
+          selected={answerFilterOptions.find(opt => opt.value === answerFilter)}
+          onSelect={(option) => setAnswerFilter(option.value)}
+          buttonClassName="text-xs sm:text-sm px-2 py-1"
+          optionClassName="text-xs sm:text-sm px-4 py-2"
+        />
+      </div>
+
+      {/* Answers List */}
+      <div className="mb-4">
+        {sortedAnswers.length > 0 ? (
+          <div className="flex flex-col space-y-6">
+            {sortedAnswers.map((answer, index) => (
+              <div key={answer._id}>
+                <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-md shadow-sm flex flex-col space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <UserAvatar user={answer.user} handleSignOut={() => { }} />
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">
+                      {answer.user?.username || answer.user?.name || "Anonymous"}
+                    </p>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatTimeAgo(answer.createdAt)}
+                    </span>
+                  </div>
+                  <div className="my-3 custom-break whitespace-normal">
+                    <TextContent content={answer.answer} type="answer" />
+                  </div>
+                  {answer.files?.length > 0 && (
+                    <div className="my-4">
+                      {answer.files.map((fileUrl, idx) => (
+                        <MediaViewer key={idx} file={fileUrl} />
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex">
+                    <VoteButtons
+                      voteCount={answer.voteCount}
+                      onUpvote={() => handleAnswerVote("upvote", answer._id)}
+                      onDownvote={() => handleAnswerVote("downvote", answer._id)}
+                      userHasUpvoted={answer.userHasUpvoted}
+                      userHasDownvoted={answer.userHasDownvoted}
+                      loading={answerLoading[answer._id] || false}
+                    />
+                  </div>
+                  <CommentSection
+                    comments={answerComments[answer._id] || []}
+                    onAddComment={handleAddAnswerComment}
+                    loading={loadingAnswerComments}
+                    parentId={answer._id}
+                    commentType="answer"
+                  />
                 </div>
-              )}
-              {/* Vote Buttons for Answer */}
-              <div className="flex">
-                <VoteButtons
-                  voteCount={answer.voteCount}
-                  onUpvote={() => handleAnswerVote("upvote", answer._id)}
-                  onDownvote={() => handleAnswerVote("downvote", answer._id)}
-                  userHasUpvoted={answer.userHasUpvoted}
-                  userHasDownvoted={answer.userHasDownvoted}
-                  loading={answerLoading[answer._id] || false}
-                />
+                {index !== sortedAnswers.length - 1 && (
+                  <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
+                )}
               </div>
-              <CommentSection
-                comments={answerComments[answer._id] || []}
-                onAddComment={handleAddAnswerComment}
-                loading={loadingAnswerComments}
-                parentId={answer._id}
-                commentType="answer"
-              />
-            </div>
-            {index !== answers.length - 1 && (
-              <hr className="border-t border-gray-300 dark:border-gray-700 mb-4" />
-            )}
+            ))}
           </div>
-        ))}
+        ) : (
+          <p className="text-center text-gray-600 dark:text-gray-300">
+            No answers available.
+          </p>
+        )}
       </div>
     </div>
   );
