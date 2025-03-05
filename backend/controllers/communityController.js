@@ -9,6 +9,47 @@ const QuizAttempt = require("../models/QuizAttempt");
 const User = require("../models/User");
 const s3BaseUrl = `https://${config.s3.bucketName}.s3.${config.s3.region}.amazonaws.com`;
 
+// Helper function to generate a random 6-character alphanumerical code
+function generateCommunityCode() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
+}
+
+// Refresh the community code (only for professors and admins)
+const refreshCommunityCode = async (req, res) => {
+  try {
+    const communityId = req.params.id;
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({
+        status: false,
+        message: "Community not found.",
+      });
+    }
+
+    // Generate and update the community code
+    community.communityCode = generateCommunityCode();
+    await community.save();
+
+    res.status(200).json({
+      status: true,
+      message: "Community code refreshed successfully.",
+      communityCode: community.communityCode,
+    });
+  } catch (error) {
+    console.error("Error refreshing community code:", error);
+    res.status(500).json({
+      status: false,
+      message: "Error refreshing community code.",
+      error: error.message,
+    });
+  }
+};
+
 // Create a new community
 const createCommunity = async (req, res) => {
   try {
@@ -28,6 +69,9 @@ const createCommunity = async (req, res) => {
     // Ensure rules is an array
     const parsedRules = Array.isArray(rules) ? rules : [rules];
 
+    // generate a unique community code
+    const communityCode = generateCommunityCode();
+
     const community = new Community({
       name,
       description,
@@ -35,6 +79,7 @@ const createCommunity = async (req, res) => {
       members: [createdBy],
       avatar,
       rules: parsedRules,
+      communityCode,
     });
 
     await community.save();
@@ -117,7 +162,9 @@ const getUserCommunities = async (req, res) => {
 const joinCommunity = async (req, res) => {
   try {
     const communityId = req.params.id;
+    const { code } = req.body;
     const userId = req.user._id;
+    const userRole = req.user.role;  // Get user role from request
 
     const community = await Community.findById(communityId);
     if (!community) {
@@ -133,6 +180,17 @@ const joinCommunity = async (req, res) => {
         status: false,
         message: "You are already a member of this community.",
       });
+    }
+
+    // Skip code verification for professors and admins
+    if (userRole !== 'professor' && userRole !== 'admin') {
+      // Only verify code for students
+      if (community.communityCode !== code) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid community code.",
+        });
+      }
     }
 
     community.members.push(userId);
@@ -180,10 +238,18 @@ const leaveCommunity = async (req, res) => {
       });
     }
 
+    // Remove user from community members
     community.members = community.members.filter(
       (memberId) => memberId.toString() !== userId.toString()
     );
     await community.save();
+
+    // Remove community from user's communities array
+    await User.findByIdAndUpdate(
+      userId,
+      { $pull: { communities: communityId } },
+      { new: true }
+    );
 
     res.status(200).json({
       status: true,
@@ -679,6 +745,7 @@ async function getAllParticipation(req, res) {
 }
 
 module.exports = {
+  refreshCommunityCode,
   createCommunity,
   getAllCommunities,
   getUserCommunities,

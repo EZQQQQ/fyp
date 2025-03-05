@@ -18,8 +18,8 @@ export const fetchCommunities = createAsyncThunk(
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch communities."
+        error.message ||
+        "Failed to fetch communities."
       );
     }
   }
@@ -39,8 +39,8 @@ export const fetchUserCommunities = createAsyncThunk(
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch user communities."
+        error.message ||
+        "Failed to fetch user communities."
       );
     }
   }
@@ -62,8 +62,8 @@ export const createCommunity = createAsyncThunk(
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to create community."
+        error.message ||
+        "Failed to create community."
       );
     }
   }
@@ -72,17 +72,44 @@ export const createCommunity = createAsyncThunk(
 // Thunk to join a community
 export const joinCommunity = createAsyncThunk(
   "communities/joinCommunity",
-  async (communityId, thunkAPI) => {
+  async ({ communityId, code }, thunkAPI) => {
     try {
-      const response = await communityService.joinCommunity(communityId);
+      // Pass the parameters correctly as an object
+      const response = await communityService.joinCommunity({ communityId, code });
+
       if (response.status) {
-        return response.data; // Assuming response.data is the updated community
+        // Fetch the complete community data with populated fields after joining
+        const communityResponse = await communityService.getCommunityById(communityId);
+        return communityResponse.data; // Return fully populated community data
       } else {
         return thunkAPI.rejectWithValue("Failed to join community.");
       }
     } catch (error) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to join community."
+      );
+    }
+  }
+);
+
+// Thunk to leave a community
+export const leaveCommunity = createAsyncThunk(
+  "communities/leaveCommunity",
+  async (communityId, thunkAPI) => {
+    try {
+      const response = await communityService.leaveCommunity(communityId);
+      if (response.status) {
+        // After leaving, refetch user communities to update the state
+        thunkAPI.dispatch(fetchUserCommunities());
+        return communityId;
+      } else {
+        return thunkAPI.rejectWithValue("Failed to leave community.");
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to leave community."
       );
     }
   }
@@ -98,6 +125,28 @@ export const checkCommunityName = createAsyncThunk(
       return { exists: response.exists };
     } catch (error) {
       return rejectWithValue(error.message || "Error checking community name");
+    }
+  }
+);
+
+// Thunk to refresh community code
+export const refreshCommunityCode = createAsyncThunk(
+  "communities/refreshCommunityCode",
+  async (communityId, thunkAPI) => {
+    try {
+      const response = await communityService.refreshCommunityCode(communityId);
+      if (response.status) {
+        // Return both the communityId and the new community code
+        return { communityId, communityCode: response.communityCode };
+      } else {
+        return thunkAPI.rejectWithValue("Failed to refresh community code.");
+      }
+    } catch (error) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to refresh community code."
+      );
     }
   }
 );
@@ -124,7 +173,6 @@ const communitySlice = createSlice({
         error: null,
       };
     },
-    // ... other reducers ...
   },
   extraReducers: (builder) => {
     builder
@@ -205,6 +253,25 @@ const communitySlice = createSlice({
         toast.error(action.payload || "Failed to join community.");
       })
 
+      // Handle leaveCommunity
+      .addCase(leaveCommunity.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(leaveCommunity.fulfilled, (state, action) => {
+        state.loading = false;
+        // Remove the community from userCommunities array
+        state.userCommunities = state.userCommunities.filter(
+          community => community._id !== action.payload
+        );
+        toast.success("Left community successfully.");
+      })
+      .addCase(leaveCommunity.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(action.payload || "Failed to leave community.");
+      })
+
       // Handle checkCommunityName
       .addCase(checkCommunityName.pending, (state) => {
         state.nameCheck = {
@@ -226,6 +293,29 @@ const communitySlice = createSlice({
           exists: false,
           error: action.payload || "Error checking community name",
         };
+      })
+
+      // Handle refreshCommunityCode
+      .addCase(refreshCommunityCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(refreshCommunityCode.fulfilled, (state, action) => {
+        state.loading = false;
+        const { communityId, communityCode } = action.payload;
+        const index = state.communities.findIndex(
+          (c) => c._id === communityId
+        );
+        if (index !== -1) {
+          state.communities[index].communityCode = communityCode;
+        }
+      })
+      .addCase(refreshCommunityCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        toast.error(
+          action.payload || "Failed to refresh community code."
+        );
       });
   },
 });

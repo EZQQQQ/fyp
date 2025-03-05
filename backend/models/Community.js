@@ -49,6 +49,11 @@ const CommunitySchema = new mongoose.Schema({
     },
   ],
   assessmentTasks: [AssessmentTaskSchema],
+  communityCode: {
+    type: String,
+    required: true,
+    unique: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

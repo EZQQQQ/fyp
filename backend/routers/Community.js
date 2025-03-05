@@ -8,6 +8,14 @@ const CommunityController = require("../controllers/communityController");
 const uploadCommunity = require("../middlewares/uploadCommunity");
 const questionController = require("../controllers/questionController");
 
+// Refresh community code route (professor and admin only)
+router.post(
+  "/:id/refresh-code",
+  auth,
+  authorizeRoles("professor", "admin"),
+  CommunityController.refreshCommunityCode
+);
+
 // Create a new community (Professor and Admin only)
 router.post(
   "/",

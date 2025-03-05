@@ -24,8 +24,8 @@ const getUserCommunities = async () => {
 };
 
 // Join a community
-const joinCommunity = async (communityId) => {
-  const response = await axiosInstance.post(`/communities/${communityId}/join`);
+const joinCommunity = async ({ communityId, code }) => {
+  const response = await axiosInstance.post(`/communities/${communityId}/join`, { code });
   return response.data;
 };
 
@@ -51,6 +51,14 @@ const checkCommunityName = async (communityName) => {
   return response.data;
 };
 
+// Refresh community code
+const refreshCommunityCode = async (communityId) => {
+  const response = await axiosInstance.post(
+    `/communities/${communityId}/refresh-code`
+  );
+  return response.data;
+};
+
 export default {
   createCommunity,
   fetchCommunities,
@@ -59,4 +67,5 @@ export default {
   leaveCommunity,
   getCommunityById,
   checkCommunityName,
+  refreshCommunityCode,
 };

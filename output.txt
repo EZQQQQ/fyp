@@ -125,7 +125,10 @@
 │   │   │   │   ├── CommunityDetail.js
 │   │   │   │   ├── CommunityList.js
 │   │   │   │   ├── CommunityPage.js
-│   │   │   │   └── CreateCommunity.js
+│   │   │   │   ├── CommunitySidebar.js
+│   │   │   │   ├── CreateCommunity.js
+│   │   │   │   ├── MemberCommunityView.js
+│   │   │   │   └── NonMemberCommunityView.js
 │   │   │   ├── CommunityChat
 │   │   │   │   ├── ChatBox.css
 │   │   │   │   ├── ChatBox.js
