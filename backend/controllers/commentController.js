@@ -1,5 +1,6 @@
 // /backend/controllers/commentController.js
 
+const mongoose = require("mongoose");
 const Comment = require("../models/Comment");
 const Question = require("../models/Question");
 const Answer = require("../models/Answer");
@@ -229,9 +230,73 @@ const getCommentsByAnswerId = async (req, res) => {
   }
 };
 
+/**
+ * Delete a comment by ID.
+ */
+const deleteComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    console.log("Deleting comment with ID:", id);
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid comment ID format.",
+      });
+    }
+
+    // Find the comment
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({
+        status: false,
+        message: "Comment not found",
+      });
+    }
+
+    // console.log("Found comment:", comment);
+
+    // Only allow professors, admins, or the comment owner to delete
+    if (
+      req.user.role !== 'professor' &&
+      req.user.role !== 'admin' &&
+      comment.user.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({
+        status: false,
+        message: "You are not authorized to delete this comment",
+      });
+    }
+
+    // Delete the comment
+    await Comment.findByIdAndDelete(id);
+
+    // Decrement the user's commentsCount if it was the owner
+    if (comment.user.toString() === userId.toString()) {
+      await User.findByIdAndUpdate(userId, { $inc: { commentsCount: -1 } });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Comment deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting comment:", err);
+    res.status(500).json({
+      status: false,
+      message: "Error deleting comment",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   addCommentToQuestion,
   getCommentsByQuestionId,
   addCommentToAnswer,
   getCommentsByAnswerId,
+  deleteComment,
 };

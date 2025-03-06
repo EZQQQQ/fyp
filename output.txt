@@ -11,6 +11,7 @@
 │   │   ├── pollController.js
 │   │   ├── quizController.js
 │   │   ├── ragController.js
+│   │   ├── reportController.js
 │   │   ├── userController.js
 │   │   ├── voteController.js
 │   ├── db.js
@@ -33,6 +34,7 @@
 │   │   ├── Question.js
 │   │   ├── Quiz.js
 │   │   ├── QuizAttempt.js
+│   │   ├── Report.js
 │   │   └── User.js
 │   ├── firebaseAdmin.js
 │   ├── package-lock.json
@@ -49,6 +51,7 @@
 │   │   ├── User.js
 │   │   ├── Rag.js
 │   │   ├── index.js
+│   │   ├── Report.js
 │   │   ├── Poll.js
 │   │   └── Vote.js
 │   ├── utils
@@ -175,6 +178,9 @@
 │   │   │   │   ├── EditQuizPage.js
 │   │   │   │   ├── QuizInstructionsPage.js
 │   │   │   │   └── QuizResultsPage.js
+│   │   │   ├── Report
+│   │   │   │   ├── ReportButton.js
+│   │   │   │   └── ReportedContentPage.js
 │   │   │   ├── Search
 │   │   │   │   ├── Searchbar.js
 │   │   │   │   └── SearchResults.js
@@ -224,6 +230,7 @@
 │   │   │   ├── pollService.js
 │   │   │   ├── questionService.js
 │   │   │   ├── quizService.js
+│   │   │   ├── reportService.js
 │   │   │   ├── userService.js
 │   │   │   └── votingService.js
 │   │   └── utils

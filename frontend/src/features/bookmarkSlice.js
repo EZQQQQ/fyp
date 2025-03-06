@@ -36,7 +36,13 @@ const bookmarkSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    clearBookmarkData: (state) => {
+      state.bookmarkedQuestions = [];
+      state.loading = false;
+      state.error = null;
+    }
+  },
   extraReducers: (builder) => {
     builder
       // Pending
@@ -61,4 +67,5 @@ const bookmarkSlice = createSlice({
   },
 });
 
+export const { clearBookmarkData } = bookmarkSlice.actions;
 export default bookmarkSlice.reducer;

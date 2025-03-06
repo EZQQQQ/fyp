@@ -3,6 +3,7 @@
 const Answer = require("../models/Answer");
 const Question = require("../models/Question");
 const User = require("../models/User");
+const Comment = require("../models/Comment");
 const Notification = require("../models/Notification");
 const mongoose = require("mongoose");
 
@@ -135,7 +136,74 @@ const getAnswersByQuestionId = async (req, res) => {
   }
 };
 
+/**
+ * Delete an answer by ID.
+ */
+const deleteAnswer = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const userId = req.user._id;
+
+    console.log("Deleting answer with ID:", questionId);
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(questionId)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid answer ID format.",
+      });
+    }
+
+    // Find the answer
+    const answer = await Answer.findById(questionId);
+    if (!answer) {
+      return res.status(404).json({
+        status: false,
+        message: "Answer not found",
+      });
+    }
+
+    // console.log("Found answer:", answer);
+
+    // Only allow professors, admins, or the answer owner to delete
+    if (
+      req.user.role !== 'professor' &&
+      req.user.role !== 'admin' &&
+      answer.user.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({
+        status: false,
+        message: "You are not authorized to delete this answer",
+      });
+    }
+
+    // Delete all comments related to this answer
+    await Comment.deleteMany({ answer_id: questionId });
+
+    // Delete the answer itself
+    await Answer.findByIdAndDelete(questionId);
+
+    // Decrement the user's answersCount if it was the owner
+    if (answer.user.toString() === userId.toString()) {
+      await User.findByIdAndUpdate(userId, { $inc: { answersCount: -1 } });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Answer and all related comments deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting answer:", err);
+    res.status(500).json({
+      status: false,
+      message: "Error deleting answer",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   addAnswer,
   getAnswersByQuestionId,
+  deleteAnswer,
 };

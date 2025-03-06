@@ -14,7 +14,6 @@
   justify-content: center;
   width: var(--icon-size);
   height: var(--icon-size);
-  margin-top: 0.5rem;
 }
 
 .ui-bookmark input {

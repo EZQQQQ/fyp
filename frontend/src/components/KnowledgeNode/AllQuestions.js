@@ -66,6 +66,12 @@ function AllQuestions() {
     }
   }, [dispatch, user]);
 
+  const handleDeleteQuestion = (deletedQuestionId) => {
+    setQuestions((prevQuestions) =>
+      prevQuestions.filter((q) => q._id !== deletedQuestionId)
+    );
+  };
+
   const sortedQuestions = [...questions].sort((a, b) => {
     if (filter === "newest") {
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -116,7 +122,9 @@ function AllQuestions() {
               <QuestionCard
                 key={question._id}
                 question={question}
+                currentUser={user}
                 updateQuestionVote={updateQuestionVote}
+                onQuestionRemoved={handleDeleteQuestion}
               />
             ))}
           </div>

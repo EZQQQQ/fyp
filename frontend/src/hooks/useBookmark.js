@@ -14,14 +14,14 @@ function useBookmark(questionId) {
   // Get bookmark data from the bookmark slice.
   const bookmarkState = useSelector((state) => state.bookmark);
 
-  // Use the bookmark slice's bookmarkedQuestions if available; 
-  // otherwise, fallback to the user object's bookmarkedQuestions.
-  const bookmarkedQuestions =
+  // Only use bookmarked questions if there's a logged-in user
+  const bookmarkedQuestions = user ?
     (bookmarkState.bookmarkedQuestions && bookmarkState.bookmarkedQuestions.length > 0)
       ? bookmarkState.bookmarkedQuestions
-      : (user?.bookmarkedQuestions || []);
+      : (user?.bookmarkedQuestions || [])
+    : [];
 
-  const isBookmarked = bookmarkedQuestions.includes(questionId);
+  const isBookmarked = user ? bookmarkedQuestions.includes(questionId) : false;
 
   const handleBookmarkToggle = async () => {
     try {

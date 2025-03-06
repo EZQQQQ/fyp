@@ -1,5 +1,4 @@
 // frontend/src/components/ViewQuestion/TextContent.js
-
 import React, { useState, useEffect, useRef } from "react";
 import parse, { domToReact } from "html-react-parser";
 import DOMPurify from "dompurify";
@@ -17,9 +16,11 @@ function TextContent({ content, type }) {
       }
       if (event.key === "Tab" && isModalOpen) {
         // Trap focus within the modal
-        const focusableElements = modalContentRef.current.querySelectorAll(
+        const focusableElements = modalContentRef.current?.querySelectorAll(
           "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])"
         );
+        if (!focusableElements || focusableElements.length === 0) return;
+
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -65,8 +66,22 @@ function TextContent({ content, type }) {
     };
   }, [isModalOpen]);
 
+  // Handle empty or invalid content
+  if (!content) {
+    return <div className="text-gray-500"></div>;
+  }
+
+  // Check if content already has HTML tags
+  // If not, wrap it in a paragraph tag for consistent formatting
+  let processedContent = content;
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+
+  if (!hasHtmlTags) {
+    processedContent = `<p>${content}</p>`;
+  }
+
   // Sanitize the content
-  const sanitizedContent = DOMPurify.sanitize(content);
+  const sanitizedContent = DOMPurify.sanitize(processedContent);
 
   // Remove empty paragraphs (those that contain only whitespace and/or <br>)
   const cleanedContent = sanitizedContent.replace(/<p>(\s|<br\s*\/?>)*<\/p>/gi, "");

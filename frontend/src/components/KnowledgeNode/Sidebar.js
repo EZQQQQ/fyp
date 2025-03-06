@@ -19,6 +19,7 @@ import {
 import SidebarLink from "./SidebarLink";
 import CommunityAvatar from "../Community/CommunityAvatar";
 import LogoDark from "../../assets/logo-dark.png";
+import ReportIcon from '@mui/icons-material/Report';
 
 const CommunityLinks = ({ communities, closeSidebar }) => (
   <>
@@ -115,6 +116,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                   Home
                 </SidebarLink>
               </li>
+
               <li>
                 <SidebarLink
                   to="/explore"
@@ -124,6 +126,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                   Explore
                 </SidebarLink>
               </li>
+
               <li>
                 <SidebarLink
                   to="/bookmark"
@@ -133,6 +136,18 @@ function Sidebar({ sidebarOpen, setSidebarOpen, openCreateCommunityModal }) {
                   Bookmarks
                 </SidebarLink>
               </li>
+
+              {(user.role === 'admin' || user.role === 'professor') && (
+                <li>
+                  <SidebarLink
+                    to="/reports"
+                    icon={ReportIcon}
+                    onClick={closeSidebar}
+                  >
+                    Reported Content
+                  </SidebarLink>
+                </li>
+              )}
             </ul>
           </div>
 

@@ -41,4 +41,12 @@ router.get(
   commentController.getCommentsByAnswerId
 );
 
+// @route DELETE /api/comment/:id
+// @desc Delete a comment
+router.delete(
+  "/:id",
+  auth,
+  commentController.deleteComment
+);
+
 module.exports = router;

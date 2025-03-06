@@ -21,6 +21,11 @@ import CommentSection from "./CommentSection";
 import { selectUser } from "../../features/userSlice";
 import CommunityAvatar from "../Community/CommunityAvatar";
 import FilterDropdown from "../KnowledgeNode/FilterDropdown";
+import ReportButton from '../Report/ReportButton';
+import { reportItem, deleteReportedItem } from '../../services/reportService';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import ReportIcon from '@mui/icons-material/Report';
+import { useNavigate } from 'react-router-dom';
 
 // Helper function to format time difference in a "time ago" format
 function formatTimeAgo(date) {
@@ -39,6 +44,7 @@ function formatTimeAgo(date) {
 
 function MainQuestion() {
   const { questionId } = useParams();
+  const navigate = useNavigate();
   const voteData = useSelector(selectVoteData);
   const dispatch = useDispatch();
   const currentUser = useSelector(selectUser);
@@ -64,7 +70,6 @@ function MainQuestion() {
       try {
         const response = await axiosInstance.get(`/question/${questionId}`);
         const qData = response.data.data;
-        // console.log("Question Data:", qData);
         setQuestion(qData);
         setComments(qData.comments || []);
         setAnswers(qData.answers || []);
@@ -114,31 +119,57 @@ function MainQuestion() {
     fetchQuestion();
   }, [questionId, dispatch]);
 
-  // Uncomment below for debugging if needed
-  // console.log("Rendering MainQuestion with question:", question);
-  // if (question) {
-  //   if (question.community) {
-  //     console.log("Community data:", question.community);
-  //   } else {
-  //     console.warn("Community data is missing in question:", question);
-  //   }
-  //   if (question.user) {
-  //     console.log("User data:", question.user);
-  //   } else {
-  //     console.warn("User data is missing in question:", question);
-  //   }
-  // }
+  const handleReport = async (type, itemId) => {
+    try {
+      await reportItem(type, itemId);
+      toast.success("Reported successfully.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to report item.");
+    }
+  };
+
+  const handleDelete = async (type, itemId) => {
+    if (!window.confirm(`Are you sure you want to delete this ${type} permanently?`)) {
+      return;
+    }
+
+    try {
+      await deleteReportedItem(itemId, type);
+
+      if (type === "question") {
+        toast.success("Question deleted successfully.");
+        navigate("/"); // This already exists in your code
+      } else if (type === "answer") {
+        toast.success("Answer deleted successfully.");
+        setAnswers(answers.filter(answer => answer._id !== itemId));
+      } else if (type === "comment") {
+        toast.success("Comment deleted successfully.");
+        // Refresh comments after deletion
+        if (comments.some(comment => comment._id === itemId)) {
+          setComments(comments.filter(comment => comment._id !== itemId));
+        } else {
+          // It's an answer comment - update the state
+          const updatedAnswerComments = { ...answerComments };
+          Object.keys(updatedAnswerComments).forEach(answerId => {
+            updatedAnswerComments[answerId] = updatedAnswerComments[answerId].filter(
+              comment => comment._id !== itemId
+            );
+          });
+          setAnswerComments(updatedAnswerComments);
+        }
+      }
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error(error.response?.data?.message || `Failed to delete ${type}.`);
+    }
+  };
 
   // Update local question state when vote data changes
   useEffect(() => {
     if (voteData[questionId]) {
       setQuestion((prev) => {
-        // console.log("Before vote update, prev question state:", prev);
-        // console.log("Incoming voteData for question:", voteData[questionId]);
-
         // Only update vote info if the previous state is complete (has an _id)
         if (!prev || !prev._id) {
-          // console.warn("Vote update skipped because full question data is not yet loaded.");
           return prev;
         }
 
@@ -149,7 +180,6 @@ function MainQuestion() {
           userHasDownvoted: voteData[questionId].userHasDownvoted,
         };
 
-        // console.log("After vote update, new question state:", updatedQuestion);
         return updatedQuestion;
       });
     }
@@ -324,11 +354,25 @@ function MainQuestion() {
             {question.community?.name || "Unknown Community"}
           </span>
         </div>
-        <BookmarkButtons
-          isBookmarked={isBookmarked}
-          onToggleBookmark={handleBookmarkToggle}
-          loading={false}
-        />
+        <div className="flex items-center gap-2">
+          {currentUser.role === 'student' ? (
+            <ReportButton
+              type="question"
+              itemId={questionId}
+              onReport={handleReport}
+            />
+          ) : (
+            <DeleteForeverIcon
+              onClick={() => handleDelete("question", questionId)}
+              className="cursor-pointer text-gray-500 hover:text-red-600"
+            />
+          )}
+          <BookmarkButtons
+            isBookmarked={isBookmarked}
+            onToggleBookmark={handleBookmarkToggle}
+            loading={false}
+          />
+        </div>
       </div>
 
       <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-gray-100 break-words">
@@ -392,6 +436,8 @@ function MainQuestion() {
           loading={false}
           parentId={questionId}
           commentType="question"
+          onReport={handleReport}
+          onDelete={handleDelete}
         />
       </div>
 
@@ -438,14 +484,30 @@ function MainQuestion() {
             {sortedAnswers.map((answer, index) => (
               <div key={answer._id}>
                 <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded-md shadow-sm flex flex-col space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <UserAvatar user={answer.user} handleSignOut={() => { }} />
-                    <p className="text-gray-900 dark:text-gray-100 font-medium">
-                      {answer.user?.username || answer.user?.name || "Anonymous"}
-                    </p>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatTimeAgo(answer.createdAt)}
-                    </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <UserAvatar user={answer.user} handleSignOut={() => { }} />
+                      <p className="text-gray-900 dark:text-gray-100 font-medium">
+                        {answer.user?.username || answer.user?.name || "Anonymous"}
+                      </p>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {formatTimeAgo(answer.createdAt)}
+                      </span>
+                    </div>
+                    <div>
+                      {currentUser.role === 'student' ? (
+                        <ReportButton
+                          type="answer"
+                          itemId={answer._id}
+                          onReport={handleReport}
+                        />
+                      ) : (
+                        <DeleteForeverIcon
+                          onClick={() => handleDelete("answer", answer._id)}
+                          className="cursor-pointer text-gray-500 hover:text-red-600"
+                        />
+                      )}
+                    </div>
                   </div>
                   <div className="my-3 custom-break whitespace-normal">
                     <TextContent content={answer.answer} type="answer" />
@@ -473,6 +535,8 @@ function MainQuestion() {
                     loading={loadingAnswerComments}
                     parentId={answer._id}
                     commentType="answer"
+                    onReport={handleReport}
+                    onDelete={handleDelete}
                   />
                 </div>
                 {index !== sortedAnswers.length - 1 && (

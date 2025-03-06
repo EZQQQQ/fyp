@@ -64,4 +64,12 @@ router.get(
   questionController.getQuestionById
 );
 
+// @route DELETE /api/question/:id
+// @desc Delete a specific question
+router.delete(
+  "/:id",
+  auth,
+  questionController.deleteQuestion
+);
+
 module.exports = router;

@@ -1,8 +1,10 @@
-// frontend/src/components/ViewQuestion/CommentSection.js
-
 import React, { useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/userSlice";
+import ReportButton from '../Report/ReportButton';
 
 function CommentSection({
   comments,
@@ -10,11 +12,14 @@ function CommentSection({
   loading,
   parentId,
   commentType,
+  onReport,
+  onDelete
 }) {
   const [showCommentBox, setShowCommentBox] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [visibleCommentsCount, setVisibleCommentsCount] = useState(3);
+  const currentUser = useSelector(selectUser);
 
   const handleToggleCommentBox = () => {
     setShowCommentBox(!showCommentBox);
@@ -66,15 +71,31 @@ function CommentSection({
                 className="mb-2 pl-4 border-l border-gray-300 dark:border-gray-600"
                 key={comment._id}
               >
-                <p className="text-gray-700 dark:text-gray-300 text-sm custom-break">
-                  {comment.comment} -{" "}
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-small">
-                    {comment.user?.username || comment.user?.name || "Anonymous"}
-                  </span>{" "}
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </span>
-                </p>
+                <div className="flex justify-between items-start">
+                  <p className="text-gray-700 dark:text-gray-300 text-sm custom-break">
+                    {comment.comment} -{" "}
+                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 text-sm font-small">
+                      {comment.user?.username || comment.user?.name || "Anonymous"}
+                    </span>{" "}
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </span>
+                  </p>
+                  <div className="flex items-center ml-2">
+                    {currentUser.role === 'student' ? (
+                      <ReportButton
+                        type="comment"
+                        itemId={comment._id}
+                        onReport={onReport}
+                      />
+                    ) : (
+                      <DeleteForeverIcon
+                        className="cursor-pointer text-gray-500 hover:text-red-600 w-4 h-4"
+                        onClick={() => onDelete("comment", comment._id)}
+                      />
+                    )}
+                  </div>
+                </div>
               </div>
             ))
           )}

@@ -5,6 +5,7 @@ import {
   IconButton,
   Tabs,
   Tab,
+  Chip,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -62,7 +63,6 @@ const CommunityDropdown = ({ communities, selected, onChange }) => {
             className="h-8 w-8 rounded-full"
           />
         ) : (
-
           <div className="h-8 w-8" />
         )}
         <input
@@ -117,6 +117,7 @@ function Question() {
   const [tabValue, setTabValue] = useState(0);
   const [body, setBody] = useState("");
   const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState(''); // Added tagInput state
   const [pollOptions, setPollOptions] = useState([
     { id: "option-1", text: "" },
     { id: "option-2", text: "" },
@@ -193,6 +194,32 @@ function Question() {
   const handleFileChange = (event) => {
     const selectedFiles = Array.from(event.target.files);
     setFiles(selectedFiles);
+  };
+
+  // Handle tag input change
+  const handleTagInputChange = (event) => {
+    setTagInput(event.target.value);
+  };
+
+  // Handle tag input keydown (for Enter)
+  const handleTagInputKeyDown = (event) => {
+    if (event.key === 'Enter' && tagInput.trim() !== '') {
+      event.preventDefault(); // Prevent form submission
+      const newTag = tagInput.trim();
+
+      // Check if tag already exists
+      if (!tags.includes(newTag)) {
+        setTags([...tags, newTag]);
+      }
+
+      // Clear input
+      setTagInput('');
+    }
+  };
+
+  // Delete a tag
+  const handleDeleteTag = (tagToDelete) => {
+    setTags(tags.filter(tag => tag !== tagToDelete));
   };
 
   const handleSubmit = async (e) => {
@@ -323,6 +350,9 @@ function Question() {
             className:
               "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
           }}
+          inputProps={{
+            className: "text-gray-800 dark:text-gray-200",
+          }}
           InputLabelProps={{
             className: "text-gray-700 dark:text-gray-300",
           }}
@@ -334,22 +364,39 @@ function Question() {
 
       {/* Tags Input */}
       <div className="mb-6">
-        <TextField
-          label="Tags"
-          variant="outlined"
-          placeholder="Enter tags"
-          fullWidth
-          value={tags}
-          onChange={(e) => setTags(e.target.value.split(","))}
-          InputProps={{
-            sx: { borderRadius: "20px" },
-            className:
-              "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
-          }}
-          InputLabelProps={{
-            className: "text-gray-700 dark:text-gray-300",
-          }}
-        />
+        <div className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-[20px] p-2">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {tags.map((tag, index) => (
+              <Chip
+                key={index}
+                label={tag}
+                onDelete={() => handleDeleteTag(tag)}
+                color="primary"
+                size="small"
+                className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              />
+            ))}
+          </div>
+          <TextField
+            label="Tags"
+            variant="outlined"
+            placeholder="Type a tag and press Enter"
+            fullWidth
+            value={tagInput}
+            onChange={handleTagInputChange}
+            onKeyDown={handleTagInputKeyDown}
+            InputProps={{
+              sx: { borderRadius: "20px" },
+              className: "bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600",
+            }}
+            inputProps={{
+              className: "text-gray-800 dark:text-gray-200",
+            }}
+            InputLabelProps={{
+              className: "text-gray-700 dark:text-gray-300",
+            }}
+          />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -400,7 +447,7 @@ function Question() {
               <MarkdownEditor
                 value={body}
                 onChange={setBody}
-                placeholder="Write your question content here (optional)..."
+                placeholder="Write your question content here..."
               />
             </div>
           )}

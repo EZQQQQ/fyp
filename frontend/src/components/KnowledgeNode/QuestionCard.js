@@ -14,6 +14,13 @@ import UserAvatar from "../../common/UserAvatar";
 import CommunityAvatar from "../Community/CommunityAvatar";
 import MediaViewer from "../MediaViewer/MediaViewer";
 import PollResults from "../Polls/PollResults";
+import ReportButton from '../Report/ReportButton';
+import { reportItem, deleteReportedItem } from '../../services/reportService';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { selectUser } from '../../features/userSlice';
 
 // Helper function to compute relative time from createdAt date string
 function getRelativeTime(dateString) {
@@ -35,7 +42,7 @@ function getRelativeTime(dateString) {
   }
 }
 
-function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote, uploadPath = "communityPosts" }) {
+function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote, uploadPath = "communityPosts", onQuestionRemoved }) {
   const {
     _id,
     title,
@@ -45,15 +52,45 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
     userHasUpvoted,
     userHasDownvoted,
     createdAt,
-    user,
+    // user,
     community,
     answersCount,
     commentsCount,
     files,
     contentType,
   } = question;
+  const user = useSelector(selectUser);
+  const navigate = useNavigate();
 
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
+
+  //function to handle report
+  const handleReport = async (type, itemId) => {
+    await reportItem(type, itemId);
+    alert("Reported successfully!");
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to permanently delete this question?')) {
+      try {
+        await deleteReportedItem(question._id, 'question');
+
+        // Call the callback if provided to update parent component state
+        if (onQuestionRemoved) {
+          onQuestionRemoved(question._id);
+        }
+
+        // Always redirect to home page after deletion
+        navigate('/');
+
+        // Show success toast
+        toast.success("Question deleted successfully");
+      } catch (error) {
+        console.error("Delete error:", error);
+        toast.error("Failed to delete question: " + (error.response?.data?.message || "Unknown error"));
+      }
+    }
+  };
 
   const handleVoteUpdate = (voteData) => {
     if (updateQuestionVote) {
@@ -87,13 +124,24 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
             <span className="mr-2">{getRelativeTime(createdAt)}</span>
           </div>
         </div>
-
-        {/* Bookmark Buttons (stays on the right) */}
-        <BookmarkButtons
-          isBookmarked={isBookmarked}
-          onToggleBookmark={handleBookmarkToggle}
-          loading={false}
-        />
+        <div className="flex items-center">
+          {/* Report/Delete Buttons (stays on the right) */}
+          {user.role === 'professor' || user.role === 'admin' ? (
+            <IconButton color="error" onClick={handleDelete}>
+              <DeleteForeverIcon
+                className="cursor-pointer text-gray-500 hover:text-red-600"
+              />
+            </IconButton>
+          ) : (
+            <ReportButton type="question" itemId={question._id} onReport={handleReport} />
+          )}
+          {/* Bookmark Buttons (stays on the right) */}
+          <BookmarkButtons
+            isBookmarked={isBookmarked}
+            onToggleBookmark={handleBookmarkToggle}
+            loading={false}
+          />
+        </div>
       </div>
 
 

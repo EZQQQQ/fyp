@@ -25,4 +25,8 @@ router.get(
   answerController.getAnswersByQuestionId
 );
 
+// @route DELETE /api/answer/:questionId
+// @desc Delete an answer
+router.delete("/:questionId", auth, answerController.deleteAnswer);
+
 module.exports = router;

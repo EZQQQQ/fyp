@@ -5,6 +5,7 @@ const Question = require("../models/Question");
 const Community = require("../models/Community");
 const Answer = require("../models/Answer");
 const Comment = require("../models/Comment");
+const User = require("../models/User");
 
 /**
  * Helper function to escape special regex characters in user input
@@ -646,6 +647,75 @@ const searchQuestions = async (req, res) => {
   }
 };
 
+/**
+ * Delete a question by ID.
+ */
+const deleteQuestion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid question ID format.",
+      });
+    }
+
+    // Find the question
+    const question = await Question.findById(id);
+    if (!question) {
+      return res.status(404).json({
+        status: false,
+        message: "Question not found",
+      });
+    }
+
+    // Only allow professors, admins, or the question owner to delete
+    if (
+      req.user.role !== 'professor' &&
+      req.user.role !== 'admin' &&
+      question.user.toString() !== userId.toString()
+    ) {
+      return res.status(403).json({
+        status: false,
+        message: "You are not authorized to delete this question",
+      });
+    }
+
+    // Delete all comments related to this question
+    await Comment.deleteMany({ question_id: id });
+
+    // Find and delete all answers and their comments
+    const answers = await Answer.find({ question_id: id });
+    for (const answer of answers) {
+      await Comment.deleteMany({ answer_id: answer._id });
+    }
+    await Answer.deleteMany({ question_id: id });
+
+    // Delete the question itself
+    await Question.findByIdAndDelete(id);
+
+    // Decrement the user's questionsCount if it was the owner
+    if (question.user.toString() === userId.toString()) {
+      await User.findByIdAndUpdate(userId, { $inc: { questionsCount: -1 } });
+    }
+
+    res.status(200).json({
+      status: true,
+      message: "Question and all related content deleted successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting question:", err);
+    res.status(500).json({
+      status: false,
+      message: "Error deleting question",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestion,
   getAllQuestions,
@@ -653,4 +723,5 @@ module.exports = {
   getQuestionById,
   getQuestionsByCommunity,
   searchQuestions,
+  deleteQuestion,
 };

@@ -39,6 +39,7 @@ import QuizResultsPage from "./components/Quiz/QuizResultsPage";
 import NotificationsListener from "./components/Notification/NotificationsListener";
 import LoadingAnimation from "./components/LoadingAnimation/LoadingAnimation";
 import CommunityChatPage from "./components/CommunityChat/CommunityChatPage";
+import ReportedContentPage from './components/Report/ReportedContentPage';
 
 // Redux Slice
 import { logout, selectUser, fetchUserData } from "./features/userSlice";
@@ -276,6 +277,14 @@ const AppContent = ({ socket }) => {
             element={
               <ProtectedRoute>
                 <BookmarkedQuestions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reports"
+            element={
+              <ProtectedRoute>
+                <ReportedContentPage />
               </ProtectedRoute>
             }
           />

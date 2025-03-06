@@ -28,8 +28,14 @@ const rootReducer = (state, action) => {
     // Clear the persisted state
     storage.removeItem("persist:root");
 
-    // Reset only the user state
-    return appReducer({ ...state, user: undefined }, action);
+    // Return a new state with all user-specific data reset
+    return appReducer({
+      ...state,
+      user: undefined,
+      vote: undefined,
+      bookmark: undefined,
+      notification: undefined
+    }, action);
   }
   return appReducer(state, action);
 };
