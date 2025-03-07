@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import ClickOutside from "./ClickOutside";
 import { markNotificationRead, markAllNotificationsRead } from "../../features/notificationSlice";
+import DOMPurify from "dompurify";
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -42,6 +43,43 @@ const DropdownNotification = () => {
 
   // Limit displayed notifications to 4
   const displayedNotifications = notifications.slice(0, 4);
+
+  // Function to strip HTML tags and properly format content for notifications
+  const formatNotificationContent = (content) => {
+    if (!content) return '';
+
+    try {
+      // Check if content contains image tags
+      const hasImage = content.includes('<img');
+
+      // First, strip HTML tags to get plain text
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = DOMPurify.sanitize(content);
+      const plainText = tempDiv.textContent || tempDiv.innerText || '';
+
+      // Remove any extra whitespace and line breaks
+      const trimmedText = plainText.trim();
+
+      // If the content has an image, indicate that
+      if (hasImage) {
+        // Clean the text before adding the image indicator
+        // Remove trailing ellipsis if content is short
+        const cleanText = trimmedText.endsWith('...') && trimmedText.length <= 103 ?
+          trimmedText.substring(0, trimmedText.length - 3) : trimmedText;
+        return '<Attached an image> ' + cleanText;
+      }
+
+      // Remove trailing ellipsis if content is short (less than 10 characters before the ellipsis)
+      if (trimmedText.endsWith('...') && trimmedText.length <= 103) {
+        return trimmedText.substring(0, trimmedText.length - 3);
+      }
+
+      return trimmedText;
+    } catch (error) {
+      console.error('Error formatting notification content:', error);
+      return content || '';
+    }
+  };
 
   return (
     <ClickOutside onClick={() => setDropdownOpen(false)} className="relative">
@@ -135,7 +173,7 @@ const DropdownNotification = () => {
                             • {new Date(notification.createdAt).toLocaleDateString()}
                           </p>
                           <p className="mt-1 text-xs text-gray-500">
-                            {notification.content}
+                            {formatNotificationContent(notification.content)}
                           </p>
                         </div>
                       </Link>

@@ -3,17 +3,18 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser, updateHideDashboardPreference } from "../features/userSlice";
-import HomeIcon from "@mui/icons-material/Home";
 import SearchIcon from "@mui/icons-material/Search";
-import ExploreIcon from "@mui/icons-material/Explore";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import InsertChartIcon from "@mui/icons-material/InsertChart";
 import EmojiEmotionsIcon from "@mui/icons-material/EmojiEmotions";
-import QuizIcon from "@mui/icons-material/Quiz";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import PolicyIcon from "@mui/icons-material/Policy";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import FlagIcon from "@mui/icons-material/Flag";
+import ChatIcon from "@mui/icons-material/Chat";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import KeyIcon from "@mui/icons-material/Key";
+import DownloadIcon from "@mui/icons-material/Download";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
 
 function Dashboard() {
   const dispatch = useDispatch();
@@ -42,25 +43,26 @@ function Dashboard() {
   };
 
   const studentInstructions = [
-    "View questions with filters from communities related to your modules (password provided by your professor).",
-    "Search for specific questions easily.",
-    "Explore communities based on your coursework.",
-    "Upload questions and share your knowledge with your classmates (supports text, images, videos, PDFs).",
-    "Provide answers to your peers' questions (supports text and images).",
-    "Upvote or downvote content to promote quality contributions.",
-    "Monitor your progress on assessment tasks within each community.",
+    "Access module communities using unique codes provided by professors",
+    "Create and respond to questions with rich formatting (text, code, images, PDFs)",
+    "Upvote helpful content and bookmark questions for later reference",
+    "Use the search feature to filter by title, tags, or descriptions",
+    "Monitor your progress on assessment tasks and quizzes",
+    "Report inappropriate content for moderation",
+    "Participate in real-time anonymous chats (messages disappear after 24hrs)",
+    "Receive notifications about interactions with your posts",
     "Follow community guidelines set by your professor and maintain respect.",
     "Enjoy sharing and learning!",
   ];
 
   const professorInstructions = [
-    "Assign assessment tasks to students.",
-    "Create communities based on different modules.",
-    "Develop quizzes for student evaluations.",
-    "Manage and oversee student questions.",
-    "Moderate community interactions effectively.",
-    "Provide constructive feedback to students.",
-    "Foster a collaborative learning environment!",
+    "Create and manage module communities with unique access codes",
+    "Design assessment rubrics and create auto-generated quizzes",
+    "Export assessment results to Excel for grading purposes",
+    "Moderate student interactions and handle reported content",
+    "Post announcements and learning materials",
+    "Engage in real-time anonymized discussions (24hours TTL messages) with students",
+    "Foster a collaborative learning environment!"
   ];
 
   const instructions =
@@ -69,24 +71,25 @@ function Dashboard() {
   const instructionIcons =
     user.role === "student"
       ? [
-        <HomeIcon style={{ color: "#DBA351", marginRight: "8px" }} />,
-        <SearchIcon style={{ color: "#D99D51", marginRight: "8px" }} />,
-        <ExploreIcon style={{ color: "#D9C16E", marginRight: "8px" }} />,
-        <CloudUploadIcon style={{ color: "#97BC98", marginRight: "8px" }} />,
-        <QuestionAnswerIcon style={{ color: "#7AAF7C", marginRight: "8px" }} />,
-        <ArrowUpwardIcon style={{ color: "#87B3D5", marginRight: "8px" }} />,
-        <InsertChartIcon style={{ color: "#63A2D3", marginRight: "8px" }} />,
-        <EmojiEmotionsIcon style={{ color: "#A567AF", marginRight: "8px" }} />,
-        <EmojiEmotionsIcon style={{ color: "#A567AF", marginRight: "8px" }} />,
+        <KeyIcon style={{ color: "#DBA351", marginRight: "8px" }} />,            // Access with unique codes - orange
+        <CloudUploadIcon style={{ color: "#D99D51", marginRight: "8px" }} />,    // Create/respond with formatting - orange
+        <BookmarkIcon style={{ color: "#D9C16E", marginRight: "8px" }} />,       // Upvote/bookmark - yellow
+        <SearchIcon style={{ color: "#D9C16E", marginRight: "8px" }} />,         // Search/filter - yellow
+        <AssessmentIcon style={{ color: "#97BC98", marginRight: "8px" }} />,     // Monitor progress - green
+        <FlagIcon style={{ color: "#7AAF7C", marginRight: "8px" }} />,           // Report content - green
+        <ChatIcon style={{ color: "#87B3D5", marginRight: "8px" }} />,           // Anonymous chats - blue
+        <NotificationsIcon style={{ color: "#63A2D3", marginRight: "8px" }} />,  // Notifications - blue
+        <PolicyIcon style={{ color: "#A567AF", marginRight: "8px" }} />,         // Community guidelines - purple
+        <EmojiEmotionsIcon style={{ color: "#8B44AD", marginRight: "8px" }} />,  // Enjoy learning - purple
       ]
       : [
-        <AssessmentIcon style={{ color: "#DBA351", marginRight: "8px" }} />,
-        <ExploreIcon style={{ color: "#D99D51", marginRight: "8px" }} />,
-        <QuizIcon style={{ color: "#D9C16E", marginRight: "8px" }} />,
-        <PolicyIcon style={{ color: "#97BC98", marginRight: "8px" }} />,
-        <ArrowUpwardIcon style={{ color: "#87B3D5", marginRight: "8px" }} />,
-        <QuestionAnswerIcon style={{ color: "#63A2D3", marginRight: "8px" }} />,
-        <EmojiEmotionsIcon style={{ color: "#A567AF", marginRight: "8px" }} />,
+        <KeyIcon style={{ color: "#DBA351", marginRight: "8px" }} />,            // Create/manage communities
+        <AssessmentIcon style={{ color: "#D99D51", marginRight: "8px" }} />,     // Design assessment rubrics
+        <DownloadIcon style={{ color: "#D9C16E", marginRight: "8px" }} />,       // Export results
+        <PolicyIcon style={{ color: "#97BC98", marginRight: "8px" }} />,         // Moderate interactions
+        <AnnouncementIcon style={{ color: "#7AAF7C", marginRight: "8px" }} />,   // Post announcements
+        <ChatIcon style={{ color: "#87B3D5", marginRight: "8px" }} />,           // Real-time discussions
+        <EmojiEmotionsIcon style={{ color: "#63A2D3", marginRight: "8px" }} />, // Participate in discussions
       ];
 
   if (!showInstructions) {

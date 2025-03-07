@@ -49,7 +49,7 @@ const addAnswer = async (req, res) => {
       sender: req.user._id,      // the user who answered
       community: question.community,
       type: "questionAnswer",    // type for an answer to a question
-      content: answer.substring(0, 100) + "...", // a snippet of the answer
+      content: answer.length > 100 ? answer.substring(0, 100) + "..." : answer, // a snippet of the answer
       questionId: question._id,
       createdAt: new Date(),
       isRead: false,
