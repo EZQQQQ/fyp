@@ -56,6 +56,9 @@ const createCommunity = async (req, res) => {
     const { name, description, rules } = req.body;
     const createdBy = req.user._id;
 
+    // Use the pre-assigned communityId from the middleware
+    const communityId = req.body.communityId;
+
     // Default S3 avatar if none is uploaded
     let avatar = `${s3BaseUrl}/uploads/defaults/default-avatar-user.jpeg`;
 
@@ -73,6 +76,7 @@ const createCommunity = async (req, res) => {
     const communityCode = generateCommunityCode();
 
     const community = new Community({
+      _id: communityId,
       name,
       description,
       createdBy,

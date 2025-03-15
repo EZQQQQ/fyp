@@ -41,7 +41,9 @@ const storage = multerS3({
   s3,
   bucket: process.env.S3_BUCKET_NAME,
   key: function (req, file, cb) {
-    const communityId = req.body.community || req.body.communityId;
+    // Try to get the community ID from either the form fields or from the custom property
+    const communityId = req.body.community || req.body.communityId || req.communityId;
+
     if (!communityId) {
       return cb(new Error('Community ID is required'), null);
     }

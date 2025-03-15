@@ -16,6 +16,7 @@
 │   │   ├── voteController.js
 │   ├── db.js
 │   ├── middlewares
+│   │   ├── assignCommunityId.js
 │   │   ├── auth.js
 │   │   ├── authorize.js
 │   │   ├── chatMessageFilter.js

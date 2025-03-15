@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middlewares/auth");
 const authorizeRoles = require("../middlewares/authorize"); // Role-based authorization middleware
+const assignCommunityId = require("../middlewares/assignCommunityId");
 const CommunityController = require("../controllers/communityController");
 const uploadCommunity = require("../middlewares/uploadCommunity");
 const questionController = require("../controllers/questionController");
@@ -20,8 +21,9 @@ router.post(
 router.post(
   "/",
   auth, // Ensure the user is authenticated
-  uploadCommunity, // Handle 'avatar' and 'files' fields
   authorizeRoles("professor", "admin"), // Role-based access
+  assignCommunityId,
+  uploadCommunity,
   CommunityController.createCommunity
 );
 
