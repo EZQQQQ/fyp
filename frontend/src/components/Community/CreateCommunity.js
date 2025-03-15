@@ -161,211 +161,224 @@ const CreateCommunity = ({ isOpen, onClose }) => {
 
   return (
     <CustomDialog isOpen={isOpen} onClose={onClose} size="md">
-      {/* Dialog Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-          Create a New Community
-        </h2>
-        <button
-          onClick={onClose}
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-        >
-          <XIcon className="h-6 w-6" />
-        </button>
-      </div>
-
-      {/* Step Indicators */}
-      <div className="flex justify-center mb-6">
-        <div className="flex space-x-2">
-          <div
-            className={`h-2 w-2 rounded-full ${
-              currentStep === 1 ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          ></div>
-          <div
-            className={`h-2 w-2 rounded-full ${
-              currentStep === 2 ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          ></div>
-          <div
-            className={`h-2 w-2 rounded-full ${
-              currentStep === 3 ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          ></div>
+      <div className="p-6 bg-white dark:bg-gray-800 dark:text-gray-100 rounded-lg">
+        {/* Dialog Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            Create a New Community
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+          >
+            <XIcon className="h-6 w-6" />
+          </button>
         </div>
-      </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        {/* Step 1: Community Name and Description */}
-        {currentStep === 1 && (
-          <div className="modal-card-content styled-scrollbar">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              Tell us about your Community
-            </h3>
-            <div className="mb-4">
-              <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Community Name
-              </label>
-              <TextField
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter community name"
-                required
-              />
-              {/* Display name check status */}
-              {checking && (
-                <p className="text-sm text-blue-500 mt-1">Checking name...</p>
-              )}
-              {exists && (
-                <p className="text-sm text-red-500 mt-1">
-                  Community name already exists.
-                </p>
-              )}
-              {nameError && (
-                <p className="text-sm text-red-500 mt-1">
-                  Error checking name: {nameError}
-                </p>
-              )}
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 dark:text-gray-300 mb-2">
-                Description
-              </label>
-              <TextField
-                type="text"
-                fullWidth
-                variant="outlined"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter community description"
-                required
-                multiline
-                rows={4}
-              />
-            </div>
+        {/* Step Indicators */}
+        <div className="flex justify-center mb-6">
+          <div className="flex space-x-2">
+            <div
+              className={`h-2 w-2 rounded-full ${currentStep === 1
+                  ? "bg-blue-500"
+                  : "bg-gray-300 dark:bg-gray-600"
+                }`}
+            ></div>
+            <div
+              className={`h-2 w-2 rounded-full ${currentStep === 2
+                  ? "bg-blue-500"
+                  : "bg-gray-300 dark:bg-gray-600"
+                }`}
+            ></div>
+            <div
+              className={`h-2 w-2 rounded-full ${currentStep === 3
+                  ? "bg-blue-500"
+                  : "bg-gray-300 dark:bg-gray-600"
+                }`}
+            ></div>
           </div>
-        )}
+        </div>
 
-        {/* Step 2: Avatar */}
-        {currentStep === 2 && (
-          <div className="modal-card-content styled-scrollbar">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              Add Visual Flair
-            </h3>
-            {/* Avatar Section */}
-            <div className="mb-6">
-              <p className="text-gray-600 dark:text-gray-400 mb-2">
-                Upload an avatar to represent your community.
-              </p>
-              <div className="flex items-center space-x-4">
-                <Avatar
-                  src={avatarPreview}
-                  alt="Community Avatar"
-                  className="h-20 w-20"
-                />
-                <label htmlFor="avatar-upload">
-                  <input
-                    accept="image/*"
-                    id="avatar-upload"
-                    type="file"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    component="span"
-                    startIcon={<PhotoCameraIcon />}
-                  >
-                    Upload Avatar
-                  </Button>
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {/* Step 1: Community Name and Description */}
+          {currentStep === 1 && (
+            <div className="modal-card-content styled-scrollbar p-4 dark:bg-gray-800 dark:text-gray-100">
+              <h3 className="text-xl font-semibold mb-4">
+                Tell us about your Community
+              </h3>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-700 dark:text-gray-300">
+                  Community Name
                 </label>
+                <TextField
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter community name"
+                  required
+                  InputProps={{
+                    className: "dark:bg-gray-700 dark:text-gray-100",
+                  }}
+                />
+                {/* Display name check status */}
+                {checking && (
+                  <p className="text-sm text-blue-500 mt-1">Checking name...</p>
+                )}
+                {exists && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Community name already exists.
+                  </p>
+                )}
+                {nameError && (
+                  <p className="text-sm text-red-500 mt-1">
+                    Error checking name: {nameError}
+                  </p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block mb-2 text-gray-700 dark:text-gray-300">
+                  Description
+                </label>
+                <TextField
+                  type="text"
+                  fullWidth
+                  variant="outlined"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter community description"
+                  required
+                  multiline
+                  rows={4}
+                  InputProps={{
+                    className: "dark:bg-gray-700 dark:text-gray-100",
+                  }}
+                />
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 3: Define Rules */}
-        {currentStep === 3 && (
-          <div className="modal-card-content styled-scrollbar">
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-              Define Rules
-            </h3>
-            {/* Rules Section */}
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Define the rules that will govern your community.
-              </p>
-              {rules.map((rule, index) => (
-                <div
-                  key={index}
-                  className="flex items-center mb-2 border-b border-gray-300 dark:border-gray-600 pb-2"
-                >
-                  <span className="mr-2 text-gray-700 dark:text-gray-300">
-                    {index + 1}.
-                  </span>
-                  <TextField
-                    type="text"
-                    variant="outlined"
-                    value={rule}
-                    onChange={(e) => handleRuleChange(index, e.target.value)}
-                    placeholder={`Rule ${index + 1}`}
-                    fullWidth
-                    required
+          {/* Step 2: Avatar */}
+          {currentStep === 2 && (
+            <div className="modal-card-content styled-scrollbar p-4 dark:bg-gray-800 dark:text-gray-100">
+              <h3 className="text-xl font-semibold mb-4">
+                Add Visual Flair
+              </h3>
+              <div className="mb-6">
+                <p className="mb-2 text-gray-600 dark:text-gray-400">
+                  Upload an avatar to represent your community.
+                </p>
+                <div className="flex items-center space-x-4">
+                  <Avatar
+                    src={avatarPreview}
+                    alt="Community Avatar"
+                    className="h-20 w-20"
                   />
-                  {rules.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeRule(index)}
-                      className="ml-2 text-red-500 hover:text-red-700"
+                  <label htmlFor="avatar-upload">
+                    <input
+                      accept="image/*"
+                      id="avatar-upload"
+                      type="file"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      component="span"
+                      startIcon={<PhotoCameraIcon />}
                     >
-                      <XIcon className="h-6 w-6" />
-                    </button>
-                  )}
+                      Upload Avatar
+                    </Button>
+                  </label>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={addRule}
-                className="mt-2 flex items-center text-blue-500 hover:text-blue-700">
-                <PlusIcon className="h-5 w-5 mr-1" /> Add another rule
-              </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Navigation Buttons */}
-        <div className="mt-6 flex justify-between">
-          {currentStep > 1 && (
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handlePrevious}
-            >
-              Previous
-            </Button>
-          )}
-          {currentStep < 3 && (
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleNext}
-              disabled={checking}
-            >
-              {checking ? "Checking..." : "Next"}
-            </Button>
-          )}
+          {/* Step 3: Define Rules */}
           {currentStep === 3 && (
-            <Button variant="contained" color="primary" type="submit">
-              Create Community
-            </Button>
+            <div className="modal-card-content styled-scrollbar p-4 dark:bg-gray-800 dark:text-gray-100">
+              <h3 className="text-xl font-semibold mb-4">
+                Define Rules
+              </h3>
+              <div>
+                <p className="mb-4 text-gray-600 dark:text-gray-400">
+                  Define the rules that will govern your community.
+                </p>
+                {rules.map((rule, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center mb-2 border-b pb-2 border-gray-300 dark:border-gray-600"
+                  >
+                    <span className="mr-2 text-gray-700 dark:text-gray-300">
+                      {index + 1}.
+                    </span>
+                    <TextField
+                      type="text"
+                      variant="outlined"
+                      value={rule}
+                      onChange={(e) => handleRuleChange(index, e.target.value)}
+                      placeholder={`Rule ${index + 1}`}
+                      fullWidth
+                      required
+                      InputProps={{
+                        className: "dark:bg-gray-700 dark:text-gray-100",
+                      }}
+                    />
+                    {rules.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeRule(index)}
+                        className="ml-2 text-red-500 hover:text-red-700"
+                      >
+                        <XIcon className="h-6 w-6" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addRule}
+                  className="mt-2 flex items-center text-blue-500 hover:text-blue-700"
+                >
+                  <PlusIcon className="h-5 w-5 mr-1" /> Add another rule
+                </button>
+              </div>
+            </div>
           )}
-        </div>
-      </form>
+
+          {/* Navigation Buttons */}
+          <div className="mt-6 flex justify-between">
+            {currentStep > 1 && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={handlePrevious}
+              >
+                Previous
+              </Button>
+            )}
+            {currentStep < 3 && (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleNext}
+                disabled={checking}
+              >
+                {checking ? "Checking..." : "Next"}
+              </Button>
+            )}
+            {currentStep === 3 && (
+              <Button variant="contained" color="primary" type="submit">
+                Create Community
+              </Button>
+            )}
+          </div>
+        </form>
+      </div>
     </CustomDialog>
   );
 };

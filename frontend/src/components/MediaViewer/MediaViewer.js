@@ -121,7 +121,7 @@ const MediaViewer = ({ file }) => {
 
         {isModalOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-75 transition-opacity duration-300"
             aria-modal="true"
             role="dialog"
           >
@@ -138,7 +138,7 @@ const MediaViewer = ({ file }) => {
               <img
                 src={filePath}
                 alt="Expanded Media"
-                className="max-w-full max-h-screen rounded-xl shadow-lg transition-transform duration-300 object-contain"
+                className="max-w-[90vw] sm:max-w-[85vw] md:max-w-[80vw] lg:max-w-[75vw] max-h-[85vh] rounded-xl shadow-lg transition-transform duration-300 object-contain"
                 loading="lazy"
                 onLoad={() => setIsModalImageLoading(false)}
               />

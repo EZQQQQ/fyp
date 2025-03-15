@@ -200,9 +200,11 @@ const joinCommunity = async (req, res) => {
     community.members.push(userId);
     await community.save();
 
+    // Update the user's communities array and increment communitiesCount
     const user = await User.findById(userId);
     if (!user.communities.includes(communityId)) {
       user.communities.push(communityId);
+      user.communitiesCount = (user.communitiesCount || 0) + 1;
       await user.save();
     }
 
@@ -248,12 +250,15 @@ const leaveCommunity = async (req, res) => {
     );
     await community.save();
 
-    // Remove community from user's communities array
-    await User.findByIdAndUpdate(
-      userId,
-      { $pull: { communities: communityId } },
-      { new: true }
-    );
+    // Update the user's communities array and decrement communitiesCount
+    const user = await User.findById(userId);
+    if (user.communities.includes(communityId)) {
+      user.communities = user.communities.filter(
+        (commId) => commId.toString() !== communityId.toString()
+      );
+      user.communitiesCount = Math.max((user.communitiesCount || 1) - 1, 0);
+      await user.save();
+    }
 
     res.status(200).json({
       status: true,

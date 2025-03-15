@@ -20,8 +20,9 @@ const CommunityList = ({ isTileView = false }) => {
   const error = useSelector((state) => state.communities.error);
   const user = useSelector((state) => state.user.user);
 
-  // Check if user is a professor
-  const isProfessor = user && (user.role === "professor" || user.role === "admin");
+  // Check if user is a professor/admin
+  const isProfessor =
+    user && (user.role === "professor" || user.role === "admin");
 
   // State for the global join code input (visible in Explore Communities page)
   const [globalJoinCode, setGlobalJoinCode] = useState("");
@@ -35,10 +36,9 @@ const CommunityList = ({ isTileView = false }) => {
     dispatch(fetchCommunities());
   }, [dispatch]);
 
-  // Updated handleJoin to accept a communityId and the provided code
+  // Updated handleJoin to accept a communityId and provided code
   const handleJoin = async (communityId, code = "") => {
     try {
-      // For professors, we'll pass an empty code or a special value that the backend recognizes
       await dispatch(joinCommunity({ communityId, code })).unwrap();
       toast.success("Joined community successfully!");
     } catch (err) {
@@ -49,12 +49,11 @@ const CommunityList = ({ isTileView = false }) => {
 
   // Direct join for professors (no code required)
   const handleProfessorJoin = (communityId) => {
-    handleJoin(communityId, "professor"); // You could use empty string or a special value recognized by your backend
+    handleJoin(communityId, "professor");
   };
 
-  // Handler for joining a community using the global code input field
+  // Handler for joining using the global join code input field
   const handleGlobalJoin = () => {
-    // Find the community that has a matching communityCode (case sensitive)
     const community = communities.find(
       (c) => c.communityCode === globalJoinCode
     );
@@ -62,7 +61,6 @@ const CommunityList = ({ isTileView = false }) => {
       toast.error("Invalid community code.");
       return;
     }
-    // Optional: Check if user is already a member
     const isMember = community.members.some(
       (member) => member._id === user?._id
     );
@@ -73,7 +71,7 @@ const CommunityList = ({ isTileView = false }) => {
     handleJoin(community._id, globalJoinCode);
   };
 
-  // Open the join modal for a specific community
+  // Open join modal for a specific community
   const openJoinModal = (communityId) => {
     setSelectedCommunityId(communityId);
     setJoinModalOpen(true);
@@ -117,17 +115,17 @@ const CommunityList = ({ isTileView = false }) => {
             Explore Communities
           </h2>
           {!isProfessor && (
-            <div className="flex">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center">
               <input
                 type="text"
                 placeholder="Enter community code"
                 value={globalJoinCode}
                 onChange={(e) => setGlobalJoinCode(e.target.value)}
-                className="border border-gray-300 rounded-l-md px-3 py-2"
+                className="border border-gray-300 rounded-md sm:rounded-l-md px-3 py-2 w-full sm:w-auto"
               />
               <button
                 onClick={handleGlobalJoin}
-                className="bg-blue-500 text-white px-4 py-2 rounded-r-md hover:bg-blue-600"
+                className="mt-2 sm:mt-0 sm:ml-2 bg-blue-500 text-white px-4 py-2 rounded-md sm:rounded-r-md hover:bg-blue-600"
               >
                 Join by Code
               </button>
@@ -148,18 +146,14 @@ const CommunityList = ({ isTileView = false }) => {
         // Tile (Grid) View
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {communities.map((community) => {
-            // Check if user is a member
             const isMember = community.members.some(
               (member) => member._id === user?._id
             );
-
             return (
               <CommunityCard
                 key={community._id}
                 community={community}
                 isMember={isMember}
-                // When the join button is clicked in a tile,
-                // use different join methods based on role
                 handleJoin={() =>
                   isProfessor
                     ? handleProfessorJoin(community._id)
@@ -174,11 +168,9 @@ const CommunityList = ({ isTileView = false }) => {
         // List View
         <ul className="space-y-4">
           {communities.map((community) => {
-            // Check if user is a member
             const isMember = community.members.some(
               (member) => member._id === user?._id
             );
-
             return (
               <li
                 key={community._id}
