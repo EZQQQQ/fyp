@@ -78,6 +78,7 @@ const validateQuestionFiles = (req, res, next) => {
       "image/png",
       "image/heic",
       "image/heif",
+      "image/gif",
       "video/mp4",
       "video/quicktime",
       "video/x-msvideo",
