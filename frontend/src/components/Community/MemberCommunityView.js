@@ -1,5 +1,5 @@
 // frontend/src/components/Community/MemberCommunityView.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useMediaQuery } from "@mui/material";
@@ -74,6 +74,18 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
 
   // Responsive design
   const mobileBreakpoint = useMediaQuery("(max-width:767px)");
+
+  // Create sorted questions based on selected filter
+  const sortedQuestions = useMemo(() => {
+    if (filter === "newest") {
+      return [...questions].sort((a, b) =>
+        new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } else if (filter === "popular") {
+      return [...questions].sort((a, b) => b.voteCount - a.voteCount);
+    }
+    return questions;
+  }, [questions, filter]);
 
   // Fetch questions
   useEffect(() => {
@@ -157,8 +169,6 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
     try {
       const res = await communityService.refreshCommunityCode(communityId);
       toast.success("Community code refreshed successfully!");
-      // Note: Since community is passed as a prop, we can't directly modify it
-      // If you need to update the code in the UI, you may need to lift this state up
     } catch (error) {
       console.error("Error refreshing community code:", error);
       toast.error(error.response?.data?.message || "Failed to refresh community code.");
@@ -241,7 +251,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
               {questions.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No questions in this community yet.</p>
               ) : (
-                questions.map((question) => (
+                sortedQuestions.map((question) => (
                   <QuestionCard
                     key={question._id}
                     question={question}
@@ -303,7 +313,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
           {questions.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No questions in this community yet.</p>
           ) : (
-            questions.map((question) => (
+            sortedQuestions.map((question) => (
               <QuestionCard
                 key={question._id}
                 question={question}
