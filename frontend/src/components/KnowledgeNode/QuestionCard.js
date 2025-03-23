@@ -52,14 +52,14 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
     userHasUpvoted,
     userHasDownvoted,
     createdAt,
-    // user,
+    user,
     community,
     answersCount,
     commentsCount,
     files,
     contentType,
   } = question;
-  const user = useSelector(selectUser);
+  // const user = useSelector(selectUser);
   const navigate = useNavigate();
 
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
