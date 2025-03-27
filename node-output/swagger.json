@@ -1,0 +1,2560 @@
+{
+  "openapi" : "3.0.0",
+  "info" : {
+    "title" : "API Title",
+    "description" : "API documentation for backend",
+    "version" : "1.0.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "security" : [ {
+    "bearerAuth" : [ ]
+  } ],
+  "tags" : [ {
+    "name" : "Answer",
+    "description" : "API for managing answers"
+  }, {
+    "name" : "Bookmark",
+    "description" : "API for managing bookmarks"
+  }, {
+    "name" : "Comment",
+    "description" : "API for managing comments"
+  }, {
+    "name" : "Community",
+    "description" : "API for managing communities"
+  }, {
+    "name" : "CommunityChat",
+    "description" : "API for managing community chat messages"
+  }, {
+    "name" : "Notification",
+    "description" : "API for managing notifications"
+  }, {
+    "name" : "Poll",
+    "description" : "API for managing polls"
+  }, {
+    "name" : "Question",
+    "description" : "API for managing questions"
+  }, {
+    "name" : "Quiz",
+    "description" : "API for managing quizzes"
+  }, {
+    "name" : "RAG",
+    "description" : "API for Retrieval Augmented Generation (RAG) operations"
+  }, {
+    "name" : "Report",
+    "description" : "API for managing reports"
+  }, {
+    "name" : "User",
+    "description" : "API for managing users and authentication"
+  }, {
+    "name" : "Vote",
+    "description" : "API for managing votes on questions and answers"
+  } ],
+  "paths" : {
+    "/api/answer/{questionId}" : {
+      "get" : {
+        "tags" : [ "Answer" ],
+        "summary" : "Get all answers for a question",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of answers.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/inline_response_200"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "500" : {
+            "description" : "Server error."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Answer" ],
+        "summary" : "Add an answer to a question",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question to answer.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/answer_questionId_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Answer successfully created."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "500" : {
+            "description" : "Server error."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Answer" ],
+        "summary" : "Delete an answer",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question whose answer is to be deleted.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Answer deleted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Answer not found."
+          },
+          "500" : {
+            "description" : "Server error."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/bookmark/user/bookmark/{questionId}" : {
+      "put" : {
+        "tags" : [ "Bookmark" ],
+        "summary" : "Toggle bookmark for a question",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question to bookmark.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Bookmark toggled successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/bookmark/user/bookmark" : {
+      "get" : {
+        "tags" : [ "Bookmark" ],
+        "summary" : "Fetch all bookmarked questions for the current user",
+        "responses" : {
+          "200" : {
+            "description" : "List of bookmarked questions.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/comment/question/{questionId}" : {
+      "get" : {
+        "tags" : [ "Comment" ],
+        "summary" : "Get all comments for a question",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of comments.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/inline_response_200_1"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Comment" ],
+        "summary" : "Add a comment to a question",
+        "parameters" : [ {
+          "name" : "questionId",
+          "in" : "path",
+          "description" : "ID of the question to comment on.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/question_questionId_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Comment successfully added."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/comment/answer/{answerId}" : {
+      "get" : {
+        "tags" : [ "Comment" ],
+        "summary" : "Get all comments for an answer",
+        "parameters" : [ {
+          "name" : "answerId",
+          "in" : "path",
+          "description" : "ID of the answer.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of comments.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/inline_response_200_1"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Comment" ],
+        "summary" : "Add a comment to an answer",
+        "parameters" : [ {
+          "name" : "answerId",
+          "in" : "path",
+          "description" : "ID of the answer to comment on.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/answer_answerId_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Comment successfully added."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/comment/{id}" : {
+      "delete" : {
+        "tags" : [ "Comment" ],
+        "summary" : "Delete a comment",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the comment to delete.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Comment deleted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Comment not found."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}/refresh-code" : {
+      "post" : {
+        "tags" : [ "Community" ],
+        "summary" : "Refresh community code (professor and admin only)",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Community code refreshed successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          },
+          "500" : {
+            "description" : "Server error."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get all communities",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of communities."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Community" ],
+        "summary" : "Create a new community (Professor and Admin only)",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/api_communities_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Community created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          },
+          "500" : {
+            "description" : "Server error."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/user" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Fetch user's communities",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of communities for the user."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}/join" : {
+      "post" : {
+        "tags" : [ "Community" ],
+        "summary" : "Join a community",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID to join.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Joined community successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}/leave" : {
+      "post" : {
+        "tags" : [ "Community" ],
+        "summary" : "Leave a community",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID to leave.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Left community successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get community by ID",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns community details."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}/questions" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get questions by community ID",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of questions for the community."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/check/{name}" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Check if community name exists",
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "Community name to check.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns whether the community name exists."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/assessment-tasks" : {
+      "post" : {
+        "tags" : [ "Community" ],
+        "summary" : "Create an assessment task",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/communityId_assessmenttasks_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Assessment task created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/assessment-tasks/{taskId}" : {
+      "put" : {
+        "tags" : [ "Community" ],
+        "summary" : "Update an assessment task",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "taskId",
+          "in" : "path",
+          "description" : "Task ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/assessmenttasks_taskId_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Assessment task updated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Community" ],
+        "summary" : "Delete an assessment task",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "taskId",
+          "in" : "path",
+          "description" : "Task ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Assessment task deleted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{id}/assessment-tasks" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get assessment tasks for a community",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of assessment tasks."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/user-participation" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get user participation metrics in a community",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns participation metrics for the user."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/all-participation" : {
+      "get" : {
+        "tags" : [ "Community" ],
+        "summary" : "Get participation data for all members in a community",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "Community ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns participation data for all members."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/chat/{communityId}/join" : {
+      "post" : {
+        "tags" : [ "CommunityChat" ],
+        "summary" : "Join a community chat room",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community chat to join.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully joined chat room."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/chat/{communityId}/leave" : {
+      "post" : {
+        "tags" : [ "CommunityChat" ],
+        "summary" : "Leave a community chat room",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community chat to leave.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully left chat room."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/chat/message" : {
+      "post" : {
+        "tags" : [ "CommunityChat" ],
+        "summary" : "Send a chat message",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/chat_message_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Message sent successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/chat/{communityId}/messages" : {
+      "get" : {
+        "tags" : [ "CommunityChat" ],
+        "summary" : "Get chat messages for a community",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community chat.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of chat messages."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/notifications" : {
+      "get" : {
+        "tags" : [ "Notification" ],
+        "summary" : "Fetch notifications for the current user",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of notifications."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Notification" ],
+        "summary" : "Create a notification",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/api_notifications_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Notification created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/notifications/{id}" : {
+      "patch" : {
+        "tags" : [ "Notification" ],
+        "summary" : "Mark a notification as read",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Notification ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Notification marked as read."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/poll/{id}/pollResults" : {
+      "get" : {
+        "tags" : [ "Poll" ],
+        "summary" : "Get a specific question's poll options and status",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the poll question.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns poll options and current status."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/poll/vote" : {
+      "post" : {
+        "tags" : [ "Poll" ],
+        "summary" : "Vote on a poll option",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/poll_vote_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Vote recorded successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/poll/close" : {
+      "post" : {
+        "tags" : [ "Poll" ],
+        "summary" : "Close a poll",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/poll_close_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Poll closed successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/poll/toggle" : {
+      "post" : {
+        "tags" : [ "Poll" ],
+        "summary" : "Toggle the state of a poll (open/closed)",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/poll_toggle_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Poll state toggled successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/question/create" : {
+      "post" : {
+        "tags" : [ "Question" ],
+        "summary" : "Create a new question",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/question_create_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Question created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/question" : {
+      "get" : {
+        "tags" : [ "Question" ],
+        "summary" : "Get all questions",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of questions."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/question/user-questions" : {
+      "get" : {
+        "tags" : [ "Question" ],
+        "summary" : "Get questions for the current user",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of user-specific questions."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/question/search" : {
+      "get" : {
+        "tags" : [ "Question" ],
+        "summary" : "Search questions",
+        "parameters" : [ {
+          "name" : "q",
+          "in" : "query",
+          "description" : "Search query.",
+          "required" : true,
+          "style" : "form",
+          "explode" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns search results."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/question/{id}" : {
+      "get" : {
+        "tags" : [ "Question" ],
+        "summary" : "Get a specific question by ID",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Question ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the question details."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Question not found."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Question" ],
+        "summary" : "Delete a specific question",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Question ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Question deleted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Question not found."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/quizzes" : {
+      "post" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Create a quiz for a community",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/communityId_quizzes_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Quiz created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/{communityId}/quizzes/ai" : {
+      "post" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Create a quiz using AI by uploading a document and prompt inputs",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/quizzes_ai_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Quiz created using AI successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/communities/quizzes/{communityId}/quizzes" : {
+      "get" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Get all quizzes in a given community with attempt status",
+        "parameters" : [ {
+          "name" : "communityId",
+          "in" : "path",
+          "description" : "ID of the community.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of quizzes."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/quizzes/{quizId}" : {
+      "get" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Get a single quiz",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the quiz details."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Quiz not found."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Update a quiz by quizId",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/quizzes_quizId_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Quiz updated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Delete a quiz by quizId",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Quiz deleted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/quizzes/{quizId}/attempts/start" : {
+      "post" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Start a quiz attempt session",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Quiz attempt started successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/quizzes/{quizId}/attempts/{attemptId}/end" : {
+      "post" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "End a quiz attempt session",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "attemptId",
+          "in" : "path",
+          "description" : "Attempt ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Quiz attempt ended successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/quizzes/{quizId}/attempts/{attemptId}/submit" : {
+      "post" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Submit quiz answers",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "attemptId",
+          "in" : "path",
+          "description" : "Attempt ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/attemptId_submit_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Quiz attempt submitted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/quizzes/{quizId}/attempts/{attemptId}" : {
+      "get" : {
+        "tags" : [ "Quiz" ],
+        "summary" : "Get quiz attempt details",
+        "parameters" : [ {
+          "name" : "quizId",
+          "in" : "path",
+          "description" : "Quiz ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "attemptId",
+          "in" : "path",
+          "description" : "Attempt ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns details of the quiz attempt."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "404" : {
+            "description" : "Attempt not found."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/rag/pdf" : {
+      "post" : {
+        "tags" : [ "RAG" ],
+        "summary" : "Upload and process a PDF for RAG",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/rag_pdf_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "PDF processed successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/rag/response" : {
+      "post" : {
+        "tags" : [ "RAG" ],
+        "summary" : "Generate a response based on a query and stored RAG data",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/rag_response_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Response generated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/report" : {
+      "get" : {
+        "tags" : [ "Report" ],
+        "summary" : "Get all reports (professor/admin)",
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of reports."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "Report" ],
+        "summary" : "Create a report (students)",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/api_report_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Report created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/report/{reportId}" : {
+      "delete" : {
+        "tags" : [ "Report" ],
+        "summary" : "Review (delete) a report (professor/admin)",
+        "parameters" : [ {
+          "name" : "reportId",
+          "in" : "path",
+          "description" : "Report ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Report reviewed (deleted) successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/report/{reportId}/dismiss" : {
+      "put" : {
+        "tags" : [ "Report" ],
+        "summary" : "Dismiss a report (professor/admin)",
+        "parameters" : [ {
+          "name" : "reportId",
+          "in" : "path",
+          "description" : "Report ID.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Report dismissed successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          },
+          "403" : {
+            "description" : "Forbidden."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/user/sso-login" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "SSO Login for a user",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user_ssologin_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "SSO login successful."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/user/login" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Admin Login for a user",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user_login_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Login successful."
+          },
+          "400" : {
+            "description" : "Bad request."
+          }
+        }
+      }
+    },
+    "/api/user/create-profile" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Create user profile with profile photo upload",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user_createprofile_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Profile created successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/user/profile" : {
+      "get" : {
+        "tags" : [ "User" ],
+        "summary" : "Get the user profile",
+        "responses" : {
+          "200" : {
+            "description" : "Returns user profile."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Update user profile",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user_profile_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Profile updated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/user/profile/hide-dashboard" : {
+      "put" : {
+        "tags" : [ "User" ],
+        "summary" : "Update hideDashboard preference for the user",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/profile_hidedashboard_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Preference updated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/user/settings" : {
+      "post" : {
+        "tags" : [ "User" ],
+        "summary" : "Update user settings",
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/user_settings_body"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Settings updated successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/vote/question/{id}/upvote" : {
+      "post" : {
+        "tags" : [ "Vote" ],
+        "summary" : "Upvote a question",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the question to upvote.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Question upvoted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/vote/question/{id}/downvote" : {
+      "post" : {
+        "tags" : [ "Vote" ],
+        "summary" : "Downvote a question",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the question to downvote.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Question downvoted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/vote/answer/{id}/upvote" : {
+      "post" : {
+        "tags" : [ "Vote" ],
+        "summary" : "Upvote an answer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the answer to upvote.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Answer upvoted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    },
+    "/api/vote/answer/{id}/downvote" : {
+      "post" : {
+        "tags" : [ "Vote" ],
+        "summary" : "Downvote an answer",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "ID of the answer to downvote.",
+          "required" : true,
+          "style" : "simple",
+          "explode" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Answer downvoted successfully."
+          },
+          "400" : {
+            "description" : "Bad request."
+          },
+          "401" : {
+            "description" : "Unauthorized."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "answer_questionId_body" : {
+        "type" : "object",
+        "properties" : {
+          "answerText" : {
+            "type" : "string",
+            "description" : "The content of the answer."
+          }
+        }
+      },
+      "rag_pdf_body" : {
+        "type" : "object",
+        "properties" : {
+          "document" : {
+            "type" : "string",
+            "format" : "binary"
+          }
+        }
+      },
+      "communityId_assessmenttasks_body" : {
+        "type" : "object",
+        "properties" : {
+          "task" : {
+            "type" : "string"
+          }
+        }
+      },
+      "user_settings_body" : {
+        "type" : "object",
+        "properties" : {
+          "profilePicture" : {
+            "type" : "string",
+            "format" : "binary"
+          },
+          "settingsData" : {
+            "type" : "string"
+          }
+        }
+      },
+      "answer_answerId_body" : {
+        "type" : "object",
+        "properties" : {
+          "commentText" : {
+            "type" : "string",
+            "description" : "The content of the comment."
+          }
+        }
+      },
+      "communityId_quizzes_body" : {
+        "type" : "object",
+        "properties" : {
+          "quizTitle" : {
+            "type" : "string"
+          }
+        }
+      },
+      "user_login_body" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        }
+      },
+      "rag_response_body" : {
+        "type" : "object",
+        "properties" : {
+          "query" : {
+            "type" : "string"
+          }
+        }
+      },
+      "assessmenttasks_taskId_body" : {
+        "type" : "object",
+        "properties" : {
+          "task" : {
+            "type" : "string"
+          }
+        }
+      },
+      "user_createprofile_body" : {
+        "type" : "object",
+        "properties" : {
+          "profilePicture" : {
+            "type" : "string",
+            "format" : "binary"
+          },
+          "bio" : {
+            "type" : "string"
+          }
+        }
+      },
+      "inline_response_200" : {
+        "type" : "object",
+        "properties" : {
+          "answerText" : {
+            "type" : "string"
+          }
+        }
+      },
+      "poll_toggle_body" : {
+        "type" : "object",
+        "properties" : {
+          "pollId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "poll_vote_body" : {
+        "type" : "object",
+        "properties" : {
+          "pollId" : {
+            "type" : "string"
+          },
+          "option" : {
+            "type" : "string"
+          }
+        }
+      },
+      "question_create_body" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string"
+          },
+          "body" : {
+            "type" : "string"
+          },
+          "files" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "binary"
+            }
+          }
+        }
+      },
+      "poll_close_body" : {
+        "type" : "object",
+        "properties" : {
+          "pollId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "profile_hidedashboard_body" : {
+        "type" : "object",
+        "properties" : {
+          "hideDashboard" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "question_questionId_body" : {
+        "type" : "object",
+        "properties" : {
+          "commentText" : {
+            "type" : "string",
+            "description" : "The content of the comment."
+          }
+        }
+      },
+      "user_profile_body" : {
+        "type" : "object",
+        "properties" : {
+          "profilePicture" : {
+            "type" : "string",
+            "format" : "binary"
+          },
+          "profileBanner" : {
+            "type" : "string",
+            "format" : "binary"
+          },
+          "profileData" : {
+            "type" : "string"
+          }
+        }
+      },
+      "chat_message_body" : {
+        "type" : "object",
+        "properties" : {
+          "communityId" : {
+            "type" : "string"
+          },
+          "content" : {
+            "type" : "string"
+          }
+        }
+      },
+      "quizzes_quizId_body" : {
+        "type" : "object",
+        "properties" : {
+          "quizTitle" : {
+            "type" : "string"
+          }
+        }
+      },
+      "attemptId_submit_body" : {
+        "type" : "object",
+        "properties" : {
+          "answers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "api_communities_body" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "image" : {
+            "type" : "string",
+            "format" : "binary"
+          }
+        }
+      },
+      "api_report_body" : {
+        "type" : "object",
+        "properties" : {
+          "reportContent" : {
+            "type" : "string"
+          }
+        }
+      },
+      "inline_response_200_1" : {
+        "type" : "object",
+        "properties" : {
+          "commentText" : {
+            "type" : "string"
+          }
+        }
+      },
+      "quizzes_ai_body" : {
+        "type" : "object",
+        "properties" : {
+          "document" : {
+            "type" : "string",
+            "format" : "binary"
+          },
+          "prompt" : {
+            "type" : "string"
+          }
+        }
+      },
+      "user_ssologin_body" : {
+        "type" : "object",
+        "properties" : {
+          "ssoToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "api_notifications_body" : {
+        "type" : "object",
+        "properties" : {
+          "message" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "type" : "http",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
