@@ -2,7 +2,6 @@
 
 require("dotenv").config();
 const express = require("express");
-const app = express();
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const connectToDatabase = require("./db");
@@ -18,17 +17,21 @@ const quizRoutes = require("./routers/Quiz");
 const notificationRouter = require("./routers/Notification");
 const communityChatRouter = require("./routers/CommunityChat");
 const ragRouter = require("./routers/Rag");
-const reportRorter = require("./routers/Report");
+const reportRouter = require("./routers/Report");
 const errorHandler = require("./middlewares/errorHandler");
-const swaggerUi = require("swagger-ui-express");
-const swaggerJsdoc = require("swagger-jsdoc");
+const { swaggerSpec, swaggerUi } = require("./utils/swaggerConfig");
 
-// Socket.io
 const http = require("http");
 const socketIo = require("socket.io");
 const CommunityChat = require("./models/CommunityChat");
-const { RegExpMatcher, TextCensor, englishDataset, englishRecommendedTransformers } = require('obscenity');
+const {
+  RegExpMatcher,
+  TextCensor,
+  englishDataset,
+  englishRecommendedTransformers,
+} = require("obscenity");
 
+const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: { origin: "*" },
@@ -37,18 +40,18 @@ const io = socketIo(server, {
 // Keep a map of connected users
 const userSockets = new Map();
 
-// Create a matcher and censor instance (you might want to move this outside the connection handler to avoid re-instantiation)
+// Initialize profanity checker instances outside the connection handler
 const matcher = new RegExpMatcher({
   ...englishDataset.build(),
   ...englishRecommendedTransformers,
 });
 const censor = new TextCensor();
 
-
+// Socket.io events
 io.on("connection", (socket) => {
   console.log("New client connected:", socket.id);
 
-  // When a client registers their userId
+  // Register user socket
   socket.on("register", (userId) => {
     userSockets.set(userId, socket.id);
   });
@@ -63,58 +66,47 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Chat events:
-  // When a client joins a chat room for a community
+  // Chat events
   socket.on("joinRoom", ({ communityId, anonymousName }) => {
     socket.join(communityId);
     console.log(`User ${anonymousName} joined community ${communityId}`);
   });
 
-  // When a client leaves a chat room
   socket.on("leaveRoom", ({ communityId, anonymousName }) => {
     socket.leave(communityId);
     console.log(`User ${anonymousName} left community ${communityId}`);
   });
 
-  // When a client sends a chat message
   socket.on("chatMessage", async (messageData) => {
     try {
       // Check for profanity using obscenity
       const matches = matcher.getAllMatches(messageData.content);
-
       if (matches && matches.length > 0) {
-        // If profanity is found, do not save or broadcast.
-        // Send an error back to the sender only.
         socket.emit("chatError", { message: "Message contains profanity and was not sent." });
         console.log("Profanity detected, message rejected:", messageData.content);
         return;
       }
-
-      // Otherwise, save the clean message to the database
+      // Save the clean message to the database
       const newMessage = await CommunityChat.create(messageData);
       // Broadcast the message to all clients in the same community room
       io.to(messageData.communityId).emit("chatMessage", newMessage);
     } catch (error) {
       console.error("Error saving chat message:", error);
-      // Optionally, you can emit an error back if something goes wrong
       socket.emit("chatError", { message: "Error sending message." });
     }
   });
 });
 
-
-
-// Make io accessible to your controllers if needed
+// Make io and userSockets accessible in controllers if needed
 app.set("io", io);
 app.set("userSockets", userSockets);
 
-// Connect to Database
+// Connect to the database
 connectToDatabase();
 
-// CORS Configuration
+// CORS configuration
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
 const allowedOrigins = CLIENT_ORIGIN.split(",").map((origin) => origin.trim());
-
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -135,10 +127,9 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json());
 
+// Logging middleware
 app.use((req, res, next) => {
-  console.log(
-    `Incoming Request: ${req.method} ${req.url} from Origin: ${req.headers.origin}`
-  );
+  console.log(`Incoming Request: ${req.method} ${req.url} from Origin: ${req.headers.origin}`);
   next();
 });
 
@@ -155,25 +146,16 @@ app.use("/api", quizRoutes);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/chat", communityChatRouter);
 app.use("/api", ragRouter);
-app.use("/api/report", reportRorter);
+app.use("/api/report", reportRouter);
 
-// Removed the local file serving line
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Swagger Setup (documentation available at /api-docs)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Swagger Setup
-const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Your API",
-      version: "1.0.0",
-    },
-  },
-  apis: ["./routers/*.js"],
-};
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
-const specs = swaggerJsdoc(swaggerOptions);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // Error Handling Middleware
 app.use(errorHandler);
