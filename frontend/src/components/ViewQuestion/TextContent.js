@@ -71,8 +71,7 @@ function TextContent({ content, type }) {
     return <div className="text-gray-500"></div>;
   }
 
-  // Check if content already has HTML tags
-  // If not, wrap it in a paragraph tag for consistent formatting
+  // Check if content already has HTML tags. If not, wrap it in a paragraph tag.
   let processedContent = content;
   const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
 
@@ -83,12 +82,30 @@ function TextContent({ content, type }) {
   // Sanitize the content
   const sanitizedContent = DOMPurify.sanitize(processedContent);
 
-  // Remove empty paragraphs (those that contain only whitespace and/or <br>)
-  const cleanedContent = sanitizedContent.replace(/<p>(\s|<br\s*\/?>)*<\/p>/gi, "");
+  // Remove only truly empty paragraphs (preserving those with <br> tags)
+  const cleanedContent = sanitizedContent.replace(/<p>\s*<\/p>/gi, "");
 
   // Define options for html-react-parser
   const options = {
     replace: (node) => {
+      // Explicitly render <br> tags
+      if (node.name === "br") {
+        return <br key={node.key} />;
+      }
+      // Render links with blue text and underline on hover
+      if (node.name === "a") {
+        return (
+          <a
+            href={node.attribs.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+            key={node.key}
+          >
+            {domToReact(node.children, options)}
+          </a>
+        );
+      }
       // Handle preformatted text blocks
       if (node.name === "pre") {
         return (
@@ -100,7 +117,6 @@ function TextContent({ content, type }) {
           </pre>
         );
       }
-
       // Handle inline code snippets
       if (node.name === "code") {
         return (
@@ -112,7 +128,6 @@ function TextContent({ content, type }) {
           </code>
         );
       }
-
       // Handle images
       if (node.name === "img") {
         return (
@@ -132,7 +147,6 @@ function TextContent({ content, type }) {
           </div>
         );
       }
-
       // Handle blockquotes
       if (node.name === "blockquote") {
         return (
@@ -144,7 +158,6 @@ function TextContent({ content, type }) {
           </blockquote>
         );
       }
-
       // Handle unordered lists
       if (node.name === "ul") {
         return (
@@ -156,7 +169,6 @@ function TextContent({ content, type }) {
           </ul>
         );
       }
-
       // Handle ordered lists
       if (node.name === "ol") {
         return (
@@ -168,7 +180,6 @@ function TextContent({ content, type }) {
           </ol>
         );
       }
-
       // Handle list items
       if (node.name === "li") {
         return (
@@ -177,7 +188,6 @@ function TextContent({ content, type }) {
           </li>
         );
       }
-
       // Handle strong text
       if (node.name === "strong") {
         return (
@@ -189,7 +199,6 @@ function TextContent({ content, type }) {
           </strong>
         );
       }
-
       // Handle emphasized text
       if (node.name === "em") {
         return (
@@ -201,7 +210,6 @@ function TextContent({ content, type }) {
           </em>
         );
       }
-
       // Handle headings
       if (/^h[1-6]$/.test(node.name)) {
         const level = node.name.replace("h", "");
