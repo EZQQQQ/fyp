@@ -38,34 +38,31 @@ const addCommentToQuestion = async (req, res) => {
     await savedComment.populate("user", "username name");
 
     // --- Socket.IO Integration for Comment on Question ---
-    // Build notification payload for a question comment
-    const notificationData = {
-      recipient: question.user, // Owner of the question receives the notification
-      sender: req.user._id,
-      community: question.community,
-      type: "questionComment",
-      content: comment.length > 100 ? comment.substring(0, 100) + "..." : comment,
-      questionId: question._id,
-      createdAt: new Date(),
-      isRead: false,
-    };
+    // Only notify if the question owner is not the commenter
+    if (question.user.toString() !== req.user._id.toString()) {
+      // Build notification payload for a question comment
+      const notificationData = {
+        recipient: question.user, // Owner of the question receives the notification
+        sender: req.user._id,
+        community: question.community,
+        type: "questionComment",
+        content: comment.length > 100 ? comment.substring(0, 100) + "..." : comment,
+        questionId: question._id,
+        createdAt: new Date(),
+        isRead: false,
+      };
 
-    // Persist the notification to the database
-    // console.log("Persisting notification (question comment):", notificationData);
-    const persistedNotification = await Notification.create(notificationData);
-    // console.log("Persisted notification:", persistedNotification);
+      // Persist the notification to the database
+      await Notification.create(notificationData);
 
-    // Emit the notification via Socket.IO
-    const io = req.app.get("io");
-    const userSockets = req.app.get("userSockets");
-    const recipientSocket = userSockets.get(String(question.user));
-    if (recipientSocket) {
-      // console.log(`Emitting question comment notification to socket ${recipientSocket} for recipient ${question.user}`);
-      io.to(recipientSocket).emit("newNotification", notificationData);
+      // Emit the notification via Socket.IO
+      const io = req.app.get("io");
+      const userSockets = req.app.get("userSockets");
+      const recipientSocket = userSockets.get(String(question.user));
+      if (recipientSocket) {
+        io.to(recipientSocket).emit("newNotification", notificationData);
+      }
     }
-    // else {
-    // console.log(`No socket found for recipient ${question.user} in question comment notification`);
-    // }
 
     res.status(201).json({
       status: true,
