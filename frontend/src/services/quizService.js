@@ -71,6 +71,20 @@ const getQuizAttempt = async (quizId, attemptId) => {
   return res.data;
 };
 
+const getQuizAttemptByQuiz = async (quizId) => {
+  try {
+    const res = await axiosInstance.get(`/quizzes/${quizId}/attempts`);
+    return res.data;
+  } catch (err) {
+    // If error status is 404, it means no attempt was found. Return a "no attempt" value.
+    if (err.response && err.response.status === 404) {
+      return { success: false, message: "No attempt found" };
+    }
+    // Otherwise, rethrow the error.
+    throw err;
+  }
+};
+
 export default {
   createQuiz,
   createQuizWithAI,
@@ -82,4 +96,5 @@ export default {
   startQuizAttempt,
   endQuizAttempt,
   getQuizAttempt,
+  getQuizAttemptByQuiz,
 };

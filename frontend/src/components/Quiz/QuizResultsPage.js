@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
 import { Button } from "@material-tailwind/react";
-import TextContent from "../ViewQuestion/TextContent"; // Import TextContent
+import TextContent from "../ViewQuestion/TextContent";
 
 function QuizResultsPage() {
   const { quizId, attemptId } = useParams();

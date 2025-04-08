@@ -453,6 +453,39 @@ async function getQuizAttempt(req, res) {
   }
 }
 
+/**
+ * GET the existing quiz attempt for a given quiz and user.
+ * Returns the attempt if one exists.
+ */
+async function getQuizAttemptByQuiz(req, res) {
+  try {
+    const { quizId } = req.params;
+    const userId = req.user._id;
+
+    // Find an existing attempt for this quiz and user.
+    // Adjust query as needed – for example, if you want only non‑submitted attempts.
+    const quizAttempt = await QuizAttempt.findOne({
+      quiz: quizId,
+      user: userId,
+    });
+
+    if (!quizAttempt) {
+      return res.status(404).json({
+        success: false,
+        message: "No quiz attempt found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      attempt: quizAttempt,
+    });
+  } catch (error) {
+    console.error("Error fetching quiz attempt:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
+  }
+}
+
 module.exports = {
   createQuizForCommunity,
   createQuizWithAI,
@@ -464,4 +497,5 @@ module.exports = {
   endQuizAttempt,
   submitQuizAttempt,
   getQuizAttempt,
+  getQuizAttemptByQuiz,
 };

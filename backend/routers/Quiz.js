@@ -380,4 +380,33 @@ router.get(
   quizController.getQuizAttempt
 );
 
+/**
+ * @swagger
+ * /api/quizzes/{quizId}/attempts:
+ *   get:
+ *     summary: Get the existing quiz attempt for a given quiz and user.
+ *     tags: [Quiz]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: quizId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Quiz ID.
+ *     responses:
+ *       200:
+ *         description: Returns the existing quiz attempt.
+ *       404:
+ *         description: No quiz attempt found.
+ *       500:
+ *         description: Server Error.
+ */
+router.get(
+  "/quizzes/:quizId/attempts",
+  auth,
+  quizController.getQuizAttemptByQuiz
+);
+
 module.exports = router;

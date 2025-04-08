@@ -1,6 +1,6 @@
 // /frontend/src/components/Quiz/QuizInstructionsPage.js
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import quizService from "../../services/quizService";
 import { toast } from "react-toastify";
@@ -13,42 +13,66 @@ function QuizInstructionsPage() {
   const [quizData, setQuizData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // On mount, fetch quiz details and check for an existing attempt.
   useEffect(() => {
-    const fetchQuizDetails = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch quiz details
         const res = await quizService.getQuizById(quizId);
         if (!res.success) {
           throw new Error(res.message || "Failed to fetch quiz details");
         }
         setQuizData(res.quiz);
+
+        // Check for an existing attempt.
+        const attemptRes = await quizService.getQuizAttemptByQuiz(quizId);
+        if (attemptRes.success && attemptRes.attempt) {
+          toast.info("You have already attempted this quiz.");
+          navigate(`/quiz/${quizId}/attempt/${attemptRes.attempt._id}/results`, { replace: true });
+          return;
+        }
+        // If no attempt is found, attemptRes will have success: false (but no error thrown)
       } catch (error) {
-        console.error("Error fetching quiz details:", error);
+        console.error("Error fetching quiz data:", error);
         toast.error(error.message || "Failed to fetch quiz details");
       } finally {
         setLoading(false);
       }
     };
+    fetchData();
+  }, [quizId, navigate]);
 
-    fetchQuizDetails();
-  }, [quizId]);
-
-  const handleBegin = async () => {
+  // Handler for when the user clicks "Begin"
+  const handleBegin = useCallback(async () => {
     try {
+      // Double-check if an attempt already exists.
+      const attemptRes = await quizService.getQuizAttemptByQuiz(quizId);
+      if (attemptRes.success && attemptRes.attempt) {
+        toast.info("You have already attempted this quiz.");
+        navigate(`/quiz/${quizId}/attempt/${attemptRes.attempt._id}/results`, { replace: true });
+        return;
+      }
+      // Otherwise, start a new quiz attempt.
       const res = await quizService.startQuizAttempt(quizId);
       if (!res.success) {
         throw new Error(res.message || "Failed to start quiz attempt");
       }
-      const { attemptId } = res;
+      // Extract attempt ID from either field; adjust as needed.
+      const attemptId = res.attemptId || (res.attempt && res.attempt._id);
+      if (!attemptId) {
+        throw new Error("Attempt ID is undefined. Please try again later.");
+      }
       navigate(`/quiz/${quizId}/attempt/${attemptId}`);
     } catch (error) {
       console.error("Error starting quiz attempt:", error);
       toast.error(error.message || "Failed to start quiz attempt");
     }
-  };
+  }, [quizId, navigate]);
 
-  const handleCancel = () => {
+  // Handler for cancelling (go back)
+  const handleCancel = useCallback(() => {
     navigate(-1);
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -68,7 +92,7 @@ function QuizInstructionsPage() {
     );
   }
 
-  // Format the quiz title to display a quiz number.
+  // Extract the quiz number from the title for display (optional)
   const extractQuizNumber = (title) => title.replace(/quiz\s*/i, "");
   const quizNumber = extractQuizNumber(quizData.title);
 
@@ -77,7 +101,6 @@ function QuizInstructionsPage() {
       <h2 className="text-2xl font-semibold mb-4">
         Quiz {quizNumber} Instructions
       </h2>
-      {/* Use TextContent component to parse and display HTML instructions */}
       <div className="whitespace-pre-line text-gray-700 dark:text-gray-300">
         <TextContent content={quizData.instructions} type="html" />
       </div>
@@ -100,4 +123,3 @@ function QuizInstructionsPage() {
 }
 
 export default QuizInstructionsPage;
-
