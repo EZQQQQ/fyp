@@ -198,6 +198,7 @@
 │   │   │   │   ├── ProfilePage.js
 │   │   │   │   └── ProfileSettings.js
 │   │   │   ├── ProtectedRoute.js
+│   │   │   ├── ProtectedProfileRoute.js
 │   │   │   └── ViewQuestion
 │   │   │       ├── CommentSection.js
 │   │   │       ├── TextContent.js

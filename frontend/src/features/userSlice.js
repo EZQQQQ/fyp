@@ -15,6 +15,7 @@ export const ssoLoginUser = createAsyncThunk(
       return data;
     } catch (error) {
       console.error("ssoLoginUser error:", error);
+      console.error('SSO Login Error payload:', error.response?.data);
       return rejectWithValue(
         error.response?.data?.message || error.message || "SSO Login failed"
       );

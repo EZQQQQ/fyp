@@ -3,7 +3,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const admin = require("../firebaseAdmin"); // Import Firebase Admin
+const admin = require("../firebaseAdmin");
 
 // Helper function to generate JWT
 const generateToken = (userId) => {
@@ -41,12 +41,20 @@ const ssoLoginUser = async (req, res) => {
       role = "admin";
     }
 
+    // Compute default username for new SSO users
+    const defaultUsername =
+      (name && name.replace(/\s+/g, "").toLowerCase()) ||
+      email.split("@")[0].toLowerCase();
+
     // Find or create user
     let user = await User.findOne({ email: email.toLowerCase() });
+    let isNewUser = false;
     if (!user) {
-      // Create new user
+      isNewUser = true;
+      // Create new user with default username
       user = new User({
-        name: name || email.split("@")[0],
+        username: defaultUsername,
+        name: name || defaultUsername,
         email: email.toLowerCase(),
         role,
         // No password for SSO users
@@ -67,6 +75,7 @@ const ssoLoginUser = async (req, res) => {
       status: true,
       message: "SSO Login successful",
       data: { user, token: appToken },
+      isNewUser,
     });
   } catch (err) {
     console.error("SSO Login Error:", err);
@@ -182,7 +191,19 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    res.status(200).json({ status: true, data: user });
+    // Generate a default username suggestion if user hasn't completed profile setup
+    // Similar to the approach in ssoLoginUser
+    const defaultUsername = user.username ||
+      (user.name && user.name.replace(/\s+/g, "").toLowerCase()) ||
+      (user.email && user.email.split("@")[0].toLowerCase());
+
+    res.status(200).json({
+      status: true,
+      data: {
+        ...user.toObject(),
+        defaultUsername: defaultUsername
+      }
+    });
   } catch (err) {
     console.error("Get Profile Error:", err);
     res.status(500).json({

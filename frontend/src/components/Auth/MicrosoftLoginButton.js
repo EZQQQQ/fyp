@@ -1,4 +1,5 @@
 // /frontend/src/components/Auth/MicrosoftLoginButton.js
+
 import React from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -15,28 +16,35 @@ function MicrosoftLoginButton({ isAdmin }) {
 
   const handleMicrosoftLogin = async () => {
     try {
+      // Trigger Firebase popup and get ID token
       const result = await signInWithPopup(auth, microsoftProvider);
       const token = await result.user.getIdToken();
-      dispatch(ssoLoginUser({ token, isAdmin }))
-        .unwrap()
-        .then((data) => {
-          if (!data.data.user.username) {
-            navigate("/profile");
-          } else {
-            navigate("/");
-          }
-        })
-        .catch((error) => {
-          console.error("SSO Login Error:", error);
-        });
+
+      // Dispatch your SSO thunk and unwrap the full payload
+      const payload = await dispatch(
+        ssoLoginUser({ token, isAdmin })
+      ).unwrap();
+
+      // Redirect based on isNewUser flag from the backend
+      if (payload.isNewUser) {
+        navigate("/profile-creation", { replace: true });
+      } else {
+        navigate("/", { replace: true });
+      }
+
+      toast.success("SSO Login successful!");
     } catch (error) {
-      console.error("Microsoft Sign-In Error:", error);
-      toast.error("Microsoft Sign-In failed. Please try again.");
+      console.error("SSO Login Error:", error);
+      toast.error("Login failed, please try again.");
     }
   };
 
   return (
-    <button className="button" data-text="Login with Microsoft" onClick={handleMicrosoftLogin}>
+    <button
+      className="button"
+      data-text="Login with Microsoft"
+      onClick={handleMicrosoftLogin}
+    >
       <span className="actual-text">
         <img src={OutlookLogo} alt="Outlook Logo" className="logo" />
         &nbsp;Login with Microsoft&nbsp;

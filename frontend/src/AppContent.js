@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useLocation,
+  useNavigate
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -24,6 +25,7 @@ import CommunityPage from "./components/Community/CommunityPage";
 import CreateCommunity from "./components/Community/CreateCommunity";
 import SearchResults from "./components/Search/SearchResults";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedProfileRoute from "./components/ProtectedProfileRoute";
 import Dashboard from "./components/Dashboard";
 import ProfilePage from "./components/Profile/ProfilePage";
 import ProfileSettings from "./components/Profile/ProfileSettings";
@@ -51,6 +53,7 @@ const AppContent = ({ socket }) => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const hideDashboard = location.pathname.startsWith("/chat");
 
@@ -59,6 +62,7 @@ const AppContent = ({ socket }) => {
     return savedMode === "true";
   });
   const [appLoading, setAppLoading] = useState(true);
+  const [profileChecked, setProfileChecked] = useState(false);
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
 
   useEffect(() => {
@@ -76,18 +80,37 @@ const AppContent = ({ socket }) => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          await dispatch(fetchUserData()).unwrap();
+          const userData = await dispatch(fetchUserData()).unwrap();
+          // If the user needs profile creation and isn't already there, redirect
+          if (userData && !userData.username &&
+            !location.pathname.startsWith('/profile-creation')) {
+            navigate('/profile-creation');
+          }
         } catch (error) {
           console.error("Failed to fetch user data:", error);
           dispatch(logout());
         }
       }
       setAppLoading(false);
+      setProfileChecked(true);
     };
     initializeUser();
-  }, [dispatch]);
+  }, [dispatch, navigate, location.pathname]);
 
-  if (appLoading) {
+  // Navigation guard effect
+  useEffect(() => {
+    // Add navigation guard to check profile requirement
+    if (user && !user.username &&
+      !location.pathname.startsWith('/profile-creation') &&
+      !location.pathname.startsWith('/auth') &&
+      !location.pathname.startsWith('/admin/login') &&
+      !location.pathname.startsWith('/unauthorized')) {
+      console.log("Navigation guard activated - redirecting to profile creation");
+      navigate('/profile-creation');
+    }
+  }, [location.pathname, user, navigate]);
+
+  if (appLoading || !profileChecked) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 relative">
         <LoadingAnimation />
@@ -115,38 +138,60 @@ const AppContent = ({ socket }) => {
       <NotificationsListener socket={socket} />
 
       <Routes>
-        {/* Standalone Routes */}
+        {/* Public routes - no auth required */}
         <Route path="/auth" element={<Auth />} />
         <Route path="/admin/login" element={<AdminAuth />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/chat/:communityId" element={<ProtectedRoute><CommunityChatPage /></ProtectedRoute>} />
 
-        {/* Routes with DefaultLayout */}
+        {/* Profile creation - requires auth but not profile */}
         <Route
-          path="/*"
+          path="/profile-creation"
           element={
-            <DefaultLayout darkMode={darkMode} setDarkMode={setDarkMode} user={user} openCreateCommunityModal={openCreateCommunityModal} />
+            <ProtectedRoute>
+              <ProfileCreation />
+            </ProtectedRoute>
           }
-        >
-          <Route path="create-profile" element={<ProtectedRoute><ProfileCreation /></ProtectedRoute>} />
-          <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-          <Route path="questions" element={<ProtectedRoute><AllQuestions /></ProtectedRoute>} />
-          <Route path="question/:questionId" element={<ProtectedRoute><MainQuestion /></ProtectedRoute>} />
-          <Route path="add-question" element={<ProtectedRoute><AddQuestion /></ProtectedRoute>} />
-          <Route path="explore" element={<ProtectedRoute><CommunityList isTileView={true} /></ProtectedRoute>} />
-          <Route path="communities/:id" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
-          <Route path="quiz/:quizId/instructions" element={<ProtectedRoute><QuizInstructionsPage /></ProtectedRoute>} />
-          <Route path="communities/:communityId/create-quiz" element={<ProtectedRoute><CreateQuizPage /></ProtectedRoute>} />
-          <Route path="communities/:communityId/create-quiz/ai" element={<ProtectedRoute><CreateQuizWithAIPage /></ProtectedRoute>} />
-          <Route path="quiz/:quizId/attempt/:attemptId" element={<ProtectedRoute><AttemptQuizPage /></ProtectedRoute>} />
-          <Route path="quiz/:quizId/attempt/:attemptId/results" element={<ProtectedRoute><QuizResultsPage /></ProtectedRoute>} />
-          <Route path="quiz/:quizId/edit" element={<ProtectedRoute><EditQuizPage /></ProtectedRoute>} />
-          <Route path="search" element={<SearchResults />} />
-          <Route path="bookmark" element={<ProtectedRoute><BookmarkedQuestions /></ProtectedRoute>} />
-          <Route path="reports" element={<ProtectedRoute><ReportedContentPage /></ProtectedRoute>} />
-          <Route index element={<ProtectedRoute requiredRoles={["student", "professor", "admin"]}><AllQuestions /></ProtectedRoute>} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+        />
+
+        {/* All protected content - requires both auth and profile */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedProfileRoute />}>
+            {/* Chat route */}
+            <Route path="/chat/:communityId" element={<CommunityChatPage />} />
+
+            {/* Main layout routes */}
+            <Route
+              path="/*"
+              element={
+                <DefaultLayout
+                  darkMode={darkMode}
+                  setDarkMode={setDarkMode}
+                  user={user}
+                  openCreateCommunityModal={openCreateCommunityModal}
+                  socket={socket}
+                />
+              }
+            >
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="settings" element={<ProfileSettings />} />
+              <Route path="questions" element={<AllQuestions />} />
+              <Route path="question/:questionId" element={<MainQuestion />} />
+              <Route path="add-question" element={<AddQuestion />} />
+              <Route path="explore" element={<CommunityList isTileView={true} />} />
+              <Route path="communities/:id" element={<CommunityPage />} />
+              <Route path="quiz/:quizId/instructions" element={<QuizInstructionsPage />} />
+              <Route path="communities/:communityId/create-quiz" element={<CreateQuizPage />} />
+              <Route path="communities/:communityId/create-quiz/ai" element={<CreateQuizWithAIPage />} />
+              <Route path="quiz/:quizId/attempt/:attemptId" element={<AttemptQuizPage />} />
+              <Route path="quiz/:quizId/attempt/:attemptId/results" element={<QuizResultsPage />} />
+              <Route path="quiz/:quizId/edit" element={<EditQuizPage />} />
+              <Route path="search" element={<SearchResults />} />
+              <Route path="bookmark" element={<BookmarkedQuestions />} />
+              <Route path="reports" element={<ReportedContentPage />} />
+              <Route index element={<AllQuestions />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Route>
         </Route>
       </Routes>
 
