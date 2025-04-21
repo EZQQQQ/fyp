@@ -35,7 +35,7 @@ const DefaultLayout = ({
 
         {/* Main scrollable container (top padding offsets the fixed header) */}
         <main className="flex-1 overflow-y-auto pt-14 main-scroll">
-          <div className="mx-auto max-w-screen-2xl p-2 md:p-3 2xl:p-8">
+          <div className="mx-auto max-w-screen-2xl p-2 md:p-3 2xl:p-8 h-full">
             <Outlet />
           </div>
         </main>

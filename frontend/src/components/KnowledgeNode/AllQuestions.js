@@ -91,7 +91,7 @@ function AllQuestions() {
   const selectedFilter = filterOptions.find((opt) => opt.value === filter);
 
   return (
-    <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
+    <div className="max-w-7xl mx-auto p-2 h-full flex flex-col overflow-x-hidden">
       {/* Header Section: arranged in one horizontal row */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-100">
@@ -115,7 +115,7 @@ function AllQuestions() {
       </div>
 
       {/* Questions List Container */}
-      <div className="all-questions-container">
+      <div className="all-questions-container flex-1">
         {questions.length > 0 ? (
           <div className="flex flex-col space-y-4">
             {sortedQuestions.map((question) => (
