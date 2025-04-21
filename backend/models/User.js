@@ -70,6 +70,11 @@ const UserSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // field track to gate navigation
+    profileComplete: {
+      type: Boolean,
+      default: false,
+    },
     // field for storing bookmarked questions
     bookmarkedQuestions: [
       {

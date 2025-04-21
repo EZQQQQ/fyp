@@ -5,14 +5,16 @@ import {
   Route,
   Navigate,
   useLocation,
-  useNavigate
+  useNavigate,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-// Layout
+// Layout & Guards
 import DefaultLayout from "./layout/DefaultLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedProfileRoute from "./components/ProtectedProfileRoute";
 
-// Components & Pages
+// Pages
 import Auth from "./components/Auth";
 import AdminAuth from "./components/Auth/AdminAuth";
 import Unauthorized from "./components/Auth/Unauthorized";
@@ -24,8 +26,6 @@ import CommunityList from "./components/Community/CommunityList";
 import CommunityPage from "./components/Community/CommunityPage";
 import CreateCommunity from "./components/Community/CreateCommunity";
 import SearchResults from "./components/Search/SearchResults";
-import ProtectedRoute from "./components/ProtectedRoute";
-import ProtectedProfileRoute from "./components/ProtectedProfileRoute";
 import Dashboard from "./components/Dashboard";
 import ProfilePage from "./components/Profile/ProfilePage";
 import ProfileSettings from "./components/Profile/ProfileSettings";
@@ -61,8 +61,8 @@ const AppContent = ({ socket }) => {
     const savedMode = localStorage.getItem("darkMode");
     return savedMode === "true";
   });
-  const [appLoading, setAppLoading] = useState(true);
-  const [profileChecked, setProfileChecked] = useState(false);
+
+  const [loadingApp, setLoadingApp] = useState(true);
   const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
 
   useEffect(() => {
@@ -75,44 +75,24 @@ const AppContent = ({ socket }) => {
     localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
 
+  // Fetch user on mount
   useEffect(() => {
-    const initializeUser = async () => {
+    (async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const userData = await dispatch(fetchUserData()).unwrap();
-          // If the user needs profile creation and isn't already there, redirect
-          if (userData && !userData.username &&
-            !location.pathname.startsWith('/profile-creation')) {
-            navigate('/profile-creation');
-          }
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
+          await dispatch(fetchUserData()).unwrap();
+        } catch {
           dispatch(logout());
         }
       }
-      setAppLoading(false);
-      setProfileChecked(true);
-    };
-    initializeUser();
-  }, [dispatch, navigate, location.pathname]);
+      setLoadingApp(false);
+    })();
+  }, [dispatch]);
 
-  // Navigation guard effect
-  useEffect(() => {
-    // Add navigation guard to check profile requirement
-    if (user && !user.username &&
-      !location.pathname.startsWith('/profile-creation') &&
-      !location.pathname.startsWith('/auth') &&
-      !location.pathname.startsWith('/admin/login') &&
-      !location.pathname.startsWith('/unauthorized')) {
-      console.log("Navigation guard activated - redirecting to profile creation");
-      navigate('/profile-creation');
-    }
-  }, [location.pathname, user, navigate]);
-
-  if (appLoading || !profileChecked) {
+  if (loadingApp) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 relative">
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
         <LoadingAnimation />
         <p className="text-xl text-gray-700 dark:text-gray-300 mt-4">Loading...</p>
       </div>
@@ -138,28 +118,30 @@ const AppContent = ({ socket }) => {
       <NotificationsListener socket={socket} />
 
       <Routes>
-        {/* Public routes - no auth required */}
+        {/** 1) Public **/}
         <Route path="/auth" element={<Auth />} />
         <Route path="/admin/login" element={<AdminAuth />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Profile creation - requires auth but not profile */}
+        {/** 2) Profile creation (must be authenticated, but profileComplete may be false) **/}
         <Route
           path="/profile-creation"
           element={
             <ProtectedRoute>
-              <ProfileCreation />
+              <ProtectedProfileRoute>
+                <ProfileCreation />
+              </ProtectedProfileRoute>
             </ProtectedRoute>
           }
         />
 
-        {/* All protected content - requires both auth and profile */}
+        {/** 3) Everything else (auth + profileComplete) **/}
         <Route element={<ProtectedRoute />}>
           <Route element={<ProtectedProfileRoute />}>
-            {/* Chat route */}
+            {/** Chat route falls outside main layout **/}
             <Route path="/chat/:communityId" element={<CommunityChatPage />} />
 
-            {/* Main layout routes */}
+            {/** Main application shell **/}
             <Route
               path="/*"
               element={
@@ -174,21 +156,49 @@ const AppContent = ({ socket }) => {
             >
               <Route path="profile" element={<ProfilePage />} />
               <Route path="settings" element={<ProfileSettings />} />
-              <Route path="questions" element={<AllQuestions />} />
+              <Route index element={<AllQuestions />} />
               <Route path="question/:questionId" element={<MainQuestion />} />
               <Route path="add-question" element={<AddQuestion />} />
-              <Route path="explore" element={<CommunityList isTileView={true} />} />
+              <Route
+                path="explore"
+                element={<CommunityList isTileView={true} />}
+              />
               <Route path="communities/:id" element={<CommunityPage />} />
-              <Route path="quiz/:quizId/instructions" element={<QuizInstructionsPage />} />
-              <Route path="communities/:communityId/create-quiz" element={<CreateQuizPage />} />
-              <Route path="communities/:communityId/create-quiz/ai" element={<CreateQuizWithAIPage />} />
-              <Route path="quiz/:quizId/attempt/:attemptId" element={<AttemptQuizPage />} />
-              <Route path="quiz/:quizId/attempt/:attemptId/results" element={<QuizResultsPage />} />
-              <Route path="quiz/:quizId/edit" element={<EditQuizPage />} />
+              <Route
+                path="communities/:communityId/create-quiz"
+                element={<CreateQuizPage />}
+              />
+              <Route
+                path="communities/:communityId/create-quiz/ai"
+                element={<CreateQuizWithAIPage />}
+              />
+              <Route
+                path="quiz/:quizId/instructions"
+                element={<QuizInstructionsPage />}
+              />
+              <Route
+                path="quiz/:quizId/attempt/:attemptId"
+                element={<AttemptQuizPage />}
+              />
+              <Route
+                path="quiz/:quizId/attempt/:attemptId/results"
+                element={<QuizResultsPage />}
+              />
+              <Route
+                path="quiz/:quizId/edit"
+                element={<EditQuizPage />}
+              />
               <Route path="search" element={<SearchResults />} />
-              <Route path="bookmark" element={<BookmarkedQuestions />} />
-              <Route path="reports" element={<ReportedContentPage />} />
-              <Route index element={<AllQuestions />} />
+              <Route
+                path="bookmark"
+                element={<BookmarkedQuestions />}
+              />
+              <Route
+                path="reports"
+                element={<ReportedContentPage />}
+              />
+
+              {/** catch‑all inside layout */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>
@@ -199,6 +209,6 @@ const AppContent = ({ socket }) => {
       {user && <CreateCommunity isOpen={isCreateCommunityOpen} onClose={closeCreateCommunityModal} />}
     </>
   );
-};
+}
 
 export default AppContent;

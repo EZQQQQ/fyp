@@ -1,25 +1,21 @@
-// /frontend/src/components/ProtectedRoute.js
-
+// frontend/src/components/ProtectedRoute.js
 import React from "react";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { selectUser } from "../features/userSlice";
 
-function ProtectedRoute({ children, requiredRoles }) {
+export default function ProtectedRoute({ children, requiredRoles }) {
   const user = useSelector(selectUser);
+  const location = useLocation();
 
+  // 1) Not authenticated → /auth
   if (!user) {
-    // User is not authenticated, redirect to login page
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
-
+  // 2) Lacks required role → /unauthorized
   if (requiredRoles && !requiredRoles.includes(user.role)) {
-    // User does not have the required role, redirect to unauthorized page
     return <Navigate to="/unauthorized" replace />;
   }
-
-  // User is authenticated and has the required role (if specified)
-  return children;
+  // 3) Authenticated (and role ok) → either render direct child or nested
+  return children ? children : <Outlet />;
 }
-
-export default ProtectedRoute;

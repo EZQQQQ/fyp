@@ -137,49 +137,60 @@ const loginUser = async (req, res) => {
 // Create User Profile Controller
 const createUserProfile = async (req, res) => {
   try {
-    const { username } = req.body;
-    let profilePicture = "";
-
-    if (req.file && req.file.location) {
-      // Using the S3 URL provided by multer-s3
-      profilePicture = req.file.location;
-    }
-
+    const { username, profileBio } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    // Check if username is unique
-    const existingUser = await User.findOne({ username: username.trim() });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Username already taken" });
+    // 1) Validate username
+    if (!username?.trim()) {
+      return res.status(400).json({ status: false, message: "Username is required" });
+    }
+    const normalized = username.trim().toLowerCase();
+    const conflict = await User.findOne({ username: new RegExp(`^${normalized}$`, "i") });
+    if (conflict && conflict._id.toString() !== user._id.toString()) {
+      return res.status(400).json({ status: false, message: "Username already taken" });
+    }
+    user.username = username.trim();
+
+    // 2) Update optional text fields
+    if (typeof profileBio === "string") {
+      user.profileBio = profileBio.trim();
     }
 
-    // Update user profile
-    user.username = username.trim();
-    if (profilePicture) user.profilePicture = profilePicture;
+    // 3) Update uploaded images (handled by multer-s3 or similar)
+    if (req.file && req.file.fieldname === "profilePicture") {
+      user.profilePicture = req.file.location;
+    }
+    if (req.files?.profileBanner?.length) {
+      user.profileBanner = req.files.profileBanner[0].location;
+    }
+
+    // 4) Mark complete only once all minimum requirements are met
+    //    (e.g. username + bio, or adjust as you see fit)
+    user.profileComplete = true;
+
     await user.save();
 
-    // Generate new JWT if needed
+    // 5) Issue fresh JWT in case you care about any new claims
     const token = generateToken(user._id);
 
-    res.status(200).json({
+    return res.status(200).json({
       status: true,
       message: "Profile created successfully",
       data: { user, token },
     });
   } catch (err) {
     console.error("Profile Creation Error:", err);
-    res.status(500).json({
+    return res.status(500).json({
       status: false,
       message: "Profile creation failed",
       error: err.message,
     });
   }
 };
+
 
 // Get User Profile
 const getUserProfile = async (req, res) => {
