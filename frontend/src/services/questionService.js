@@ -5,13 +5,13 @@ const questionService = {
   getQuestionsByCommunity: (communityId) => {
     return axiosInstance.get(`/communities/${communityId}/questions`);
   },
-  searchQuestions: (query, community) => {
-    return axiosInstance.get("/question/search", {
-      params: {
-        query,
-        community,
-      },
-    });
+  searchQuestions: async (query, community) => {
+    const params = { query };
+    if (community && community !== "all") {
+      params.community = community;
+    }
+
+    return axiosInstance.get("/question/search", { params });
   },
   deleteQuestion: (questionId) => {
     return axiosInstance.delete(`/question/${questionId}`);

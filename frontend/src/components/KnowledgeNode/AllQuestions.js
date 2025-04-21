@@ -14,11 +14,27 @@ import CreateQuestionButton from "./CreateQuestionButton";
 function AllQuestions() {
   const [filter, setFilter] = useState("newest");
   const [questions, setQuestions] = useState([]);
+  const [displayOrder, setDisplayOrder] = useState([]);
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
   const handleFilterChange = (option) => {
     setFilter(option.value);
+    updateDisplayOrder(questions, option.value);
+  };
+
+  // Helper function to update display order
+  const updateDisplayOrder = (questionsList, currentFilter) => {
+    const sortedIds = [...questionsList].sort((a, b) => {
+      if (currentFilter === "newest") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (currentFilter === "popular") {
+        return b.voteCount - a.voteCount;
+      }
+      return 0;
+    }).map(q => q._id);
+
+    setDisplayOrder(sortedIds);
   };
 
   const updateQuestionVote = (questionId, voteData) => {
@@ -40,8 +56,13 @@ function AllQuestions() {
     const fetchQuestions = async () => {
       try {
         const response = await axiosInstance.get("/question/user-questions");
-        setQuestions(response.data.data || []);
-        response.data.data.forEach((question) => {
+        const fetchedQuestions = response.data.data || [];
+        setQuestions(fetchedQuestions);
+
+        // Set initial display order
+        updateDisplayOrder(fetchedQuestions, filter);
+
+        fetchedQuestions.forEach((question) => {
           dispatch(
             setVoteData({
               targetId: question._id,
@@ -64,22 +85,16 @@ function AllQuestions() {
     if (user) {
       fetchQuestions();
     }
-  }, [dispatch, user]);
+  }, [dispatch, user, filter]);
 
   const handleDeleteQuestion = (deletedQuestionId) => {
-    setQuestions((prevQuestions) =>
-      prevQuestions.filter((q) => q._id !== deletedQuestionId)
-    );
+    setQuestions((prevQuestions) => {
+      const updatedQuestions = prevQuestions.filter((q) => q._id !== deletedQuestionId);
+      // Update display order after deletion
+      updateDisplayOrder(updatedQuestions, filter);
+      return updatedQuestions;
+    });
   };
-
-  const sortedQuestions = [...questions].sort((a, b) => {
-    if (filter === "newest") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    } else if (filter === "popular") {
-      return b.voteCount - a.voteCount;
-    }
-    return 0;
-  });
 
   const communityId = user?.currentCommunityId || null;
 
@@ -118,15 +133,18 @@ function AllQuestions() {
       <div className="all-questions-container flex-1">
         {questions.length > 0 ? (
           <div className="flex flex-col space-y-4">
-            {sortedQuestions.map((question) => (
-              <QuestionCard
-                key={question._id}
-                question={question}
-                currentUser={user}
-                updateQuestionVote={updateQuestionVote}
-                onQuestionRemoved={handleDeleteQuestion}
-              />
-            ))}
+            {displayOrder.map(questionId => {
+              const question = questions.find(q => q._id === questionId);
+              return question ? (
+                <QuestionCard
+                  key={question._id}
+                  question={question}
+                  currentUser={user}
+                  updateQuestionVote={updateQuestionVote}
+                  onQuestionRemoved={handleDeleteQuestion}
+                />
+              ) : null;
+            })}
           </div>
         ) : (
           <p className="text-center text-gray-600 dark:text-gray-300">

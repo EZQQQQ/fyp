@@ -516,28 +516,40 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Add fields for relevance scoring and vote count
+    // Enhanced relevance scoring with more nuanced weights
     pipeline.push({
       $addFields: {
         score: {
           $add: [
-            {
-              $cond: [{ $in: [query, "$tags"] }, 3, 0],
-            },
+            // Exact tag match (highest weight)
+            { $cond: [{ $in: [query, "$tags"] }, 5, 0] },
+
+            // Title match - exact phrase (high weight)
             {
               $cond: [
-                { $regexMatch: { input: "$title", regex: titleRegex } },
+                { $regexMatch: { input: "$title", regex: new RegExp(`\\b${escapedQuery}\\b`, "i") } },
+                4,
+                0
+              ]
+            },
+
+            // Title contains words (medium-high weight)
+            { $cond: [{ $regexMatch: { input: "$title", regex: titleRegex } }, 3, 0] },
+
+            // Content contains exact phrase (medium weight)
+            {
+              $cond: [
+                { $regexMatch: { input: "$content", regex: new RegExp(`\\b${escapedQuery}\\b`, "i") } },
                 2,
-                0,
-              ],
+                0
+              ]
             },
-            {
-              $cond: [
-                { $regexMatch: { input: "$content", regex: contentRegex } },
-                1,
-                0,
-              ],
-            },
+
+            // Content contains keywords (lower weight)
+            { $cond: [{ $regexMatch: { input: "$content", regex: contentRegex } }, 1, 0] },
+
+            // Boost for popular questions (optional weight based on vote count)
+            { $multiply: [{ $divide: [{ $subtract: [{ $size: "$upvoters" }, { $size: "$downvoters" }] }, 10] }, 0.5] }
           ],
         },
         voteCount: {
@@ -546,8 +558,30 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Sort results by 'score' in descending order
-    pipeline.push({ $sort: { score: -1 } });
+    // Project stage to rename score to relevanceScore and include all necessary fields
+    pipeline.push({
+      $project: {
+        _id: 1,
+        title: 1,
+        content: 1,
+        contentType: 1,
+        tags: 1,
+        files: 1,
+        community: 1,
+        user: 1,
+        upvoters: 1,
+        downvoters: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        voteCount: 1,
+        relevanceScore: "$score", // Rename score to relevanceScore
+      },
+    });
+
+    // Sort by relevanceScore by default
+    pipeline.push({
+      $sort: { relevanceScore: -1, createdAt: -1 }
+    });
 
     // Populate the 'user' field
     pipeline.push({
@@ -599,16 +633,26 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Project necessary fields
+    // Final project to shape the output
     pipeline.push({
       $project: {
+        _id: 1,
         title: 1,
         content: 1,
         tags: 1,
-        files: 1, // Ensure 'files' field is included as is
+        files: 1,
         contentType: 1,
-        user: { username: 1, profilePicture: 1 },
-        community: { name: 1, avatar: 1 },
+        user: {
+          _id: 1,
+          username: 1,
+          name: 1,
+          profilePicture: 1
+        },
+        community: {
+          _id: 1,
+          name: 1,
+          avatar: 1
+        },
         upvoters: 1,
         downvoters: 1,
         createdAt: 1,
@@ -616,6 +660,7 @@ const searchQuestions = async (req, res) => {
         voteCount: 1,
         answersCount: 1,
         commentsCount: 1,
+        relevanceScore: 1,
       },
     });
 

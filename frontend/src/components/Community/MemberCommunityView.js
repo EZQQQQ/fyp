@@ -61,6 +61,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
 
   // State management
   const [questions, setQuestions] = useState([]);
+  const [displayOrder, setDisplayOrder] = useState([]); // Add display order state
   const [quizzes, setQuizzes] = useState([]);
   const [filter, setFilter] = useState("newest");
   const [mobileTab, setMobileTab] = useState(0);
@@ -75,25 +76,32 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
   // Responsive design
   const mobileBreakpoint = useMediaQuery("(max-width:767px)");
 
-  // Create sorted questions based on selected filter
-  const sortedQuestions = useMemo(() => {
-    if (filter === "newest") {
-      return [...questions].sort((a, b) =>
-        new Date(b.createdAt) - new Date(a.createdAt)
-      );
-    } else if (filter === "popular") {
-      return [...questions].sort((a, b) => b.voteCount - a.voteCount);
-    }
-    return questions;
-  }, [questions, filter]);
+  // Update display order based on filter - doesn't depend on questions state changes
+  const updateDisplayOrder = (questionsData, currentFilter) => {
+    const sortedIds = [...questionsData].sort((a, b) => {
+      if (currentFilter === "newest") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (currentFilter === "popular") {
+        return b.voteCount - a.voteCount;
+      }
+      return 0;
+    }).map(q => q._id);
+
+    setDisplayOrder(sortedIds);
+  };
 
   // Fetch questions
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         const response = await questionService.getQuestionsByCommunity(communityId);
-        setQuestions(response.data.data || []);
-        response.data.data.forEach((question) => {
+        const fetchedQuestions = response.data.data || [];
+        setQuestions(fetchedQuestions);
+
+        // Set initial display order based on current filter
+        updateDisplayOrder(fetchedQuestions, filter);
+
+        fetchedQuestions.forEach((question) => {
           dispatch(
             setVoteData({
               targetId: question._id,
@@ -112,7 +120,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
     };
 
     fetchQuestions();
-  }, [communityId, dispatch]);
+  }, [communityId, dispatch, filter]);
 
   // Fetch quizzes
   useEffect(() => {
@@ -144,6 +152,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
   // Event handlers
   const handleFilterChange = (option) => {
     setFilter(option.value);
+    updateDisplayOrder(questions, option.value);
   };
 
   const handleMobileTabChange = (event, newValue) => {
@@ -251,14 +260,17 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
               {questions.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No questions in this community yet.</p>
               ) : (
-                sortedQuestions.map((question) => (
-                  <QuestionCard
-                    key={question._id}
-                    question={question}
-                    updateQuestionVote={updateQuestionVote}
-                    uploadPath="communityPosts"
-                  />
-                ))
+                displayOrder.map(questionId => {
+                  const question = questions.find(q => q._id === questionId);
+                  return question ? (
+                    <QuestionCard
+                      key={question._id}
+                      question={question}
+                      updateQuestionVote={updateQuestionVote}
+                      uploadPath="communityPosts"
+                    />
+                  ) : null;
+                })
               )}
             </div>
           </CustomTabPanel>
@@ -313,14 +325,17 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
           {questions.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No questions in this community yet.</p>
           ) : (
-            sortedQuestions.map((question) => (
-              <QuestionCard
-                key={question._id}
-                question={question}
-                updateQuestionVote={updateQuestionVote}
-                uploadPath="communityPosts"
-              />
-            ))
+            displayOrder.map(questionId => {
+              const question = questions.find(q => q._id === questionId);
+              return question ? (
+                <QuestionCard
+                  key={question._id}
+                  question={question}
+                  updateQuestionVote={updateQuestionVote}
+                  uploadPath="communityPosts"
+                />
+              ) : null;
+            })
           )}
         </div>
       </div>

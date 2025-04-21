@@ -13,6 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 function BookmarkedQuestions() {
   const [filter, setFilter] = useState("newest");
   const [questions, setQuestions] = useState([]);
+  const [displayOrder, setDisplayOrder] = useState([]);
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
 
@@ -22,8 +23,23 @@ function BookmarkedQuestions() {
     { label: "Popular", value: "popular" },
   ];
 
+  // Update display order when filter changes
+  const updateDisplayOrder = (questionsList, currentFilter) => {
+    const sortedIds = [...questionsList].sort((a, b) => {
+      if (currentFilter === "newest") {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      } else if (currentFilter === "popular") {
+        return b.voteCount - a.voteCount;
+      }
+      return 0;
+    }).map(q => q._id);
+
+    setDisplayOrder(sortedIds);
+  };
+
   const handleFilterChange = (filterValue) => {
     setFilter(filterValue);
+    updateDisplayOrder(questions, filterValue);
   };
 
   const updateQuestionVote = (questionId, voteData) => {
@@ -45,9 +61,13 @@ function BookmarkedQuestions() {
     const fetchBookmarkedQuestions = async () => {
       try {
         const response = await bookmarkService.fetchUserBookmarks();
-        setQuestions(response.data || []);
+        const fetchedQuestions = response.data || [];
+        setQuestions(fetchedQuestions);
 
-        response.data.forEach((question) => {
+        // Set initial display order
+        updateDisplayOrder(fetchedQuestions, filter);
+
+        fetchedQuestions.forEach((question) => {
           dispatch(
             setVoteData({
               targetId: question._id,
@@ -70,17 +90,7 @@ function BookmarkedQuestions() {
     if (user) {
       fetchBookmarkedQuestions();
     }
-  }, [dispatch, user]);
-
-  // Sort questions based on selected filter
-  const sortedQuestions = [...questions].sort((a, b) => {
-    if (filter === "newest") {
-      return new Date(b.createdAt) - new Date(a.createdAt);
-    } else if (filter === "popular") {
-      return b.voteCount - a.voteCount;
-    }
-    return 0;
-  });
+  }, [dispatch, user, filter]);
 
   return (
     <div className="max-w-7xl mx-auto p-2 overflow-x-hidden">
@@ -106,13 +116,16 @@ function BookmarkedQuestions() {
       <div className="all-questions-container overflow-y-auto">
         {questions.length > 0 ? (
           <div className="flex flex-col space-y-6">
-            {sortedQuestions.map((question) => (
-              <QuestionCard
-                key={question._id}
-                question={question}
-                updateQuestionVote={updateQuestionVote}
-              />
-            ))}
+            {displayOrder.map((questionId) => {
+              const question = questions.find((q) => q._id === questionId);
+              return (
+                <QuestionCard
+                  key={question._id}
+                  question={question}
+                  updateQuestionVote={updateQuestionVote}
+                />
+              );
+            })}
           </div>
         ) : (
           <p className="text-center text-gray-600 dark:text-gray-300">
