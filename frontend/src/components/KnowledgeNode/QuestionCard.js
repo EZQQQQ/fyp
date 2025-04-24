@@ -60,6 +60,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
     contentType,
   } = question;
   // const user = useSelector(selectUser);
+  const loggedInUser = useSelector(selectUser);
   const navigate = useNavigate();
 
   const totalResponses = (answersCount || 0) + (commentsCount || 0);
@@ -106,7 +107,6 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-1 px-4 w-full border dark:border-gray-700">
-      {/* Top Row: Community Info and Bookmark */}
       {/* Top Row: Community Info, Time Posted and User Info, and Bookmark */}
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-4">
@@ -126,7 +126,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
         </div>
         <div className="flex items-center">
           {/* Report/Delete Buttons (stays on the right) */}
-          {user.role === 'professor' || user.role === 'admin' ? (
+          {loggedInUser && (loggedInUser.role === 'professor' || loggedInUser.role === 'admin') ? (
             <IconButton color="error" onClick={handleDelete}>
               <DeleteForeverIcon
                 className="cursor-pointer text-gray-500 hover:text-red-600"
