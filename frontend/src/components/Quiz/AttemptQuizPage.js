@@ -1,4 +1,4 @@
-// /frontend/src/components/Quiz/AttemptQuizPage.js
+// frontend/src/components/Quiz/AttemptQuizPage.js
 
 import React, { useEffect, useState, useCallback } from "react";
 import {
@@ -15,43 +15,32 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import TextContent from "../ViewQuestion/TextContent";
 
 function AttemptQuizPage() {
-  // Local state to track whether the quiz has been submitted.
   const [quizCompleted, setQuizCompleted] = useState(false);
-
-  // React Router hooks:
   const { quizId, attemptId } = useParams();
   const navigate = useNavigate();
 
-  // Other component state
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
-  // For each question, store the user's selected option(s)
   const [answers, setAnswers] = useState([]);
-  // Track the current question index being viewed.
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // ----------------------------
   // Navigation Blocking Logic
   // ----------------------------
-
-  // useBlocker will intercept internal navigation if the quiz is not yet completed.
   const blocker = useBlocker(!quizCompleted);
 
-  // useBeforeUnload warns on page refresh, closing the tab, or manually entering another URL.
   useBeforeUnload(
     useCallback(
       (event) => {
         if (!quizCompleted) {
           event.preventDefault();
-          event.returnValue = ""; // This triggers the browser's default confirmation dialog.
+          event.returnValue = ""; // triggers browser dialog
         }
       },
       [quizCompleted]
     )
   );
 
-  // When internal navigation is blocked (blocker.state becomes "blocked"),
-  // display a confirmation dialog. If the user confirms, allow navigation.
   useEffect(() => {
     if (blocker.state === "blocked") {
       const confirmLeave = window.confirm(
@@ -63,12 +52,11 @@ function AttemptQuizPage() {
         blocker.reset();
       }
     }
-  }, [blocker.state, blocker]);
+  }, [blocker]);
 
   // ----------------------------
-  // Quiz Data Loading
+  // Fetch Quiz Data
   // ----------------------------
-
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -78,11 +66,12 @@ function AttemptQuizPage() {
         }
         const fetchedQuiz = res.quiz;
         setQuiz(fetchedQuiz);
-        const initAnswers = fetchedQuiz.questions.map((q) => ({
-          questionId: q._id,
-          selectedOptionId: q.allowMultipleCorrect ? [] : null,
-        }));
-        setAnswers(initAnswers);
+        setAnswers(
+          fetchedQuiz.questions.map((q) => ({
+            questionId: q._id,
+            selectedOptionId: q.allowMultipleCorrect ? [] : null,
+          }))
+        );
       } catch (err) {
         console.error("Error fetching quiz:", err);
         toast.error(err.message || "Failed to load quiz");
@@ -90,24 +79,22 @@ function AttemptQuizPage() {
         setLoading(false);
       }
     };
-
     fetchQuiz();
   }, [quizId]);
 
   // ----------------------------
   // Handlers
   // ----------------------------
-
   const handleOptionChange = (qIdx, optionId) => {
     setAnswers((prev) =>
       prev.map((ans, idx) => {
         if (idx !== qIdx) return ans;
         const question = quiz.questions[qIdx];
         if (question.allowMultipleCorrect) {
-          const alreadySelected = ans.selectedOptionId.includes(optionId);
+          const already = ans.selectedOptionId.includes(optionId);
           return {
             ...ans,
-            selectedOptionId: alreadySelected
+            selectedOptionId: already
               ? ans.selectedOptionId.filter((id) => id !== optionId)
               : [...ans.selectedOptionId, optionId],
           };
@@ -120,54 +107,66 @@ function AttemptQuizPage() {
 
   const handleNext = () => {
     if (currentQuestionIndex < quiz.questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      setCurrentQuestionIndex((i) => i + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
+      setCurrentQuestionIndex((i) => i - 1);
     }
   };
 
-  // On submission, check if all questions were answered.
-  // If so, submit the quiz, mark it as completed, and navigate away.
   const handleSubmit = async () => {
+    // 1) Always warn about no reattempts
+    const confirmFinal = window.confirm(
+      "You are about to submit the quiz, there will be no reattempts after this."
+    );
+    if (!confirmFinal) return;
+
+    // 2) If some unanswered, warn again
     const incomplete = answers.some((ans) =>
       Array.isArray(ans.selectedOptionId)
         ? ans.selectedOptionId.length === 0
         : ans.selectedOptionId === null
     );
-
     if (incomplete) {
-      const confirmSubmit = window.confirm(
+      const confirmIncomplete = window.confirm(
         "You have not attempted all the questions, are you sure you want to submit?"
       );
-      if (!confirmSubmit) return;
+      if (!confirmIncomplete) return;
     }
 
     try {
       const attemptData = { answers };
-      const res = await quizService.submitQuizAttempt(quizId, attemptId, attemptData);
+      const res = await quizService.submitQuizAttempt(
+        quizId,
+        attemptId,
+        attemptData
+      );
       if (res.quizAttempt) {
         toast.success(`Quiz submitted! Score: ${res.quizAttempt.score}`);
       } else {
         toast.success("Quiz submitted!");
       }
-      // Mark quiz as completed so the navigation blocker is disabled.
+      // flip the flag — navigation blocker will now allow redirect
       setQuizCompleted(true);
-      // Navigate away (this will now work since quizCompleted is true)
-      navigate(`/communities/${quiz.community}`);
     } catch (err) {
       console.error("Error submitting quiz:", err);
       toast.error("Failed to submit quiz");
     }
   };
 
-  // ----------------------------
-  // Rendering
-  // ----------------------------
+  // once quizCompleted is true, fire the actual redirect
+  useEffect(() => {
+    if (quizCompleted && quiz) {
+      navigate(`/communities/${quiz.community}`);
+    }
+  }, [quizCompleted, quiz, navigate]);
 
+  // ----------------------------
+  // Render
+  // ----------------------------
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -190,24 +189,24 @@ function AttemptQuizPage() {
     <div className="max-w-4xl mx-auto p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-md shadow-md">
       <h2 className="text-2xl font-semibold mb-4">{quiz.title}</h2>
       <div className="mb-6">
-        {/* Display the question text */}
         <div className="font-medium text-lg mb-2">
           <span>{currentQuestionIndex + 1}. </span>
           <TextContent content={currentQuestion.questionText} type="html" />
         </div>
         <div className="space-y-2">
           {currentQuestion.options.map((opt) => {
-            const selected =
-              currentQuestion.allowMultipleCorrect
-                ? answers[currentQuestionIndex]?.selectedOptionId.includes(opt._id)
-                : answers[currentQuestionIndex]?.selectedOptionId === opt._id;
+            const selected = currentQuestion.allowMultipleCorrect
+              ? answers[currentQuestionIndex].selectedOptionId.includes(opt._id)
+              : answers[currentQuestionIndex].selectedOptionId === opt._id;
             return (
               <label key={opt._id} className="flex items-center cursor-pointer">
                 <input
                   type={currentQuestion.allowMultipleCorrect ? "checkbox" : "radio"}
                   className="mr-2"
                   checked={!!selected}
-                  onChange={() => handleOptionChange(currentQuestionIndex, opt._id)}
+                  onChange={() =>
+                    handleOptionChange(currentQuestionIndex, opt._id)
+                  }
                 />
                 <TextContent content={opt.optionText} type="html" />
               </label>
@@ -215,7 +214,6 @@ function AttemptQuizPage() {
           })}
         </div>
       </div>
-      {/* Navigation Bar */}
       <div className="flex items-center justify-between mt-8">
         <div className="flex space-x-2">
           <Button

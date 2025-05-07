@@ -59,7 +59,7 @@ function AdminAssessmentTasks({ communityId }) {
   }, []);
 
   const openDialog = (task = null) => {
-    console.log("openDialog called with task:", task);
+    // console.log("openDialog called with task:", task);
 
     setCurrentTask(task);
     if (task) {
