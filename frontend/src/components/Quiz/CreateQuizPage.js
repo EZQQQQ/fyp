@@ -100,7 +100,7 @@ Due Date: This Test is due on {time set by professor}. Test submitted past this 
 
     try {
       const quizDataToSend = { title, instructions, questions };
-      console.log("Quiz Data:", quizDataToSend);
+      // console.log("Quiz Data:", quizDataToSend);
 
       const res = await quizService.createQuiz(communityId, quizDataToSend);
 
