@@ -63,7 +63,7 @@ function QuestionCard({ question, currentUser, onUserUpdate, updateQuestionVote,
   const loggedInUser = useSelector(selectUser);
   const navigate = useNavigate();
 
-  const totalResponses = (answersCount || 0) + (commentsCount || 0);
+  const totalResponses = (answersCount || 0) + (commentsCount || 0) + (question.answerCommentsCount || 0);
 
   //function to handle report
   const handleReport = async (type, itemId) => {

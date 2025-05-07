@@ -173,6 +173,12 @@ const getAllQuestions = async (req, res) => {
           question_id: question._id,
         });
 
+        const answers = await Answer.find({ question_id: question._id });
+        const answerIds = answers.map(answer => answer._id);
+        const answerCommentsCount = await Comment.countDocuments({
+          answer_id: { $in: answerIds }
+        });
+
         // Convert Mongoose document to plain object
         const questionObj = question.toObject();
 
@@ -182,6 +188,7 @@ const getAllQuestions = async (req, res) => {
           userHasDownvoted,
           answersCount,
           commentsCount,
+          answerCommentsCount,
         };
       })
     );
@@ -241,6 +248,12 @@ const getUserQuestions = async (req, res) => {
           question_id: question._id,
         });
 
+        const answers = await Answer.find({ question_id: question._id });
+        const answerIds = answers.map(answer => answer._id);
+        const answerCommentsCount = await Comment.countDocuments({
+          answer_id: { $in: answerIds }
+        });
+
         const questionObj = question.toObject();
 
         return {
@@ -249,6 +262,7 @@ const getUserQuestions = async (req, res) => {
           userHasDownvoted,
           answersCount,
           commentsCount,
+          answerCommentsCount,
         };
       })
     );
@@ -422,6 +436,12 @@ const getQuestionsByCommunity = async (req, res) => {
           question_id: question._id,
         });
 
+        const answers = await Answer.find({ question_id: question._id });
+        const answerIds = answers.map(answer => answer._id);
+        const answerCommentsCount = await Comment.countDocuments({
+          answer_id: { $in: answerIds }
+        });
+
         return {
           ...question,
           voteCount: question.upvoters.length - question.downvoters.length,
@@ -429,6 +449,7 @@ const getQuestionsByCommunity = async (req, res) => {
           userHasDownvoted,
           answersCount,
           commentsCount,
+          answerCommentsCount,
         };
       })
     );
@@ -625,11 +646,37 @@ const searchQuestions = async (req, res) => {
       },
     });
 
-    // Add counts for answers and comments
+    // Add lookup to get comments on answers
+    pipeline.push({
+      $lookup: {
+        from: "comments",
+        let: { questionId: "$_id" },
+        pipeline: [
+          {
+            $lookup: {
+              from: "answers",
+              localField: "answer_id",
+              foreignField: "_id",
+              as: "relatedAnswer"
+            }
+          },
+          { $unwind: "$relatedAnswer" },
+          {
+            $match: {
+              $expr: { $eq: ["$relatedAnswer.question_id", "$$questionId"] }
+            }
+          }
+        ],
+        as: "answerComments"
+      }
+    });
+
+    // Add counts for answers, comments, and answer comments
     pipeline.push({
       $addFields: {
         answersCount: { $size: "$answers" },
         commentsCount: { $size: "$comments" },
+        answerCommentsCount: { $size: "$answerComments" }
       },
     });
 
@@ -660,6 +707,7 @@ const searchQuestions = async (req, res) => {
         voteCount: 1,
         answersCount: 1,
         commentsCount: 1,
+        answerCommentsCount: 1,
         relevanceScore: 1,
       },
     });
