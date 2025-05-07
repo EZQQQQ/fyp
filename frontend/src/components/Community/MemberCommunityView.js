@@ -60,6 +60,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
   const assessment = useSelector((state) => state.assessment);
 
   // State management
+  const [communityData, setCommunityData] = useState(community);
   const [questions, setQuestions] = useState([]);
   const [displayOrder, setDisplayOrder] = useState([]); // Add display order state
   const [quizzes, setQuizzes] = useState([]);
@@ -89,6 +90,10 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
 
     setDisplayOrder(sortedIds);
   };
+
+  useEffect(() => {
+    setCommunityData(community);
+  }, [community]);
 
   // Fetch questions
   useEffect(() => {
@@ -177,6 +182,10 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
   const handleRefreshCode = async () => {
     try {
       const res = await communityService.refreshCommunityCode(communityId);
+      setCommunityData((prev) => ({
+        ...prev,
+        communityCode: res.communityCode,
+      }));
       toast.success("Community code refreshed successfully!");
     } catch (error) {
       console.error("Error refreshing community code:", error);
@@ -276,7 +285,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
           </CustomTabPanel>
           <CustomTabPanel value={mobileTab} index={1}>
             <CommunitySidebar
-              community={community}
+              community={communityData}
               communityId={communityId}
               user={user}
               quizzes={quizzes}
@@ -343,7 +352,7 @@ function MemberCommunityView({ community, communityId, user, onMembershipChange 
       {/* Sidebar */}
       <div className="w-80 flex-none bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-4">
         <CommunitySidebar
-          community={community}
+          community={communityData}
           communityId={communityId}
           user={user}
           quizzes={quizzes}
